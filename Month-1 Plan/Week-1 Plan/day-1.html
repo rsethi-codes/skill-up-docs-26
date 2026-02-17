@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 1 Master Handbook — Arrays + SQL Indexing + URL Shortener</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #f78166;
+    --accent3: #3fb950;
+    --accent4: #d29922;
+    --accent5: #bc8cff;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --code-bg: #1e2736;
+    --red: #f85149;
+    --yellow: #d29922;
+    --green: #3fb950;
+    --purple: #bc8cff;
+    --orange: #f78166;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+
+  .toc-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .toc-bar a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+
+  .toc-bar a:hover { background: var(--accent); color: #000; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+  .hero {
+    text-align: center;
+    padding: 60px 0 40px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 60px;
+  }
+
+  .hero h1 {
+    font-size: 2.8em;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--purple), var(--accent3));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+  }
+
+  .hero p { color: var(--text-muted); font-size: 1.1em; }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    margin: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-dsa { background: rgba(88,166,255,0.15); color: var(--accent); border: 1px solid var(--accent); }
+  .badge-db { background: rgba(247,129,102,0.15); color: var(--orange); border: 1px solid var(--orange); }
+  .badge-sys { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid var(--green); }
+
+  .topic-section {
+    margin-bottom: 80px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .topic-header {
+    padding: 28px 32px;
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .topic-header.dsa { background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(88,166,255,0.02)); border-left: 4px solid var(--accent); }
+  .topic-header.db { background: linear-gradient(135deg, rgba(247,129,102,0.08), rgba(247,129,102,0.02)); border-left: 4px solid var(--orange); }
+  .topic-header.sys { background: linear-gradient(135deg, rgba(63,185,80,0.08), rgba(63,185,80,0.02)); border-left: 4px solid var(--green); }
+
+  .topic-header h2 { font-size: 1.8em; font-weight: 800; }
+
+  .topic-body { padding: 32px; }
+
+  .section-block {
+    margin-bottom: 40px;
+    padding: 24px;
+    background: var(--surface);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .section-block h3 {
+    font-size: 1.15em;
+    font-weight: 700;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  p { margin-bottom: 12px; }
+
+  ul, ol { padding-left: 24px; }
+  ul li, ol li { margin-bottom: 8px; }
+
+  strong { color: var(--accent); }
+  em { color: var(--accent4); font-style: normal; font-weight: 600; }
+
+  code {
+    background: var(--code-bg);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    font-size: 0.88em;
+    color: #f0a500;
+  }
+
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    position: relative;
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+    color: #e6edf3;
+    font-size: 0.9em;
+    line-height: 1.8;
+  }
+
+  .highlight-green { color: var(--green); }
+  .highlight-red { color: var(--red); }
+  .highlight-yellow { color: var(--yellow); }
+  .highlight-blue { color: var(--accent); }
+  .highlight-purple { color: var(--purple); }
+  .highlight-orange { color: var(--orange); }
+
+  .callout {
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin: 16px 0;
+    border-left: 4px solid;
+    font-size: 0.95em;
+  }
+
+  .callout-danger { background: rgba(248,81,73,0.08); border-color: var(--red); }
+  .callout-warning { background: rgba(210,153,34,0.08); border-color: var(--yellow); }
+  .callout-info { background: rgba(88,166,255,0.08); border-color: var(--accent); }
+  .callout-success { background: rgba(63,185,80,0.08); border-color: var(--green); }
+
+  .callout-title { font-weight: 700; margin-bottom: 6px; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.5px; }
+  .callout-danger .callout-title { color: var(--red); }
+  .callout-warning .callout-title { color: var(--yellow); }
+  .callout-info .callout-title { color: var(--accent); }
+  .callout-success .callout-title { color: var(--green); }
+
+  .diagram {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 16px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.6;
+    color: #a8d8a8;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.9em;
+  }
+
+  th {
+    background: var(--surface2);
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 700;
+    border: 1px solid var(--border);
+    color: var(--accent);
+  }
+
+  td {
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  .complexity-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  .complexity-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .complexity-card .complexity-value {
+    font-size: 1.5em;
+    font-weight: 800;
+    font-family: monospace;
+    margin-bottom: 6px;
+  }
+
+  .complexity-card .complexity-label {
+    font-size: 0.8em;
+    color: var(--text-muted);
+  }
+
+  .remember-box {
+    background: linear-gradient(135deg, rgba(188,140,255,0.08), rgba(88,166,255,0.08));
+    border: 1px solid var(--purple);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 16px 0;
+  }
+
+  .remember-box h4 {
+    color: var(--purple);
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+    font-weight: 700;
+  }
+
+  .remember-box li { margin-bottom: 8px; }
+
+  .summary-box {
+    background: linear-gradient(135deg, rgba(63,185,80,0.06), rgba(88,166,255,0.06));
+    border: 1px solid var(--green);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 16px 0;
+  }
+
+  .summary-box h4 {
+    color: var(--green);
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+    font-weight: 700;
+  }
+
+  .interview-box {
+    background: rgba(210,153,34,0.06);
+    border: 1px solid var(--yellow);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 16px 0;
+  }
+
+  .interview-box h4 {
+    color: var(--yellow);
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+    font-weight: 700;
+  }
+
+  .cross-topic {
+    background: linear-gradient(135deg, var(--surface), var(--surface2));
+    border: 2px solid var(--purple);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 60px;
+  }
+
+  .rapid-revision {
+    background: var(--surface);
+    border: 2px solid var(--accent3);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 60px;
+  }
+
+  .rapid-revision h2, .cross-topic h2 {
+    font-size: 1.8em;
+    margin-bottom: 24px;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 16px 0;
+  }
+
+  @media (max-width: 768px) {
+    .two-col { grid-template-columns: 1fr; }
+    .complexity-grid { grid-template-columns: repeat(2, 1fr); }
+    .topic-header h2 { font-size: 1.4em; }
+  }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.75em;
+    font-weight: 700;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .pill-fast { background: rgba(63,185,80,0.2); color: var(--green); }
+  .pill-slow { background: rgba(248,81,73,0.2); color: var(--red); }
+  .pill-medium { background: rgba(210,153,34,0.2); color: var(--yellow); }
+  .pill-new { background: rgba(88,166,255,0.2); color: var(--accent); }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  .step-list { counter-reset: steps; list-style: none; padding: 0; }
+  .step-list li {
+    counter-increment: steps;
+    padding: 12px 12px 12px 52px;
+    position: relative;
+    margin-bottom: 8px;
+    background: var(--surface2);
+    border-radius: 8px;
+  }
+  .step-list li::before {
+    content: counter(steps);
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    background: var(--accent);
+    color: #000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.85em;
+  }
+</style>
+</head>
+<body>
+
+<nav class="toc-bar">
+  <a href="#big-o">Big-O</a>
+  <a href="#arrays">Arrays & Patterns</a>
+  <a href="#btree">B-Tree Indexing</a>
+  <a href="#url-shortener">URL Shortener</a>
+  <a href="#cross-topic">Cross-Topic</a>
+  <a href="#rapid-revision">Rapid Revision</a>
+</nav>
+
+<div class="container">
+
+<div class="hero">
+  <h1>⚡ Day 1 Master Handbook</h1>
+  <p>A self-contained, deeply technical reference for every topic in your Day 1 roadmap.</p>
+  <div style="margin-top:16px">
+    <span class="badge badge-dsa">🧠 DSA</span>
+    <span class="badge badge-dsa">📊 Big-O Complexity</span>
+    <span class="badge badge-dsa">🔢 Arrays</span>
+    <span class="badge badge-db">🗄 SQL B-Tree Indexing</span>
+    <span class="badge badge-sys">🏗 URL Shortener Design</span>
+  </div>
+</div>
+
+
+<!-- ============================= TOPIC 1: BIG-O ============================= -->
+<div id="big-o" class="topic-section">
+  <div class="topic-header dsa">
+    <div>
+      <h2>🔥 Big-O Complexity</h2>
+      <div style="margin-top:8px; color: var(--text-muted); font-size:0.9em">Time & Space — The language of algorithm efficiency</div>
+    </div>
+  </div>
+
+  <div class="topic-body">
+
+    <!-- Section 1: Intuition -->
+    <div class="section-block">
+      <h3>🧠 1. Intuition First</h3>
+      <p>Big-O answers one question: <strong>how does runtime grow as input grows?</strong></p>
+      <p>Think of it like this: your code works fine with 100 rows. Then your client uploads 10 million. Does it still finish before the user gives up? Big-O tells you whether to panic or not.</p>
+      <p><em>Real-world analogy:</em> A linear scan (O(n)) is like reading every page of a book to find a word. Binary search (O(log n)) is like using the index — jump straight to the right section. A nested loop (O(n²)) is like comparing every person in a city with every other person.</p>
+      <div class="callout callout-info">
+        <div class="callout-title">ℹ️ The Core Insight</div>
+        Big-O is about <strong>worst-case growth rate</strong>, not actual speed. Constants get dropped. The dominant term wins. O(2n + 500) = O(n).
+      </div>
+    </div>
+
+    <!-- Section 2: Core Mechanics -->
+    <div class="section-block">
+      <h3>⚙️ 2. Core Mechanics</h3>
+
+      <h4 style="color:var(--accent4); margin: 12px 0 8px">The Complexity Ladder (best → worst)</h4>
+      <div class="complexity-grid">
+        <div class="complexity-card" style="border-color: var(--green)">
+          <div class="complexity-value" style="color:var(--green)">O(1)</div>
+          <div class="complexity-label">Constant<br>Array index, HashMap get</div>
+        </div>
+        <div class="complexity-card" style="border-color: var(--green)">
+          <div class="complexity-value" style="color:var(--green)">O(log n)</div>
+          <div class="complexity-label">Logarithmic<br>Binary search, B-Tree lookup</div>
+        </div>
+        <div class="complexity-card" style="border-color: var(--accent)">
+          <div class="complexity-value" style="color:var(--accent)">O(n)</div>
+          <div class="complexity-label">Linear<br>Single loop, linear scan</div>
+        </div>
+        <div class="complexity-card" style="border-color: var(--accent4)">
+          <div class="complexity-value" style="color:var(--accent4)">O(n log n)</div>
+          <div class="complexity-label">Linearithmic<br>Merge sort, heap sort</div>
+        </div>
+        <div class="complexity-card" style="border-color: var(--yellow)">
+          <div class="complexity-value" style="color:var(--yellow)">O(n²)</div>
+          <div class="complexity-label">Quadratic<br>Nested loops, bubble sort</div>
+        </div>
+        <div class="complexity-card" style="border-color: var(--red)">
+          <div class="complexity-value" style="color:var(--red)">O(2ⁿ)</div>
+          <div class="complexity-label">Exponential<br>Recursive subsets</div>
+        </div>
+      </div>
+
+      <h4 style="color:var(--accent4); margin: 20px 0 8px">Pattern → Complexity Mapping</h4>
+      <table>
+        <tr><th>Code Pattern</th><th>Complexity</th><th>Why</th></tr>
+        <tr><td><code>arr[i]</code> or <code>map.get(key)</code></td><td><span style="color:var(--green)">O(1)</span></td><td>Direct memory address or hash slot</td></tr>
+        <tr><td><code>for i in range(n)</code></td><td><span style="color:var(--accent)">O(n)</span></td><td>Visits each element once</td></tr>
+        <tr><td>Nested <code>for i... for j...</code></td><td><span style="color:var(--yellow)">O(n²)</span></td><td>n × n iterations</td></tr>
+        <tr><td><code>sort(arr)</code> + single loop</td><td><span style="color:var(--accent4)">O(n log n)</span></td><td>Sort dominates</td></tr>
+        <tr><td>Binary search</td><td><span style="color:var(--green)">O(log n)</span></td><td>Halves search space each step</td></tr>
+        <tr><td>HashMap build + single scan</td><td><span style="color:var(--accent)">O(n)</span></td><td>O(n) build + O(n) scan = O(n)</td></tr>
+        <tr><td>Sort → binary search</td><td><span style="color:var(--accent4)">O(n log n + log n)</span> = <span style="color:var(--accent4)">O(n log n)</span></td><td>Sort dominates</td></tr>
+      </table>
+
+      <h4 style="color:var(--accent4); margin: 20px 0 8px">O(n) vs O(n log n) — Why does sorting cost more?</h4>
+      <div class="diagram">Input: [5, 2, 8, 1, 9, 3]  (n = 6)
+
+O(n) single loop — touch each once:
+5 → 2 → 8 → 1 → 9 → 3   [6 operations]
+
+O(n log n) merge sort — divide and conquer:
+Level 0:  [5,2,8,1,9,3]                     ← split
+Level 1:  [5,2,8]      [1,9,3]              ← split again
+Level 2:  [5,2] [8]    [1,9] [3]            ← split
+Level 3:  [5][2][8]    [1][9][3]            ← base case
+           ↑↑↑ merge back up ↑↑↑
+Total levels = log₂(6) ≈ 3
+Work per level = n = 6
+Total = n × log n ≈ 6 × 3 = 18 operations</div>
+
+      <h4 style="color:var(--accent4); margin: 20px 0 8px">Space Complexity</h4>
+      <table>
+        <tr><th>Pattern</th><th>Space</th><th>Example</th></tr>
+        <tr><td>Fixed variables</td><td>O(1)</td><td><code>max_val = 0</code></td></tr>
+        <tr><td>Result array same size as input</td><td>O(n)</td><td>Prefix sum array</td></tr>
+        <tr><td>HashMap storing all elements</td><td>O(n)</td><td>Frequency map</td></tr>
+        <tr><td>Recursive call stack depth</td><td>O(log n) or O(n)</td><td>Binary search: O(log n), DFS: O(n)</td></tr>
+        <tr><td>2D grid / DP table</td><td>O(n²)</td><td>Edit distance</td></tr>
+      </table>
+    </div>
+
+    <!-- Section 3: Scale -->
+    <div class="section-block">
+      <h3>🚨 3. What Breaks at Scale?</h3>
+      <table>
+        <tr><th>Input n</th><th>O(n)</th><th>O(n log n)</th><th>O(n²)</th><th>O(2ⁿ)</th></tr>
+        <tr><td>100</td><td>0.0001ms</td><td>0.0007ms</td><td>0.01ms</td><td>💥 Universe age</td></tr>
+        <tr><td>10,000</td><td>0.01ms</td><td>0.13ms</td><td>100ms</td><td>💥</td></tr>
+        <tr><td>1,000,000</td><td>1ms</td><td>20ms</td><td>16.7 minutes</td><td>💥</td></tr>
+        <tr><td>10,000,000</td><td>10ms</td><td>233ms</td><td>1.16 days</td><td>💥</td></tr>
+      </table>
+      <div class="callout callout-danger">
+        <div class="callout-title">⚠️ Production Trap</div>
+        An O(n²) algorithm on 10M rows = over a day of compute. This is why nested loops over large datasets are production killers. Always ask: "What's the max n in prod?"
+      </div>
+    </div>
+
+    <!-- Section 4: Production Reality -->
+    <div class="section-block">
+      <h3>🏗 4. Production Reality</h3>
+      <ul>
+        <li><strong>Constants matter in practice:</strong> O(n) with a constant of 1000 can be slower than O(n²) for small n. Always benchmark.</li>
+        <li><strong>Space vs Time tradeoff:</strong> HashMaps trade O(n) space for O(1) lookup time. This is almost always worth it.</li>
+        <li><strong>Cache misses kill performance:</strong> An array traversal (O(n)) is often faster in practice than a linked list (also O(n)) due to CPU cache locality.</li>
+        <li><strong>Amortized complexity:</strong> ArrayList/dynamic array append is O(1) amortized, O(n) worst case — know the difference.</li>
+      </ul>
+    </div>
+
+    <!-- Section 5: Interview -->
+    <div class="section-block">
+      <h3>🔍 5. Interview Angle</h3>
+      <div class="interview-box">
+        <h4>🎯 Say These in Interviews</h4>
+        <ul>
+          <li>"My brute force is O(n²) because of nested iteration. I can eliminate the inner loop using a HashMap, reducing it to O(n) time with O(n) space."</li>
+          <li>"Sorting costs O(n log n), so if I sort first and use binary search, total complexity is O(n log n), dominated by the sort."</li>
+          <li>"With 10 million inputs, O(n²) is completely infeasible — that's days of compute. O(n log n) finishes in under a second."</li>
+          <li>"Space complexity is O(n) here because my HashMap can store up to n entries in the worst case."</li>
+        </ul>
+      </div>
+      <div class="callout callout-warning">
+        <div class="callout-title">⚠️ Common Traps</div>
+        <ul>
+          <li>Forgetting to account for the sort step in "sort + single pass" solutions</li>
+          <li>Calling HashMap lookup O(1) without mentioning it assumes good hash distribution</li>
+          <li>Ignoring space complexity when the interviewer cares about memory-constrained environments</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Section 6: Code -->
+    <div class="section-block">
+      <h3>🧩 6. Practical Code</h3>
+<pre><code><span class="highlight-green"># Identify complexity at a glance</span>
+
+<span class="highlight-blue">def</span> <span class="highlight-orange">single_loop</span>(arr):          <span class="highlight-green"># O(n) time, O(1) space</span>
+    max_val = 0
+    <span class="highlight-blue">for</span> x <span class="highlight-blue">in</span> arr:
+        max_val = max(max_val, x)
+    <span class="highlight-blue">return</span> max_val
+
+<span class="highlight-blue">def</span> <span class="highlight-orange">nested_loop</span>(arr):           <span class="highlight-green"># O(n²) time, O(1) space</span>
+    <span class="highlight-blue">for</span> i <span class="highlight-blue">in</span> range(len(arr)):
+        <span class="highlight-blue">for</span> j <span class="highlight-blue">in</span> range(i+1, len(arr)):
+            <span class="highlight-blue">if</span> arr[i] == arr[j]: <span class="highlight-blue">return True</span>
+    <span class="highlight-blue">return False</span>
+
+<span class="highlight-blue">def</span> <span class="highlight-orange">hashmap_lookup</span>(arr):        <span class="highlight-green"># O(n) time, O(n) space</span>
+    seen = set()
+    <span class="highlight-blue">for</span> x <span class="highlight-blue">in</span> arr:
+        <span class="highlight-blue">if</span> x <span class="highlight-blue">in</span> seen: <span class="highlight-blue">return True</span>
+        seen.add(x)
+    <span class="highlight-blue">return False</span>
+
+<span class="highlight-blue">def</span> <span class="highlight-orange">sort_then_scan</span>(arr):        <span class="highlight-green"># O(n log n) time, O(1) extra space</span>
+    arr.sort()                   <span class="highlight-green"># O(n log n)</span>
+    <span class="highlight-blue">for</span> i <span class="highlight-blue">in</span> range(1, len(arr)):  <span class="highlight-green"># O(n)</span>
+        <span class="highlight-blue">if</span> arr[i] == arr[i-1]: <span class="highlight-blue">return True</span>
+    <span class="highlight-blue">return False</span></code></pre>
+    </div>
+
+    <!-- Remember -->
+    <div class="remember-box">
+      <h4>🎯 Absolutely Remember These</h4>
+      <ul>
+        <li>Drop constants: O(3n) = O(n), O(n + 1000) = O(n)</li>
+        <li>The dominant term wins: O(n² + n) = O(n²)</li>
+        <li>HashMap get/set = O(1) average, O(n) worst case (hash collision)</li>
+        <li>Sort = O(n log n). Anything that sorts has at least O(n log n) time</li>
+        <li>Space complexity counts auxiliary space — often interviewers allow O(n) extra space</li>
+        <li>At n = 10M: O(n) ✅, O(n log n) ✅, O(n²) 💀</li>
+      </ul>
+    </div>
+
+    <div class="summary-box">
+      <h4>📝 60-Second Summary</h4>
+      <p>Big-O measures how runtime scales with input size, not absolute speed. Drop constants and lower-order terms — only the dominant term matters. Single loop = O(n). Nested loops = O(n²). HashMap trades O(n) space for O(1) lookup — almost always worth it. Sort adds O(n log n). At production scale (millions of rows), O(n²) is a bug, not just a slowness. Always state time AND space complexity in interviews, and always ask "what is n in production?"</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================= TOPIC 2: ARRAYS ============================= -->
+<div id="arrays" class="topic-section">
+  <div class="topic-header dsa">
+    <div>
+      <h2>🔥 Array Algorithms & Patterns</h2>
+      <div style="margin-top:8px; color: var(--text-muted); font-size:0.9em">Duplicate Detection · Prefix Sum · Subarray Logic · Sliding Window</div>
+    </div>
+  </div>
+
+  <div class="topic-body">
+
+    <div class="section-block">
+      <h3>🧠 1. Intuition First</h3>
+      <p>Arrays are the most fundamental data structure because they map directly to how RAM works — <strong>contiguous memory, O(1) indexed access</strong>. Every array algorithm problem is ultimately about: "How do I avoid redundant work?"</p>
+      <p>The breakthrough moment is realizing that most O(n²) array problems can be reduced to O(n) by:</p>
+      <ul>
+        <li><strong>Trading space for time</strong> — use a HashSet/HashMap to remember what you've seen</li>
+        <li><strong>Building running aggregates</strong> — prefix sums, sliding windows, monotonic stacks</li>
+        <li><strong>Pattern recognition</strong> — is this a "two-pointer"? A "frequency map"? A "window"?</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h3>⚙️ 2. Core Patterns — Deep Breakdown</h3>
+
+      <h4 style="color:var(--orange); margin: 16px 0 8px">Pattern 1: Duplicate Detection</h4>
+
+      <p><strong>Brute Force O(n²):</strong> Compare every pair — nested loop.</p>
+      <p><strong>Optimized O(n):</strong> HashSet — insert as you go, check before inserting.</p>
+
+<pre><code><span class="highlight-green"># O(n) time, O(n) space — HashSet approach</span>
+<span class="highlight-blue">def</span> <span class="highlight-orange">has_duplicate</span>(nums):
+    seen = set()
+    <span class="highlight-blue">for</span> num <span class="highlight-blue">in</span> nums:
+        <span class="highlight-blue">if</span> num <span class="highlight-blue">in</span> seen:     <span class="highlight-green"># O(1) average lookup</span>
+            <span class="highlight-blue">return True</span>
+        seen.add(num)
+    <span class="highlight-blue">return False</span>
+
+<span class="highlight-green"># Variant: Return the duplicate value (Floyd's Cycle — O(1) space)</span>
+<span class="highlight-blue">def</span> <span class="highlight-orange">find_duplicate</span>(nums):   <span class="highlight-green"># Array values in range [1, n], length n+1</span>
+    slow, fast = nums[0], nums[nums[0]]
+    <span class="highlight-blue">while</span> slow != fast:
+        slow = nums[slow]
+        fast = nums[nums[fast]]
+    slow = 0
+    <span class="highlight-blue">while</span> slow != fast:
+        slow = nums[slow]
+        fast = nums[fast]
+    <span class="highlight-blue">return</span> slow   <span class="highlight-green"># O(n) time, O(1) space — treats array as linked list</span></code></pre>
+
+      <h4 style="color:var(--orange); margin: 24px 0 8px">Pattern 2: Prefix Sum</h4>
+      <p>Prefix sums pre-compute cumulative totals so any subarray sum query is answered in O(1) instead of O(n).</p>
+      <div class="diagram">Array:    [3,  1,  4,  1,  5,  9,  2,  6]
+Index:     0   1   2   3   4   5   6   7
+
+Prefix:   [0,  3,  4,  8,  9, 14, 23, 25, 31]
+            ↑
+           prefix[0] = 0 (empty prefix)
+
+Sum of arr[2..5] = prefix[6] - prefix[2] = 23 - 4 = 19
+                   ↑ O(1) query!  ↑
+                   (without prefix: loop from 2 to 5 = O(n))</div>
+
+<pre><code><span class="highlight-blue">def</span> <span class="highlight-orange">subarray_sum_equals_k</span>(nums, k):
+    <span class="highlight-green"># Count subarrays where sum == k</span>
+    <span class="highlight-green"># Key insight: if prefix[j] - prefix[i] == k, then prefix[i] == prefix[j] - k</span>
+    prefix_counts = {0: 1}   <span class="highlight-green"># empty prefix seen once</span>
+    current_sum = 0
+    count = 0
+    <span class="highlight-blue">for</span> num <span class="highlight-blue">in</span> nums:
+        current_sum += num
+        target = current_sum - k
+        count += prefix_counts.get(target, 0)   <span class="highlight-green"># how many times did we see target prefix?</span>
+        prefix_counts[current_sum] = prefix_counts.get(current_sum, 0) + 1
+    <span class="highlight-blue">return</span> count
+<span class="highlight-green"># O(n) time, O(n) space</span></code></pre>
+
+      <h4 style="color:var(--orange); margin: 24px 0 8px">Pattern 3: Sliding Window</h4>
+      <div class="diagram">Fixed window of size k=3:
+Array: [2, 1, 5, 1, 3, 2]
+        [2+1+5]           = 8  ← window slides right
+           [1+5+1]        = 7  ← add right, remove left (O(1)!)
+              [5+1+3]     = 9  ← max window sum = 9
+                 [1+3+2]  = 6
+
+Variable window (expand right until violated, shrink left):
+Find longest substring without repeating chars</div>
+
+<pre><code><span class="highlight-green"># Maximum sum subarray of size k — O(n)</span>
+<span class="highlight-blue">def</span> <span class="highlight-orange">max_subarray_sum</span>(arr, k):
+    window_sum = sum(arr[:k])
+    max_sum = window_sum
+    <span class="highlight-blue">for</span> i <span class="highlight-blue">in</span> range(k, len(arr)):
+        window_sum += arr[i] - arr[i-k]   <span class="highlight-green"># slide: add right, remove left</span>
+        max_sum = max(max_sum, window_sum)
+    <span class="highlight-blue">return</span> max_sum</code></pre>
+
+      <h4 style="color:var(--orange); margin: 24px 0 8px">Pattern 4: Two Pointers</h4>
+<pre><code><span class="highlight-green"># Two Sum in sorted array — O(n) time, O(1) space</span>
+<span class="highlight-blue">def</span> <span class="highlight-orange">two_sum_sorted</span>(arr, target):
+    left, right = 0, len(arr)-1
+    <span class="highlight-blue">while</span> left < right:
+        s = arr[left] + arr[right]
+        <span class="highlight-blue">if</span> s == target: <span class="highlight-blue">return</span> [left, right]
+        <span class="highlight-blue">elif</span> s < target: left += 1    <span class="highlight-green"># need more</span>
+        <span class="highlight-blue">else</span>: right -= 1              <span class="highlight-green"># too much</span></code></pre>
+    </div>
+
+    <div class="section-block">
+      <h3>🚨 3. What Breaks at Scale?</h3>
+      <ul>
+        <li><strong>10M elements:</strong> Even O(n) = ~10ms — fine. But your HashMap now uses ~400MB RAM for int keys. Memory becomes the bottleneck.</li>
+        <li><strong>Streaming data:</strong> Can't load 10M rows into memory for prefix sum. Need online algorithms (running sum) instead.</li>
+        <li><strong>Integer overflow:</strong> Prefix sum on 10M elements each = 10⁹ can overflow 32-bit int. Always use 64-bit (long/int64).</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h3>🔍 5. Interview Angle</h3>
+      <div class="interview-box">
+        <h4>🎯 Pattern Recognition Playbook</h4>
+        <table>
+          <tr><th>If you see...</th><th>Think...</th><th>Complexity</th></tr>
+          <tr><td>"Subarray sum == k"</td><td>Prefix sum + HashMap</td><td>O(n)</td></tr>
+          <tr><td>"Longest/smallest subarray with condition"</td><td>Sliding window</td><td>O(n)</td></tr>
+          <tr><td>"Find duplicate / seen before"</td><td>HashSet</td><td>O(n)</td></tr>
+          <tr><td>"Sorted array, find pair"</td><td>Two pointers</td><td>O(n)</td></tr>
+          <tr><td>"All subarrays" (brute)</td><td>Avoid O(n²), use prefix sum</td><td>O(n)</td></tr>
+          <tr><td>"Max profit buy/sell stock"</td><td>Single pass, track running min</td><td>O(n)</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="remember-box">
+      <h4>🎯 Absolutely Remember These</h4>
+      <ul>
+        <li>Brute force first, then optimize — always state your brute force approach to interviewers</li>
+        <li>Prefix sum converts "subarray sum queries" from O(n) to O(1) — but costs O(n) build time and space</li>
+        <li>Sliding window requires knowing what "invalidates" the window to know when to shrink</li>
+        <li>Two pointers only work on sorted arrays (or arrays where the pointer movement logic is valid)</li>
+        <li>HashSet/HashMap is the #1 tool to convert O(n²) to O(n) — always ask "what if I remembered previous state?"</li>
+      </ul>
+    </div>
+
+    <div class="summary-box">
+      <h4>📝 60-Second Summary</h4>
+      <p>Array problems are won by pattern recognition, not cleverness. The three power moves: <strong>1) HashSet for "seen before"</strong>, reducing O(n²) pair comparisons to O(n). <strong>2) Prefix sum</strong> for subarray aggregation — pay O(n) upfront, answer any range query in O(1). <strong>3) Sliding window</strong> for contiguous subarray problems — add to right, remove from left in O(1). When stuck, ask: "Can a HashSet remember what I've already computed?" or "Does a running aggregate eliminate redundant work?"</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================= TOPIC 3: B-TREE ============================= -->
+<div id="btree" class="topic-section">
+  <div class="topic-header db">
+    <div>
+      <h2>🔥 SQL B-Tree Indexing</h2>
+      <div style="margin-top:8px; color: var(--text-muted); font-size:0.9em">How databases find your data in milliseconds across billions of rows</div>
+    </div>
+  </div>
+
+  <div class="topic-body">
+
+    <div class="section-block">
+      <h3>🧠 1. Intuition First</h3>
+      <p>Without an index, finding a row in a 100M-row table = reading every single row. That's like finding someone in a city by knocking on every door. An <strong>index is a sorted data structure that lets the database jump directly to the right page on disk</strong>, like using an address book.</p>
+      <p>The database stores data in pages (typically 8KB or 16KB each). A table with 100M rows might span 800,000 disk pages. A full table scan reads them all. A B-Tree index traversal reads only 4-5 pages. <strong>That's a 160,000× speedup.</strong></p>
+      <p><em>Why B-Tree and not binary search tree (BST)?</em> BSTs can become unbalanced (O(n) worst case). B-Trees are always balanced. But more importantly: BSTs have one value per node — bad for disk. B-Trees have hundreds of values per node, meaning each disk read (I/O) returns massive amounts of useful data. They're optimized for disk access patterns.</p>
+    </div>
+
+    <div class="section-block">
+      <h3>⚙️ 2. Core Mechanics</h3>
+
+      <h4 style="color:var(--orange); margin: 0 0 12px">B-Tree vs Binary Tree vs B+Tree</h4>
+      <table>
+        <tr><th>Property</th><th>Binary Tree (BST)</th><th>B-Tree</th><th>B+Tree (used by PostgreSQL, MySQL)</th></tr>
+        <tr><td>Branching factor</td><td>2</td><td>Hundreds</td><td>Hundreds</td></tr>
+        <tr><td>Data stored at</td><td>Every node</td><td>Every node</td><td>Leaf nodes only</td></tr>
+        <tr><td>Leaf nodes linked?</td><td>No</td><td>No</td><td>Yes (doubly linked)</td></tr>
+        <tr><td>Height for 1M rows</td><td>~20 (balanced) or n (worst)</td><td>3-4</td><td>3-4</td></tr>
+        <tr><td>Range queries</td><td>Slow</td><td>Moderate</td><td>Fast (linked leaves)</td></tr>
+        <tr><td>Used in production</td><td>No</td><td>Rarely</td><td>Yes (MySQL InnoDB, PostgreSQL)</td></tr>
+      </table>
+
+      <h4 style="color:var(--orange); margin: 20px 0 12px">B+Tree Structure (What PostgreSQL/MySQL actually use)</h4>
+      <div class="diagram">                        [Root Node]
+                   ┌──────────────────────┐
+                   │  25  |  50  |  75    │  ← Internal nodes: keys ONLY
+                   └──────────────────────┘
+                  /        |        |      \
+         [10|20]    [30|40]  [55|65]  [80|90]    ← Internal nodes
+         /  |  \    /  |  \   ...
+    [5][10][20] [25][30][40]                      ← Leaf nodes: keys + row pointers
+
+Leaf nodes are DOUBLY LINKED:
+[5|10|20] ←→ [25|30|40] ←→ [55|65|...] ←→ [75|80|90]
+                                             ↑ enables fast range scans!
+
+Each leaf node pointer → actual row on disk (heap/clustered table)
+
+Height formula: h = ceil(log_m(n))
+  m = branching factor (keys per node) ≈ 200-400 for typical page size
+  n = number of rows
+  At 10M rows, m=200: h = ceil(log_200(10,000,000)) ≈ 3-4 levels</div>
+
+      <h4 style="color:var(--orange); margin: 20px 0 12px">How a Query Uses the Index</h4>
+      <ol class="step-list">
+        <li>Parser receives <code>SELECT * FROM users WHERE id = 42</code></li>
+        <li>Query planner checks: does an index exist on <code>id</code>? Is the selectivity high enough to use it?</li>
+        <li>Traverse B+Tree from root → internal nodes → leaf node containing id=42. Each level = one disk I/O. Total: 3-4 reads.</li>
+        <li>Leaf node contains a pointer (page number + slot) to the actual row on the heap</li>
+        <li>One more I/O to fetch the actual row. Total: 4-5 disk I/Os regardless of table size.</li>
+      </ol>
+
+      <h4 style="color:var(--orange); margin: 20px 0 12px">Index Scan vs Full Table Scan</h4>
+      <div class="diagram">Query: SELECT * FROM orders WHERE customer_id = 1001
+
+WITHOUT INDEX:
+Page 1 [row1, row2, row3 ...] → read
+Page 2 [row4, row5, row6 ...] → read
+...
+Page 800,000                  → read
+Total I/Os: 800,000 💀
+
+WITH INDEX on customer_id:
+Root node → matches → leaf node → heap page → DONE
+Total I/Os: 4-5 ✅  (160,000× faster!)</div>
+
+      <h4 style="color:var(--orange); margin: 20px 0 12px">Composite Indexes and Prefix Rule</h4>
+<pre><code><span class="highlight-green">-- Composite index on (last_name, first_name, age)</span>
+CREATE INDEX idx_name ON users(last_name, first_name, age);
+
+<span class="highlight-green">-- ✅ Uses index (leading column match)</span>
+SELECT * FROM users WHERE last_name = 'Smith';
+SELECT * FROM users WHERE last_name = 'Smith' AND first_name = 'John';
+SELECT * FROM users WHERE last_name = 'Smith' AND first_name = 'John' AND age = 30;
+
+<span class="highlight-green">-- ❌ Cannot use index (skips leading column)</span>
+SELECT * FROM users WHERE first_name = 'John';  <span class="highlight-red">-- full scan!</span>
+SELECT * FROM users WHERE age = 30;             <span class="highlight-red">-- full scan!</span></code></pre>
+
+      <div class="callout callout-info">
+        <div class="callout-title">💡 The Leftmost Prefix Rule</div>
+        A composite index <code>(A, B, C)</code> can be used for queries filtering on A, or A+B, or A+B+C. It CANNOT be used if you skip A. Build your index in order of: most selective column first, then columns used in range queries last.
+      </div>
+    </div>
+
+    <div class="section-block">
+      <h3>🚨 3. What Breaks at Scale?</h3>
+
+      <h4 style="color:var(--accent4); margin: 0 0 12px">At 10M Rows</h4>
+      <table>
+        <tr><th>Problem</th><th>What Happens</th><th>Impact</th></tr>
+        <tr><td>Index on write-heavy column</td><td>Every INSERT/UPDATE/DELETE must update the B-Tree — rebalancing, page splits</td><td>Insert throughput drops 2-10×</td></tr>
+        <tr><td>Index on low-cardinality column</td><td>Index on <code>gender</code> (2 values) → planner ignores it, does full scan anyway</td><td>Index exists but never used — wastes disk</td></tr>
+        <tr><td>Too many indexes</td><td>Each index stored separately on disk. 10 indexes = 10× write amplification</td><td>Disk usage balloons, writes slow to crawl</td></tr>
+        <tr><td>No composite index</td><td>Multi-column WHERE clause can't use individual single-column indexes together (usually)</td><td>Full scan on large tables</td></tr>
+        <tr><td>Index not fitting in RAM</td><td>B-Tree traversal requires disk I/O for each level</td><td>Queries slow from milliseconds to seconds</td></tr>
+      </table>
+
+      <h4 style="color:var(--accent4); margin: 16px 0 12px">Insert Performance Degradation</h4>
+      <div class="diagram">Insert without index:
+  Append row to end of table → 1 write operation
+
+Insert with 5 indexes:
+  Write row to heap
+  + Update index 1 (may cause B-Tree rebalance/page split)
+  + Update index 2 (same)
+  + Update index 3
+  + Update index 4
+  + Update index 5
+  = 6+ write operations, potential WAL (Write-Ahead Log) amplification
+
+Page split (worst case):
+  A full leaf node needs to be split → creates new page
+  → Parent node needs a new key → may propagate up
+  → In extreme cases, cascades to root → tree grows taller by 1 level</div>
+    </div>
+
+    <div class="section-block">
+      <h3>🏗 4. Production Reality</h3>
+      <ul>
+        <li><strong>EXPLAIN ANALYZE</strong> is your best friend. Never guess — run it and look for "Seq Scan" on large tables (red flag).</li>
+        <li><strong>Covering indexes:</strong> Include all columns needed by a query in the index to avoid the extra heap lookup (<code>INDEX ONLY SCAN</code> in PostgreSQL).</li>
+        <li><strong>Partial indexes:</strong> Index only a subset of rows: <code>CREATE INDEX ON orders(created_at) WHERE status = 'pending'</code> — smaller, faster index if most queries target pending orders.</li>
+        <li><strong>Index bloat:</strong> After many DELETEs/UPDATEs, B-Tree pages contain dead entries. Run <code>VACUUM</code> in PostgreSQL to reclaim space.</li>
+        <li><strong>Hot spot problem:</strong> Sequential inserts (auto-increment IDs) insert always to the rightmost leaf → hot spot contention in high-write scenarios. UUID-based keys spread writes but cause more page splits.</li>
+      </ul>
+      <div class="callout callout-danger">
+        <div class="callout-title">🔴 Worst Indexing Mistakes in Production</div>
+        <ul>
+          <li>Indexing every column "just in case" — destroys write performance</li>
+          <li>Not indexing foreign keys — JOINs become full scans</li>
+          <li>Using <code>LIKE '%keyword%'</code> — leading wildcard defeats B-Tree (use full-text search instead)</li>
+          <li>Functions on indexed columns: <code>WHERE LOWER(email) = 'x'</code> — index not used (create a functional index)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <h3>🔍 5. Interview Angle</h3>
+      <div class="interview-box">
+        <h4>🎯 Say These Confidently</h4>
+        <ul>
+          <li>"MySQL InnoDB and PostgreSQL both use B+Trees — a variant where data lives only in leaf nodes, which are doubly linked to enable efficient range scans."</li>
+          <li>"A B+Tree of height 4 with branching factor 200 can index 200⁴ = 1.6 billion rows with just 4 disk reads. That's why indexing is so powerful."</li>
+          <li>"Adding too many indexes is a real production problem — each write must update every index, causing write amplification proportional to the number of indexes."</li>
+          <li>"The leftmost prefix rule means a composite index on (A, B) helps queries on A or A+B, but not queries on B alone."</li>
+          <li>"When a query has low selectivity — like filtering by a boolean — the planner often ignores the index because reading half the table via index is slower than a sequential scan."</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <h3>📊 7. Comparison Table</h3>
+      <table>
+        <tr><th>Index Type</th><th>Best For</th><th>Limitation</th></tr>
+        <tr><td>B+Tree (default)</td><td>Equality, range queries, ORDER BY</td><td>Not for full-text search, leading wildcard LIKE</td></tr>
+        <tr><td>Hash Index</td><td>Exact equality only (faster)</td><td>No range queries, no ORDER BY</td></tr>
+        <tr><td>GIN (PostgreSQL)</td><td>Arrays, JSONB, full-text search</td><td>Slower writes, larger size</td></tr>
+        <tr><td>GiST (PostgreSQL)</td><td>Geospatial, ranges</td><td>Complex to configure</td></tr>
+        <tr><td>Covering Index</td><td>Queries needing only indexed columns</td><td>Larger index size</td></tr>
+        <tr><td>Partial Index</td><td>Queries always filtering by same condition</td><td>Only usable when WHERE matches definition</td></tr>
+        <tr><td>Functional Index</td><td><code>WHERE LOWER(email) = ?</code></td><td>Must match exact expression in query</td></tr>
+      </table>
+    </div>
+
+    <div class="remember-box">
+      <h4>🎯 Absolutely Remember These</h4>
+      <ul>
+        <li>B+Tree height ≈ 3-4 for up to billions of rows — this is why it's fast</li>
+        <li>Data stored ONLY in leaf nodes in B+Tree; internal nodes hold only keys for routing</li>
+        <li>Leaf nodes are doubly linked → range scans are fast (just walk the list)</li>
+        <li>Every index you add = write amplification on INSERT/UPDATE/DELETE</li>
+        <li>Low-cardinality columns (gender, boolean) make bad index candidates</li>
+        <li>Leftmost prefix rule is the most commonly violated rule in composite index design</li>
+        <li><code>EXPLAIN ANALYZE</code> = non-negotiable before deploying any query optimization</li>
+        <li>Functions on indexed columns break index usage (create functional indexes to fix)</li>
+      </ul>
+    </div>
+
+    <div class="summary-box">
+      <h4>📝 60-Second Summary</h4>
+      <p>B+Trees are the backbone of SQL indexes. They stay balanced with height ≈ 3-4 regardless of table size, so lookup is always O(log n) ≈ 4 disk reads vs millions for full scan. Data lives only at leaf nodes (routing keys in internal nodes); leaves are linked for range scans. The cost: every index updates on every write. Index strategy = index high-cardinality columns used in WHERE/JOIN/ORDER BY, use composite indexes following leftmost prefix rule, and remove unused indexes. At scale, index maintenance becomes a bottleneck — budget for read/write tradeoffs.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================= TOPIC 4: URL SHORTENER ============================= -->
+<div id="url-shortener" class="topic-section">
+  <div class="topic-header sys">
+    <div>
+      <h2>🔥 System Design: URL Shortener</h2>
+      <div style="margin-top:8px; color: var(--text-muted); font-size:0.9em">bit.ly / TinyURL architecture — a complete system design walkthrough</div>
+    </div>
+  </div>
+
+  <div class="topic-body">
+
+    <div class="section-block">
+      <h3>🧠 1. Intuition First</h3>
+      <p>A URL shortener maps a long URL to a short unique code (e.g., <code>https://bit.ly/3xK9p</code>) and redirects users to the original URL. It sounds simple but is a <strong>perfect system design question because it touches every fundamental concept</strong>: hashing, caching, databases, load balancing, scaling reads, and handling failures.</p>
+      <p>The core challenge: <strong>this is an extremely read-heavy system</strong>. A URL might be created once but accessed millions of times. The architecture must be optimized for reads, not writes.</p>
+    </div>
+
+    <div class="section-block">
+      <h3>⚙️ 2. Full System Design</h3>
+
+      <h4 style="color:var(--green); margin: 0 0 12px">Functional Requirements</h4>
+      <ul>
+        <li>Given a long URL, generate a unique short URL (code ~6-8 chars)</li>
+        <li>Redirect short URL → original URL with HTTP 301 (permanent) or 302 (temporary)</li>
+        <li>Optional: custom aliases, expiry, analytics</li>
+      </ul>
+
+      <h4 style="color:var(--green); margin: 16px 0 12px">Non-Functional Requirements</h4>
+      <ul>
+        <li><strong>Scale:</strong> 100M URLs created/day, 10B redirects/day (100:1 read/write ratio)</li>
+        <li><strong>Latency:</strong> Redirect p99 &lt; 10ms</li>
+        <li><strong>Availability:</strong> 99.99% uptime (4.4 minutes downtime/year)</li>
+        <li><strong>Short code uniqueness:</strong> Collision probability must be negligible</li>
+      </ul>
+
+      <h4 style="color:var(--green); margin: 16px 0 12px">Capacity Estimation</h4>
+      <div class="diagram">Writes: 100M URLs/day = ~1,160/second
+Reads:  10B redirects/day = ~116,000/second   ← 100:1 read:write
+
+Storage: 100M URLs/day × 365 days × 500 bytes/URL
+       ≈ 18.25 TB/year
+
+Short code space:
+  Base62 (a-z, A-Z, 0-9): 62⁶ = ~56 billion codes  ✅
+  Base62 7-chars:          62⁷ = ~3.5 trillion codes ✅✅</div>
+
+      <h4 style="color:var(--green); margin: 16px 0 12px">High-Level Architecture</h4>
+      <div class="diagram">                    ┌─────────────────────┐
+  User ──────────► │    Load Balancer     │
+                    └──────────┬──────────┘
+                               │ (Round Robin / Least Connections)
+                    ┌──────────┴──────────┐
+                    │    App Servers      │ ←── Stateless, horizontally scalable
+                    │   (API Layer)       │
+                    └──────┬──────┬───────┘
+                           │      │
+              ┌────────────┘      └─────────────────┐
+              ▼                                       ▼
+   ┌──────────────────┐                  ┌────────────────────┐
+   │   Cache Layer    │                  │   Database Layer   │
+   │ Redis / Memcached│                  │                    │
+   │                  │                  │  Primary DB (RW)   │
+   │ short_code →     │                  │  + Replicas (RO)   │
+   │ long_url         │                  │                    │
+   │ (LRU eviction)   │                  │  Indexed on:       │
+   └──────────────────┘                  │  short_code (PK)   │
+                                         │  long_url (unique) │
+                                         └────────────────────┘</div>
+
+      <h4 style="color:var(--green); margin: 20px 0 12px">Database Schema</h4>
+<pre><code><span class="highlight-green">-- Core table</span>
+CREATE TABLE urls (
+    short_code   VARCHAR(8) PRIMARY KEY,   <span class="highlight-green">-- indexed, PK</span>
+    long_url     TEXT NOT NULL,
+    user_id      BIGINT,
+    created_at   TIMESTAMP DEFAULT NOW(),
+    expires_at   TIMESTAMP,                <span class="highlight-green">-- NULL = never expires</span>
+    click_count  BIGINT DEFAULT 0,
+    UNIQUE(long_url)                       <span class="highlight-green">-- prevent duplicate short codes for same URL</span>
+);
+
+<span class="highlight-green">-- Index on long_url for "does this URL already exist?" check</span>
+CREATE INDEX idx_long_url ON urls(long_url);
+
+<span class="highlight-green">-- Partial index for expiry processing (only active URLs)</span>
+CREATE INDEX idx_expiry ON urls(expires_at) WHERE expires_at IS NOT NULL;</code></pre>
+
+      <h4 style="color:var(--green); margin: 20px 0 12px">Short Code Generation — 3 Approaches</h4>
+      <table>
+        <tr><th>Approach</th><th>How</th><th>Pros</th><th>Cons</th></tr>
+        <tr><td><strong>MD5/SHA256 Hash</strong></td><td>Hash(long_url) → take first 6 chars of base62 encoding</td><td>Simple, deterministic (same URL = same code)</td><td>Hash collision risk. Need to check DB and retry if collision</td></tr>
+        <tr><td><strong>Random Base62</strong></td><td>Generate random 6-8 char base62 string, check uniqueness in DB</td><td>Simple</td><td>DB lookup on every creation; rare but possible collision</td></tr>
+        <tr><td><strong>Counter + Base62</strong></td><td>Auto-increment ID → encode to base62 (ID 1 = "000001")</td><td>No collisions, no DB check needed</td><td>Predictable/guessable codes; ID counter is a single point of failure</td></tr>
+      </table>
+
+      <div class="callout callout-info">
+        <div class="callout-title">💡 Best Practice: Hash + Collision Handling</div>
+<pre><code><span class="highlight-blue">import</span> hashlib, base64
+
+<span class="highlight-blue">def</span> <span class="highlight-orange">generate_short_code</span>(long_url, attempt=0):
+    hash_input = long_url + str(attempt)          <span class="highlight-green"># add salt on retry</span>
+    hash_bytes = hashlib.md5(hash_input.encode()).digest()
+    code = base64.urlsafe_b64encode(hash_bytes)[:7].decode()
+    <span class="highlight-green"># store in DB, if collision: generate_short_code(url, attempt+1)</span>
+    <span class="highlight-blue">return</span> code</code></pre>
+      </div>
+
+      <h4 style="color:var(--green); margin: 20px 0 12px">Redirect Flow — 301 vs 302</h4>
+      <table>
+        <tr><th></th><th>301 Permanent</th><th>302 Temporary</th></tr>
+        <tr><td>Browser caches?</td><td>Yes — next request goes direct</td><td>No — always hits your server</td></tr>
+        <tr><td>Server load</td><td>Lower (browser handles repeat visits)</td><td>Higher (every click hits server)</td></tr>
+        <tr><td>Analytics possible?</td><td>No — clicks bypass server after first</td><td>Yes — you see every click</td></tr>
+        <tr><td>Use when</td><td>Static redirects, performance critical</td><td>Need click tracking or URL can change</td></tr>
+      </table>
+
+      <h4 style="color:var(--green); margin: 20px 0 12px">Caching Strategy</h4>
+      <div class="diagram">Read path:
+  Request → Check Redis (short_code → long_url)
+              ├── HIT:  Return cached URL (sub-millisecond) ✅
+              └── MISS: Query DB → cache result → Return URL
+
+Cache sizing:
+  80/20 rule: 20% of URLs = 80% of traffic
+  Cache top 20% = massive hit rate
+  At 100M URLs: cache 20M = ~10GB Redis (very feasible)
+
+Cache eviction: LRU (Least Recently Used)
+  Least-accessed URLs get evicted when cache is full
+
+Cache TTL: match URL expiry or set 24h default
+  Expired URL in cache = user gets wrong redirect — CRITICAL BUG
+  Solution: Always check expires_at before returning cached result</div>
+    </div>
+
+    <div class="section-block">
+      <h3>🚨 3. What Breaks at Scale?</h3>
+
+      <table>
+        <tr><th>Failure Mode</th><th>Trigger</th><th>Fix</th></tr>
+        <tr><td>DB overload on reads</td><td>Cache goes down → all 116K req/s hit DB</td><td>Read replicas + cache with retry logic</td></tr>
+        <tr><td>Hash collision</td><td>Two different URLs hash to same short code</td><td>DB unique constraint + retry with salt</td></tr>
+        <tr><td>Hot URLs</td><td>Viral link → single cache key → thundering herd</td><td>Probabilistic early expiry; in-memory local cache per server</td></tr>
+        <tr><td>Short code enumeration</td><td>Sequential counter codes are predictable (code 1,2,3...)</td><td>Use hashed/random codes; add auth for private URLs</td></tr>
+        <tr><td>Write bottleneck</td><td>High URL creation rate overwhelms single DB primary</td><td>Queue writes via Kafka; async counter service</td></tr>
+        <tr><td>Analytics at scale</td><td>Updating click_count on every redirect = write contention</td><td>Stream events to Kafka → aggregate async in batch</td></tr>
+      </table>
+    </div>
+
+    <div class="section-block">
+      <h3>🏗 4. Production Reality</h3>
+      <ul>
+        <li><strong>CDN-level caching:</strong> The most extreme optimization — cache redirects at the CDN edge (Cloudflare Workers / AWS Lambda@Edge). Redirect latency drops to &lt;5ms globally.</li>
+        <li><strong>Database choice:</strong> SQL for strong consistency on writes; Redis Cluster for cache. Some systems use Cassandra for URL storage at massive scale (trading consistency for availability).</li>
+        <li><strong>Rate limiting:</strong> Without rate limiting, a single user can generate millions of short codes and exhaust your namespace. Implement per-user rate limits (token bucket algorithm).</li>
+        <li><strong>Security:</strong> Malicious URLs in your shortener = reputation damage. Integrate Google Safe Browsing API on creation. Blacklist known phishing domains.</li>
+        <li><strong>Monitoring:</strong> Track cache hit rate (should be &gt;95%), redirect latency p50/p99, and error rate per short code to detect dead links.</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h3>🔍 5. Interview Angle</h3>
+      <div class="interview-box">
+        <h4>🎯 How to Structure Your Answer (4 minutes)</h4>
+        <ol class="step-list">
+          <li>State requirements: "This is read-heavy, 100:1 read:write, low latency redirect is the key SLA"</li>
+          <li>Estimate: "116K reads/sec, cache top 20% of URLs, ~10GB Redis"</li>
+          <li>Architecture: Load balancer → stateless app servers → Redis cache → primary DB + read replicas</li>
+          <li>Code generation: "I'd use MD5 hash, take first 7 base62 chars, handle collisions by retrying with salt"</li>
+          <li>Bottlenecks: "Cache is critical — if Redis goes down, we need DB replicas and circuit breakers to prevent cascade"</li>
+        </ol>
+      </div>
+      <div class="callout callout-warning">
+        <div class="callout-title">⚠️ Common Interview Traps</div>
+        <ul>
+          <li>Forgetting to discuss hash collision handling — always mention it proactively</li>
+          <li>Choosing 301 without mentioning it disables analytics tracking</li>
+          <li>Not mentioning the load balancer or assuming a single server</li>
+          <li>Ignoring security — malicious URL shorteners are a real threat</li>
+          <li>Not discussing the 80/20 caching rule to justify cache sizing</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="remember-box">
+      <h4>🎯 Absolutely Remember These</h4>
+      <ul>
+        <li>100:1 read:write ratio → optimize EVERYTHING for reads</li>
+        <li>Cache is the most impactful optimization — target 95%+ hit rate</li>
+        <li>Hash collision WILL happen at scale — always have retry logic with salt</li>
+        <li>62⁷ = 3.5 trillion unique codes — 7 chars base62 is more than enough</li>
+        <li>301 = browser-cached (no analytics). 302 = server-tracked (analytics possible)</li>
+        <li>B-Tree index on short_code (PK) makes redirect lookup O(log n) ≈ 4 disk reads</li>
+        <li>Never update click_count inline — it creates write contention. Use async batch updates</li>
+        <li>Expired URLs in cache = redirect to wrong URL — always validate expiry before serving</li>
+      </ul>
+    </div>
+
+    <div class="summary-box">
+      <h4>📝 60-Second Summary</h4>
+      <p>URL shortener is a read-heavy system (100:1 ratio). Architecture: Load Balancer → Stateless App Servers → Redis Cache → PostgreSQL (primary + read replicas). Short code generation: MD5(url) → base62 encode → first 7 chars; retry with salt on collision. Cache top 20% of URLs in Redis (LRU eviction) to serve 80% of traffic. Use 302 for analytics, 301 for pure performance. Index the short_code column (PK) and long_url column. Main bottlenecks: cache stampede on viral URLs, write contention on click_count (fix with Kafka async), and DB overload on cache miss (fix with read replicas + circuit breakers).</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================= CROSS-TOPIC ============================= -->
+<div id="cross-topic" class="cross-topic">
+  <h2>🧠 Cross-Topic Connections</h2>
+
+  <div class="two-col">
+    <div class="section-block">
+      <h3 style="border:none; padding:0; margin-bottom:12px">🔗 How These Topics Relate</h3>
+      <ul>
+        <li><strong>Big-O explains B-Tree value:</strong> A full table scan is O(n). A B-Tree index lookup is O(log n). This is the exact Big-O complexity difference that makes indexes worth having. The reason indexes exist is Big-O.</li>
+        <li><strong>URL Shortener uses B-Tree indexes:</strong> The primary key <code>short_code</code> is a B-Tree index. Without it, every redirect = full table scan on a billion-row table = unusable system.</li>
+        <li><strong>HashMap pattern mirrors cache design:</strong> The HashSet/HashMap pattern in array algorithms is conceptually identical to Redis caching in the URL shortener — trade O(n) space for O(1) lookup.</li>
+        <li><strong>Prefix sum = denormalization:</strong> Pre-computing prefix sums to avoid O(n) per query is the same principle as caching computed results (like click counts) to avoid expensive DB queries on every request.</li>
+        <li><strong>Array patterns inform DB query optimization:</strong> The same "avoid redundant work" principle that turns O(n²) to O(n) array problems applies to query optimization — avoid N+1 queries, use JOIN instead of loops.</li>
+      </ul>
+    </div>
+
+    <div class="section-block">
+      <h3 style="border:none; padding:0; margin-bottom:12px">💥 Combined Failure Scenarios</h3>
+      <ul>
+        <li><strong>No index + high read traffic:</strong> URL shortener without index on short_code + 100K req/sec = full table scan on every redirect. System dies within seconds of production traffic.</li>
+        <li><strong>O(n²) query pattern:</strong> If your URL redirect handler accidentally runs N queries for N redirects (N+1 problem), you've created an O(n²) database workload — same failure as nested loops but at infrastructure scale.</li>
+        <li><strong>Cache miss storm (thundering herd):</strong> Redis fails, all requests fall back to DB. Without read replicas, this is like reverting from O(1) cache to O(n) full scan — system collapses under load. The Big-O jump from O(1) to O(n) is what kills it.</li>
+        <li><strong>Too many indexes + high write rate:</strong> Over-indexed table on a write-heavy path = write amplification. Same as running O(n²) where you expected O(n) — costs compound multiplicatively.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-block" style="margin-top:20px">
+    <h3 style="border:none; padding:0; margin-bottom:12px">🗺 Mental Map — Where Everything Connects</h3>
+    <div class="diagram">                          BIG-O COMPLEXITY
+                         /          |          \
+            Explains why        Drives         Informs
+            indexes matter    algorithm      when to cache
+                  |           choice              |
+                  ▼               ▼               ▼
+           B-TREE INDEX ──── ARRAYS ─────── URL SHORTENER
+                  |                               |
+          O(log n) lookup           Redis cache = O(1) HashMap
+          vs O(n) full scan         Index = O(log n) DB lookup
+                  |                 Avoid O(n²) with queue/batch
+                  └───────────── Same tradeoffs ──────────────┘
+                                (Space vs Time, Read vs Write)</div>
+  </div>
+</div>
+
+
+<!-- ============================= RAPID REVISION ============================= -->
+<div id="rapid-revision" class="rapid-revision">
+  <h2>🏆 Interview Rapid Revision Sheet</h2>
+  <p style="color: var(--text-muted); margin-bottom: 24px">Re-read this the night before any interview. 2-minute scan, full recall.</p>
+
+  <div class="two-col">
+    <div>
+      <h3 style="color: var(--accent); margin-bottom: 12px">📊 Big-O Cheat Sheet</h3>
+      <table>
+        <tr><th>Pattern</th><th>Time</th><th>Space</th></tr>
+        <tr><td>Single loop</td><td>O(n)</td><td>O(1)</td></tr>
+        <tr><td>Nested loop</td><td>O(n²)</td><td>O(1)</td></tr>
+        <tr><td>Sort + loop</td><td>O(n log n)</td><td>O(1)*</td></tr>
+        <tr><td>HashMap build+scan</td><td>O(n)</td><td>O(n)</td></tr>
+        <tr><td>Binary search</td><td>O(log n)</td><td>O(1)</td></tr>
+        <tr><td>Prefix sum build</td><td>O(n)</td><td>O(n)</td></tr>
+        <tr><td>Prefix sum query</td><td>O(1)</td><td>—</td></tr>
+      </table>
+
+      <h3 style="color: var(--orange); margin: 20px 0 12px">🗄 B-Tree Key Facts</h3>
+      <ul style="font-size:0.9em">
+        <li>Height ≈ 3-4 for BILLIONS of rows</li>
+        <li>Full scan O(n), Index O(log n)</li>
+        <li>B+Tree: data in leaves only, leaves linked</li>
+        <li>Composite index: leftmost prefix rule</li>
+        <li>Every index = write amplification</li>
+        <li>Low cardinality = bad index (gender, bool)</li>
+        <li>EXPLAIN ANALYZE before any optimization</li>
+        <li>Page split = B-Tree rebalance on insert</li>
+      </ul>
+    </div>
+
+    <div>
+      <h3 style="color: var(--green); margin-bottom: 12px">🏗 URL Shortener Key Numbers</h3>
+      <table>
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr><td>Read:Write ratio</td><td>100:1</td></tr>
+        <tr><td>Reads/sec</td><td>~116,000</td></tr>
+        <tr><td>62⁷ codes</td><td>3.5 trillion</td></tr>
+        <tr><td>Cache hit target</td><td>&gt;95%</td></tr>
+        <tr><td>Redirect latency</td><td>&lt;10ms p99</td></tr>
+        <tr><td>Storage/year</td><td>~18 TB</td></tr>
+      </table>
+
+      <h3 style="color: var(--purple); margin: 20px 0 12px">🔑 Key Tradeoffs</h3>
+      <ul style="font-size:0.9em">
+        <li><strong>301 vs 302:</strong> Performance vs Analytics</li>
+        <li><strong>Index:</strong> Fast reads vs Slow writes</li>
+        <li><strong>Cache:</strong> Speed vs Stale data risk</li>
+        <li><strong>Hash vs Counter:</strong> Unpredictable vs Guessable codes</li>
+        <li><strong>HashMap:</strong> O(1) time vs O(n) space</li>
+        <li><strong>Sort first:</strong> O(n log n) upfront → O(1) queries</li>
+        <li><strong>Prefix sum:</strong> O(n) build → O(1) range queries</li>
+      </ul>
+    </div>
+  </div>
+
+  <hr>
+
+  <h3 style="color: var(--accent4); margin: 20px 0 12px">⚡ Critical Formulas</h3>
+  <div class="complexity-grid">
+    <div class="complexity-card">
+      <div class="complexity-value" style="color:var(--green)">h = ceil(log_m(n))</div>
+      <div class="complexity-label">B-Tree height<br>(m = branching factor)</div>
+    </div>
+    <div class="complexity-card">
+      <div class="complexity-value" style="color:var(--accent)">sum(i,j) = P[j+1] - P[i]</div>
+      <div class="complexity-label">Prefix sum range query</div>
+    </div>
+    <div class="complexity-card">
+      <div class="complexity-value" style="color:var(--orange)">62⁷ ≈ 3.5T</div>
+      <div class="complexity-label">Base62, 7 chars<br>= 3.5 trillion codes</div>
+    </div>
+    <div class="complexity-card">
+      <div class="complexity-value" style="color:var(--yellow)">O(n²) @ 10M = 💀</div>
+      <div class="complexity-label">Nested loop at 10M rows<br>= 1+ days compute</div>
+    </div>
+  </div>
+
+  <div class="callout callout-success" style="margin-top: 20px">
+    <div class="callout-title">✅ Interview Winning Moves</div>
+    <ul>
+      <li>Always state brute force THEN optimize. Show the thought process, not just the answer.</li>
+      <li>Always mention both time AND space complexity. Interviewers reward completeness.</li>
+      <li>In system design: estimate first (QPS, storage), then architect. Numbers justify choices.</li>
+      <li>Proactively mention failure modes (hash collision, cache miss, hot key) — it shows production thinking.</li>
+      <li>Connect your choices to Big-O: "I use a cache here because it converts O(n) DB reads to O(1) lookups."</li>
+    </ul>
+  </div>
+</div>
+
+</div> <!-- /container -->
+</body>
+</html>
