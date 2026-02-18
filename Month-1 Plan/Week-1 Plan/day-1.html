@@ -394,17 +394,182 @@
     font-weight: 800;
     font-size: 0.85em;
   }
+
+  /* ── Resources Section ── */
+  .resources-section {
+    margin-bottom: 80px;
+    border: 2px solid #2a3a5c;
+    border-radius: 12px;
+    overflow: hidden;
+    background: linear-gradient(135deg, rgba(88,166,255,0.03), rgba(188,140,255,0.03));
+  }
+
+  .resources-header {
+    padding: 28px 32px;
+    background: linear-gradient(135deg, rgba(88,166,255,0.1), rgba(188,140,255,0.05));
+    border-bottom: 1px solid var(--border);
+  }
+
+  .resources-header h2 { font-size: 1.8em; font-weight: 800; }
+
+  .resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0;
+  }
+
+  .resource-category {
+    padding: 28px 32px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .resource-category:last-child { border-right: none; }
+
+  .resource-category h3 {
+    font-size: 1em;
+    font-weight: 700;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .resource-link {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .resource-link:hover { border-color: var(--accent); background: rgba(88,166,255,0.05); }
+
+  .resource-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    flex-shrink: 0;
+  }
+
+  .resource-icon.video { background: rgba(248,81,73,0.15); }
+  .resource-icon.article { background: rgba(88,166,255,0.15); }
+  .resource-icon.course { background: rgba(63,185,80,0.15); }
+  .resource-icon.visual { background: rgba(210,153,34,0.15); }
+  .resource-icon.practice { background: rgba(188,140,255,0.15); }
+  .resource-icon.book { background: rgba(247,129,102,0.15); }
+
+  .resource-info { flex: 1; }
+  .resource-title { font-weight: 600; font-size: 0.9em; color: var(--text); margin-bottom: 3px; }
+  .resource-meta { font-size: 0.78em; color: var(--text-muted); }
+  .resource-tag {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 0.7em;
+    font-weight: 700;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .tag-free { background: rgba(63,185,80,0.2); color: var(--green); }
+  .tag-paid { background: rgba(210,153,34,0.2); color: var(--yellow); }
+  .tag-interactive { background: rgba(88,166,255,0.2); color: var(--accent); }
+  .tag-visual { background: rgba(188,140,255,0.2); color: var(--purple); }
+
+  /* ── Extended Deep Dive blocks ── */
+  .deep-block {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent5);
+    border-radius: 0 8px 8px 0;
+    padding: 20px 24px;
+    margin: 16px 0;
+  }
+
+  .deep-block h4 { color: var(--purple); margin-bottom: 10px; font-size: 0.95em; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .qa-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 10px 0;
+  }
+
+  .qa-q { color: var(--accent4); font-weight: 700; font-size: 0.9em; margin-bottom: 6px; }
+  .qa-a { font-size: 0.9em; color: var(--text); }
+
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+    font-size: 0.9em;
+  }
+
+  .flow-box {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .flow-arrow { color: var(--text-muted); font-size: 1.2em; }
+
+  .mental-model {
+    background: linear-gradient(135deg, rgba(63,185,80,0.05), rgba(88,166,255,0.05));
+    border: 1px dashed var(--green);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 12px 0;
+    font-style: italic;
+    font-size: 0.95em;
+  }
+
+  .mental-model::before { content: "💡 Mental Model: "; font-style: normal; font-weight: 700; color: var(--green); }
+
+  .warning-strip {
+    background: rgba(248,81,73,0.06);
+    border: 1px solid rgba(248,81,73,0.3);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 8px 0;
+    font-size: 0.88em;
+  }
+
+  .warning-strip::before { content: "🚨 "; }
+
+  @media (max-width: 768px) {
+    .resources-grid { grid-template-columns: 1fr; }
+    .resource-category { border-right: none; }
+  }
 </style>
 </head>
 <body>
 
 <nav class="toc-bar">
-  <a href="#big-o">Big-O</a>
-  <a href="#arrays">Arrays & Patterns</a>
-  <a href="#btree">B-Tree Indexing</a>
-  <a href="#url-shortener">URL Shortener</a>
-  <a href="#cross-topic">Cross-Topic</a>
-  <a href="#rapid-revision">Rapid Revision</a>
+  <a href="#big-o">📊 Big-O</a>
+  <a href="#arrays">🔢 Arrays</a>
+  <a href="#btree">🗄 B-Tree</a>
+  <a href="#url-shortener">🏗 URL Shortener</a>
+  <a href="#deep-dives">🔬 Deep Dives</a>
+  <a href="#cross-topic">🧠 Cross-Topic</a>
+  <a href="#rapid-revision">🏆 Revision</a>
+  <a href="#resources">📚 Resources</a>
 </nav>
 
 <div class="container">
@@ -1311,6 +1476,981 @@ Cache TTL: match URL expiry or set 24h default
       <li>Proactively mention failure modes (hash collision, cache miss, hot key) — it shows production thinking.</li>
       <li>Connect your choices to Big-O: "I use a cache here because it converts O(n) DB reads to O(1) lookups."</li>
     </ul>
+  </div>
+</div>
+
+
+
+<!-- ============================= DEEP DIVES ============================= -->
+<div id="deep-dives">
+
+<!-- DEEP DIVE 1: AMORTIZED + ADVANCED BIG-O -->
+<div class="topic-section" style="margin-bottom:40px">
+  <div class="topic-header dsa">
+    <div>
+      <h2>🔬 Deep Dive: Amortized Analysis &amp; Advanced Big-O Concepts</h2>
+      <div style="margin-top:8px; color: var(--text-muted); font-size:0.9em">What interviews rarely ask but senior engineers always know</div>
+    </div>
+  </div>
+  <div class="topic-body">
+
+    <div class="section-block">
+      <h3>⚙️ Amortized Complexity — The Real Cost of Dynamic Arrays</h3>
+      <p>A Python <code>list.append()</code> is advertised as O(1). But sometimes it's O(n). How can both be true?</p>
+      <div class="diagram">Dynamic Array (Python list / Java ArrayList) growth pattern:
+
+Capacity: 1  → full → COPY to new array of size 2   (1 copy)
+Capacity: 2  → full → COPY to new array of size 4   (2 copies)
+Capacity: 4  → full → COPY to new array of size 8   (4 copies)
+Capacity: 8  → full → COPY to new array of size 16  (8 copies)
+
+After n appends, total copies = 1 + 2 + 4 + ... + n/2 = n - 1 ≈ O(n)
+Cost per append (amortized) = O(n) / n = O(1) ✅
+
+Analogy: You move house every time you run out of rooms.
+Most months = O(1) (just move stuff in). Moving day = O(n).
+Average across all months = O(1) amortized.</div>
+
+      <div class="qa-block">
+        <div class="qa-q">Q: Why does Python list double in size instead of growing by 1?</div>
+        <div class="qa-a">Growing by 1 = copying every time = O(n) per append = O(n²) total. Doubling ensures total copies = O(n) across all appends, making each append O(1) amortized. The geometric growth is mathematically provable to be optimal.</div>
+      </div>
+
+      <h4 style="color:var(--orange); margin: 20px 0 12px">Omega, Theta — The Full Picture</h4>
+      <table>
+        <tr><th>Notation</th><th>Meaning</th><th>Example</th><th>Used For</th></tr>
+        <tr><td><strong>O(f(n))</strong></td><td>Upper bound (worst case)</td><td>Quicksort: O(n²)</td><td>Interviews, capacity planning</td></tr>
+        <tr><td><strong>Ω(f(n))</strong> (Omega)</td><td>Lower bound (best case)</td><td>Quicksort: Ω(n log n)</td><td>Proving no algorithm can do better</td></tr>
+        <tr><td><strong>Θ(f(n))</strong> (Theta)</td><td>Tight bound (exact)</td><td>Merge sort: Θ(n log n)</td><td>Precise algorithmic analysis</td></tr>
+        <tr><td><strong>o(f(n))</strong> (little-o)</td><td>Strict upper (grows slower)</td><td>n = o(n²)</td><td>Theory papers</td></tr>
+      </table>
+      <div class="mental-model">When an interviewer says "what's the complexity?" they mean Big-O (worst case). When they say "can we do better?" they're asking about Omega (lower bound). Merge sort is Θ(n log n) because it's ALWAYS n log n — best and worst are identical.</div>
+
+      <h4 style="color:var(--orange); margin: 20px 0 12px">Recurrence Relations — Solving Recursive Algorithms</h4>
+<pre><code><span class="highlight-green"># Merge Sort recurrence: T(n) = 2T(n/2) + O(n)</span>
+<span class="highlight-green"># Binary Search:         T(n) = T(n/2) + O(1)</span>
+<span class="highlight-green"># Use Master Theorem: T(n) = aT(n/b) + O(n^d)</span>
+
+<span class="highlight-green"># Case 1: log_b(a) > d  →  O(n^log_b(a))</span>
+<span class="highlight-green"># Case 2: log_b(a) = d  →  O(n^d * log n)   ← Merge Sort: a=2,b=2,d=1 → log₂2=1=d → O(n log n)</span>
+<span class="highlight-green"># Case 3: log_b(a) < d  →  O(n^d)</span></code></pre>
+
+      <h4 style="color:var(--orange); margin: 20px 0 12px">Space Complexity: Heap vs Stack</h4>
+      <table>
+        <tr><th>Memory Type</th><th>What Lives There</th><th>Failure Mode</th><th>Size</th></tr>
+        <tr><td><strong>Stack</strong></td><td>Function call frames, local vars, recursion depth</td><td>Stack overflow (deep recursion)</td><td>Typically 1-8MB</td></tr>
+        <tr><td><strong>Heap</strong></td><td>Objects, arrays, HashMaps, dynamically allocated data</td><td>Out of Memory (OOM)</td><td>GBs (limited by RAM)</td></tr>
+      </table>
+      <div class="callout callout-warning">
+        <div class="callout-title">⚠️ Recursion Depth Trap</div>
+        A recursive DFS on a sorted linked list/array has O(n) call stack depth. At n = 100,000, each stack frame ≈ 100 bytes → 10MB stack → Stack Overflow. Iterative solutions with explicit stack on heap avoid this.
+      </div>
+
+      <h4 style="color:var(--orange); margin: 20px 0 12px">Best, Average, Worst Case — By Algorithm</h4>
+      <table>
+        <tr><th>Algorithm</th><th>Best</th><th>Average</th><th>Worst</th><th>Space</th><th>Stable?</th></tr>
+        <tr><td>Bubble Sort</td><td>O(n)*</td><td>O(n²)</td><td>O(n²)</td><td>O(1)</td><td>Yes</td></tr>
+        <tr><td>Selection Sort</td><td>O(n²)</td><td>O(n²)</td><td>O(n²)</td><td>O(1)</td><td>No</td></tr>
+        <tr><td>Insertion Sort</td><td>O(n)*</td><td>O(n²)</td><td>O(n²)</td><td>O(1)</td><td>Yes</td></tr>
+        <tr><td>Merge Sort</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n)</td><td>Yes</td></tr>
+        <tr><td>Quick Sort</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n²)*</td><td>O(log n)</td><td>No</td></tr>
+        <tr><td>Heap Sort</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n log n)</td><td>O(1)</td><td>No</td></tr>
+        <tr><td>Tim Sort (Python)</td><td>O(n)*</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n)</td><td>Yes</td></tr>
+        <tr><td>Binary Search</td><td>O(1)</td><td>O(log n)</td><td>O(log n)</td><td>O(1)</td><td>—</td></tr>
+      </table>
+      <p style="font-size:0.85em; color: var(--text-muted); margin-top: 8px">* Best case with early termination / already-sorted input / perfect pivot selection</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- DEEP DIVE 2: ADVANCED ARRAY PATTERNS -->
+<div class="topic-section" style="margin-bottom:40px">
+  <div class="topic-header dsa">
+    <div>
+      <h2>🔬 Deep Dive: Advanced Array Patterns</h2>
+      <div style="margin-top:8px; color: var(--text-muted); font-size:0.9em">Kadane's, Monotonic Stack, Boyer-Moore, Dutch National Flag</div>
+    </div>
+  </div>
+  <div class="topic-body">
+
+    <div class="section-block">
+      <h3>⚙️ Pattern 5: Kadane's Algorithm — Maximum Subarray</h3>
+      <p>Find the contiguous subarray with the largest sum. Classic DP-on-array problem that trips everyone up the first time.</p>
+      <div class="mental-model">At every index, ask: "Is it better to extend the current subarray, or start fresh?" If the running sum becomes negative, dump it — a negative prefix only hurts any future subarray.</div>
+<pre><code><span class="highlight-blue">def</span> <span class="highlight-orange">max_subarray</span>(nums):
+    <span class="highlight-green"># Kadane's Algorithm: O(n) time, O(1) space</span>
+    max_sum = nums[0]
+    current = nums[0]
+
+    <span class="highlight-blue">for</span> i <span class="highlight-blue">in</span> range(1, len(nums)):
+        current = max(nums[i], current + nums[i])  <span class="highlight-green"># extend or restart</span>
+        max_sum = max(max_sum, current)
+
+    <span class="highlight-blue">return</span> max_sum
+
+<span class="highlight-green"># Example: [-2, 1, -3, 4, -1, 2, 1, -5, 4]</span>
+<span class="highlight-green"># current:  -2  1  -2  4   3  5  6   1  5</span>
+<span class="highlight-green"># max_sum:  -2  1   1  4   4  5  6   6  6  → Answer: 6 (subarray [4,-1,2,1])</span></code></pre>
+
+      <h3 style="margin-top:24px">⚙️ Pattern 6: Monotonic Stack — Next Greater Element</h3>
+      <p>A stack that maintains a monotonic (always increasing or always decreasing) order. Used to find the next/previous greater/smaller element in O(n).</p>
+<pre><code><span class="highlight-blue">def</span> <span class="highlight-orange">next_greater</span>(nums):
+    <span class="highlight-green"># For each element, find the next element that is greater</span>
+    <span class="highlight-green"># O(n) time — each element pushed/popped at most once</span>
+    result = [-1] * len(nums)
+    stack = []   <span class="highlight-green"># stores indices, monotonically decreasing values</span>
+
+    <span class="highlight-blue">for</span> i <span class="highlight-blue">in</span> range(len(nums)):
+        <span class="highlight-blue">while</span> stack <span class="highlight-blue">and</span> nums[i] > nums[stack[-1]]:
+            idx = stack.pop()
+            result[idx] = nums[i]   <span class="highlight-green"># nums[i] is the next greater for idx</span>
+        stack.append(i)
+
+    <span class="highlight-blue">return</span> result
+
+<span class="highlight-green"># Input:  [2, 1, 2, 4, 3]</span>
+<span class="highlight-green"># Output: [4, 2, 4,-1,-1]</span>
+<span class="highlight-green"># Time: O(n) — "popped at most once" is the key insight</span></code></pre>
+
+      <h3 style="margin-top:24px">⚙️ Pattern 7: Boyer-Moore Voting — Majority Element</h3>
+      <p>Find element appearing &gt;n/2 times in O(n) time, O(1) space. No HashMap needed.</p>
+<pre><code><span class="highlight-blue">def</span> <span class="highlight-orange">majority_element</span>(nums):
+    <span class="highlight-green"># O(n) time, O(1) space — genius algorithm</span>
+    candidate, count = None, 0
+    <span class="highlight-blue">for</span> num <span class="highlight-blue">in</span> nums:
+        <span class="highlight-blue">if</span> count == 0:
+            candidate = num
+        count += 1 <span class="highlight-blue">if</span> num == candidate <span class="highlight-blue">else</span> -1
+
+    <span class="highlight-blue">return</span> candidate  <span class="highlight-green"># guaranteed correct if majority exists</span>
+
+<span class="highlight-green"># Mental model: majority element "survives" a cancel-out battle against all others</span>
+<span class="highlight-green"># Every non-majority pair cancels one majority vote. Majority always wins.</span></code></pre>
+
+      <h3 style="margin-top:24px">⚙️ Pattern 8: Dutch National Flag — 3-Way Partition</h3>
+<pre><code><span class="highlight-blue">def</span> <span class="highlight-orange">sort_colors</span>(nums):
+    <span class="highlight-green"># Sort [0,1,2] array in one pass — O(n) time, O(1) space</span>
+    low, mid, high = 0, 0, len(nums) - 1
+    <span class="highlight-blue">while</span> mid <= high:
+        <span class="highlight-blue">if</span> nums[mid] == 0:
+            nums[low], nums[mid] = nums[mid], nums[low]
+            low += 1; mid += 1
+        <span class="highlight-blue">elif</span> nums[mid] == 1:
+            mid += 1
+        <span class="highlight-blue">else</span>:
+            nums[mid], nums[high] = nums[high], nums[mid]
+            high -= 1   <span class="highlight-green"># don't increment mid — new nums[mid] is unexamined</span></code></pre>
+
+      <h3 style="margin-top:24px">⚙️ 2D Array Patterns — Matrix Traversal</h3>
+<pre><code><span class="highlight-green"># Spiral traversal — O(m×n)</span>
+<span class="highlight-blue">def</span> <span class="highlight-orange">spiral_order</span>(matrix):
+    result = []
+    top, bottom, left, right = 0, len(matrix)-1, 0, len(matrix[0])-1
+    <span class="highlight-blue">while</span> top <= bottom <span class="highlight-blue">and</span> left <= right:
+        <span class="highlight-blue">for</span> c <span class="highlight-blue">in</span> range(left, right+1):   result.append(matrix[top][c])
+        top += 1
+        <span class="highlight-blue">for</span> r <span class="highlight-blue">in</span> range(top, bottom+1):    result.append(matrix[r][right])
+        right -= 1
+        <span class="highlight-blue">if</span> top <= bottom:
+            <span class="highlight-blue">for</span> c <span class="highlight-blue">in</span> range(right, left-1, -1): result.append(matrix[bottom][c])
+            bottom -= 1
+        <span class="highlight-blue">if</span> left <= right:
+            <span class="highlight-blue">for</span> r <span class="highlight-blue">in</span> range(bottom, top-1, -1): result.append(matrix[r][left])
+            left += 1
+    <span class="highlight-blue">return</span> result</code></pre>
+
+      <h3 style="margin-top:24px">⚙️ Interval Problems Cheat Sheet</h3>
+      <table>
+        <tr><th>Problem Type</th><th>Approach</th><th>Complexity</th></tr>
+        <tr><td>Merge overlapping intervals</td><td>Sort by start, merge if overlap</td><td>O(n log n)</td></tr>
+        <tr><td>Meeting rooms (can attend all?)</td><td>Sort by start, check end[i-1] &gt; start[i]</td><td>O(n log n)</td></tr>
+        <tr><td>Min meeting rooms needed</td><td>Min-heap tracking end times</td><td>O(n log n)</td></tr>
+        <tr><td>Insert interval into sorted list</td><td>Binary search + merge</td><td>O(n)</td></tr>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- DEEP DIVE 3: ADVANCED SQL INDEXING -->
+<div class="topic-section" style="margin-bottom:40px">
+  <div class="topic-header db">
+    <div>
+      <h2>🔬 Deep Dive: SQL Internals &amp; Query Optimizer</h2>
+      <div style="margin-top:8px; color: var(--text-muted); font-size:0.9em">EXPLAIN plans · Query planner decisions · Index-only scans · WAL · MVCC</div>
+    </div>
+  </div>
+  <div class="topic-body">
+
+    <div class="section-block">
+      <h3>⚙️ Reading EXPLAIN ANALYZE Output</h3>
+      <p>Every query optimization starts here. Know how to read this output cold.</p>
+<pre><code><span class="highlight-green">-- Run this before ever optimizing a query</span>
+EXPLAIN (ANALYZE, BUFFERS, FORMAT TEXT) 
+SELECT * FROM orders WHERE customer_id = 1001;
+
+<span class="highlight-green">-- Sample output annotation:</span>
+Index Scan using idx_customer on orders  <span class="highlight-green">← ✅ Index is being used</span>
+  (cost=0.43..8.45 rows=1 width=72)      <span class="highlight-green">← estimated cost (startup..total)</span>
+  (actual time=0.052..0.055 rows=1 loops=1)  <span class="highlight-green">← actual timing</span>
+  Index Cond: (customer_id = 1001)
+  Buffers: shared hit=4                  <span class="highlight-green">← 4 pages read from buffer cache (fast)</span>
+Planning Time: 0.12 ms
+Execution Time: 0.08 ms                 <span class="highlight-green">← total including planning</span>
+
+<span class="highlight-orange">-- Red flags to look for:</span>
+Seq Scan on orders                       <span class="highlight-red">← 🚨 Full table scan on large table</span>
+  (cost=0.00..284591.00 rows=1 width=72) <span class="highlight-red">← high cost estimate</span>
+  Filter: (customer_id = 1001)
+  Rows Removed by Filter: 9999999        <span class="highlight-red">← scanning 10M rows to find 1</span>
+  Buffers: shared read=88889             <span class="highlight-red">← 88K disk reads = slow</span></code></pre>
+
+      <h4 style="color:var(--orange); margin:16px 0 8px">Key EXPLAIN Terms</h4>
+      <table>
+        <tr><th>Term</th><th>Meaning</th><th>Watch For</th></tr>
+        <tr><td><code>Seq Scan</code></td><td>Full table scan — reads every row</td><td>On tables &gt;10K rows = red flag</td></tr>
+        <tr><td><code>Index Scan</code></td><td>Uses index to find rows, then fetches heap</td><td>Normal — good</td></tr>
+        <tr><td><code>Index Only Scan</code></td><td>All data in index — no heap fetch needed</td><td>Best case ✅</td></tr>
+        <tr><td><code>Bitmap Heap Scan</code></td><td>Index finds page set, then batch-fetches heap</td><td>Used for range queries returning many rows</td></tr>
+        <tr><td><code>Hash Join</code></td><td>Build hash table of smaller table, probe with larger</td><td>Good for large unsorted joins</td></tr>
+        <tr><td><code>Nested Loop Join</code></td><td>For each row in outer, scan inner</td><td>O(n×m) — bad on large tables without index</td></tr>
+        <tr><td><code>rows removed by filter</code></td><td>Rows scanned but rejected</td><td>High number = index should be added</td></tr>
+        <tr><td><code>shared hit</code></td><td>Pages found in buffer cache (RAM)</td><td>High = good (cache is working)</td></tr>
+        <tr><td><code>shared read</code></td><td>Pages read from disk</td><td>High = slow (disk I/O)</td></tr>
+      </table>
+
+      <h3 style="margin-top:24px">⚙️ How the Query Planner Decides to Use an Index</h3>
+      <div class="diagram">Planner decision tree:
+
+1. Does an index exist on the filter column?
+   └── NO → Seq Scan (no choice)
+   └── YES → Check selectivity
+
+2. What fraction of rows match the filter?
+   ├── &lt; 5-10% selectivity (few rows match)
+   │     └── Index Scan preferred ✅
+   └── &gt; 10-15% selectivity (many rows match)
+         └── Seq Scan may be FASTER ⚠️
+             (random I/O via index > sequential scan cost)
+
+3. Are all required columns in the index?
+   └── YES → Index Only Scan (no heap access!) ✅✅
+
+4. Are table statistics up to date?
+   └── Run ANALYZE to update pg_stats
+       Stale stats = wrong planner decisions = bad plans</div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">💡 Why Seq Scan Can Beat Index Scan</div>
+        Disk reads via an index are <em>random I/O</em> — the database jumps to different disk locations for each row pointer. Sequential scan = <em>sequential I/O</em> — reads pages in order, which HDDs and even SSDs handle much more efficiently. PostgreSQL switches to Seq Scan when it estimates &gt;~10-15% of rows will be returned.
+      </div>
+
+      <h3 style="margin-top:24px">⚙️ WAL — Write-Ahead Log (Crash Recovery)</h3>
+      <div class="diagram">Every write in PostgreSQL/MySQL goes through WAL first:
+
+App writes row
+    ↓
+WAL buffer (in memory)  ← write change here first
+    ↓  (fsync on commit)
+WAL on disk             ← DURABLE: if crash here, can replay
+    ↓  (async/background)
+Actual data page         ← tables, indexes updated later
+
+WHY: Appending to WAL = sequential I/O (fast!)
+     Updating B-Tree pages = random I/O (slow!)
+     WAL makes writes fast; data pages updated asynchronously.
+
+On crash: replay WAL from last checkpoint → database consistent ✅</div>
+
+      <h3 style="margin-top:24px">⚙️ MVCC — Multi-Version Concurrency Control</h3>
+      <p>How PostgreSQL allows multiple transactions to read/write simultaneously without locking each other.</p>
+      <div class="diagram">Timeline: Transaction 1 (T1) and Transaction 2 (T2) run simultaneously
+
+T1: BEGIN → reads row R (sees version v1)
+T2: BEGIN → updates row R (creates version v2)
+T2: COMMIT
+
+T1 still sees v1 ← T1's snapshot was taken at T1.BEGIN
+T1: COMMIT → T1 reads consistent data despite T2's write
+
+HOW: Each row has xmin (created by txn X) and xmax (deleted by txn Y)
+Each transaction has a snapshot: "I can see rows where xmin ≤ my_txn_id and xmax is null or &gt; my_txn_id"
+
+COST: Old row versions accumulate → VACUUM cleans dead tuples
+      VACUUM also reclaims B-Tree dead index entries (index bloat)</div>
+
+      <h3 style="margin-top:24px">⚙️ Index Selectivity — The Math</h3>
+<pre><code><span class="highlight-green">-- Measure index selectivity before creating</span>
+SELECT 
+    attname AS column,
+    n_distinct,                          <span class="highlight-green">-- negative = fraction of total rows</span>
+    correlation,                         <span class="highlight-green">-- 1.0 = perfectly sorted, -1 = reversed</span>
+    most_common_vals,
+    most_common_freqs
+FROM pg_stats 
+WHERE tablename = 'orders' AND attname = 'customer_id';
+
+<span class="highlight-green">-- Selectivity formula:</span>
+<span class="highlight-green">-- selectivity = 1 / n_distinct  (for equality predicates)</span>
+<span class="highlight-green">-- If n_distinct = 1000, selectivity = 0.1% → great index candidate</span>
+<span class="highlight-green">-- If n_distinct = 2 (boolean), selectivity = 50% → terrible index candidate</span>
+
+<span class="highlight-green">-- Check which indexes are actually being used:</span>
+SELECT indexname, idx_scan, idx_tup_read, idx_tup_fetch
+FROM pg_stat_user_indexes
+WHERE relname = 'orders'
+ORDER BY idx_scan DESC;
+<span class="highlight-green">-- Indexes with idx_scan = 0 are DEAD WEIGHT → DROP THEM</span></code></pre>
+
+      <h3 style="margin-top:24px">⚙️ Advanced Index Patterns</h3>
+<pre><code><span class="highlight-green">-- 1. Functional / Expression Index</span>
+CREATE INDEX idx_lower_email ON users(LOWER(email));
+<span class="highlight-green">-- Now this query uses the index:</span>
+SELECT * FROM users WHERE LOWER(email) = 'test@example.com';
+
+<span class="highlight-green">-- 2. Partial Index (index only relevant rows)</span>
+CREATE INDEX idx_pending ON orders(created_at) WHERE status = 'pending';
+<span class="highlight-green">-- Tiny index, lightning fast for "pending orders" queries</span>
+
+<span class="highlight-green">-- 3. Covering Index (include extra columns)</span>
+CREATE INDEX idx_cover ON orders(customer_id) INCLUDE (total_amount, status);
+<span class="highlight-green">-- This query becomes Index Only Scan (no heap access):</span>
+SELECT total_amount, status FROM orders WHERE customer_id = 1001;
+
+<span class="highlight-green">-- 4. Multi-column with range last</span>
+CREATE INDEX idx_opt ON orders(customer_id, status, created_at);
+<span class="highlight-green">-- Rule: equality columns first, range columns last</span>
+SELECT * FROM orders 
+WHERE customer_id = 1001 AND status = 'shipped' AND created_at &gt; '2024-01-01';
+<span class="highlight-green">-- customer_id (equality) + status (equality) + created_at (range) = optimal order</span></code></pre>
+    </div>
+
+  </div>
+</div>
+
+<!-- DEEP DIVE 4: ADVANCED SYSTEM DESIGN -->
+<div class="topic-section" style="margin-bottom:40px">
+  <div class="topic-header sys">
+    <div>
+      <h2>🔬 Deep Dive: URL Shortener — Production-Grade Additions</h2>
+      <div style="margin-top:8px; color: var(--text-muted); font-size:0.9em">Rate limiting · Consistent hashing · Analytics pipeline · CDN · Security</div>
+    </div>
+  </div>
+  <div class="topic-body">
+
+    <div class="section-block">
+      <h3>⚙️ Rate Limiting — Token Bucket Algorithm</h3>
+      <div class="diagram">Token Bucket (per user, per API key):
+
+Bucket capacity: 100 tokens
+Refill rate: 10 tokens/second
+
+Request arrives:
+  ├── Tokens available? Consume 1 token, serve request ✅
+  └── Bucket empty? Return HTTP 429 Too Many Requests ❌
+
+Stored in Redis:
+  KEY: rate_limit:{user_id}
+  VALUE: {tokens: 85, last_refill: 1708262400}
+
+On each request:
+  1. GET current state from Redis
+  2. Calculate elapsed time since last_refill
+  3. Add elapsed × rate tokens (cap at max)
+  4. If tokens &gt;= 1: decrement, serve
+  5. Else: reject with Retry-After header
+  6. SET new state (atomic with Redis MULTI/EXEC)</div>
+
+<pre><code><span class="highlight-green"># Token bucket in Redis (Lua script for atomicity)</span>
+local key = KEYS[1]
+local capacity = tonumber(ARGV[1])
+local rate = tonumber(ARGV[2])
+local now = tonumber(ARGV[3])
+
+local data = redis.call("HMGET", key, "tokens", "last_refill")
+local tokens = tonumber(data[1]) or capacity
+local last = tonumber(data[2]) or now
+
+<span class="highlight-green">-- refill tokens based on elapsed time</span>
+tokens = math.min(capacity, tokens + (now - last) * rate)
+
+<span class="highlight-blue">if</span> tokens >= 1 then
+    tokens = tokens - 1
+    redis.call("HMSET", key, "tokens", tokens, "last_refill", now)
+    redis.call("EXPIRE", key, 3600)
+    <span class="highlight-blue">return</span> 1  <span class="highlight-green">-- allowed</span>
+<span class="highlight-blue">else</span>
+    <span class="highlight-blue">return</span> 0  <span class="highlight-green">-- rate limited</span>
+end</code></pre>
+
+      <h3 style="margin-top:24px">⚙️ Analytics Pipeline — Counting Clicks at Scale</h3>
+      <div class="diagram">❌ Naive approach: UPDATE urls SET click_count = click_count + 1 WHERE short_code = 'xyz'
+   Problem: Viral URL = 1000 req/sec on one row = row-level lock contention
+
+✅ Production approach: Event-driven async pipeline
+
+Request arrives
+    ↓
+App server: serve redirect (fast, no write)
+    ↓ (fire-and-forget)
+Kafka topic: "url-clicks"
+Event: {short_code, timestamp, user_agent, ip, referrer}
+    ↓
+Flink / Spark Streaming consumer
+    ↓
+Aggregate in micro-batches (every 60 seconds)
+    ↓
+Bulk UPDATE or UPSERT to analytics DB
+    ↓
+Time-series DB (InfluxDB / TimescaleDB) for dashboards
+
+Benefits:
+- Zero write contention on redirect path
+- Full click data retained (not just count)
+- Can re-aggregate if schema changes
+- Latency: &lt;5ms redirect, analytics delayed by ~60s (acceptable)</div>
+
+      <h3 style="margin-top:24px">⚙️ Thundering Herd — Hot URL Problem</h3>
+      <div class="diagram">Problem: Elon Musk tweets a shortened URL.
+100,000 users click simultaneously.
+Cache has just expired for that key.
+→ 100,000 requests all miss cache → hit DB simultaneously
+→ DB melts 🔥
+
+Solution 1: Mutex/Lock on cache miss
+  Only ONE request fetches from DB.
+  Others wait on a lock, then read from cache.
+  Redis SET NX (set if not exists) as distributed lock.
+
+Solution 2: Probabilistic Early Expiry
+  Before TTL hits zero, with some probability, refresh early:
+  p = exp(-(ttl_remaining / (beta * delta)))
+  If random() &lt; p → refresh now (before expiry)
+  → No thundering herd, no lock needed
+
+Solution 3: Two-tier caching
+  L1: Per-server in-memory cache (1000 hot URLs, 1ms lookup)
+  L2: Redis shared cache (all URLs, 5ms lookup)
+  L3: Database (on L1+L2 miss, &lt;1% of traffic)</div>
+
+      <h3 style="margin-top:24px">⚙️ Consistent Hashing — Distributing URLs Across Shards</h3>
+      <div class="diagram">Problem: As data grows, add DB shards. But which shard holds which URL?
+
+Naive modulo sharding: shard = hash(short_code) % num_shards
+  Problem: Adding a shard reshuffles ALL URLs → massive migration
+
+Consistent Hashing:
+  - Place shards on a "ring" (0 to 2^32)
+  - Hash each shard's ID to a position on ring
+  - For each URL: hash(short_code) → position on ring
+  - Walk clockwise to find first shard → that's the owner
+
+  Ring: ──────────────────────────────────────
+  Shards: A(1000)  B(2000)  C(3000)
+  URL hash 1500 → clockwise → lands on B
+  URL hash 2500 → clockwise → lands on C
+
+Adding shard D at position 1800:
+  Only URLs between 1000-1800 move from B to D
+  Everything else unchanged ✅
+
+Virtual nodes: Each shard appears multiple times on ring
+  → Better distribution, less hotspotting</div>
+
+      <h3 style="margin-top:24px">⚙️ Security Deep Dive</h3>
+      <table>
+        <tr><th>Attack Vector</th><th>Risk</th><th>Defense</th></tr>
+        <tr><td>Phishing via shortened URLs</td><td>Users tricked into visiting malicious sites</td><td>Google Safe Browsing API on URL creation; re-scan periodically</td></tr>
+        <tr><td>URL enumeration</td><td>Sequential codes let attackers discover all URLs</td><td>Use random/hashed codes; add auth for private URLs</td></tr>
+        <tr><td>Click fraud / bot traffic</td><td>Analytics inflation</td><td>User-agent filtering; rate limiting per IP; CAPTCHA on bulk creation</td></tr>
+        <tr><td>Open redirect abuse</td><td>Your domain used in phishing campaigns</td><td>Allowlist domains; add interstitial warning page</td></tr>
+        <tr><td>DDoS on redirect endpoint</td><td>Service outage</td><td>Rate limiting + CDN absorbs traffic; edge caching prevents origin hits</td></tr>
+        <tr><td>Cache poisoning</td><td>Malicious URL cached, served to all users</td><td>Strict input validation; re-validate on cache write</td></tr>
+      </table>
+
+      <h3 style="margin-top:24px">⚙️ Full Request Lifecycle (Production)</h3>
+      <ol class="step-list">
+        <li><strong>DNS Resolution</strong> — User's browser resolves bit.ly → CDN edge IP (Cloudflare/Fastly)</li>
+        <li><strong>CDN Edge Check</strong> — Is this short_code cached at the edge? If yes, 301/302 in &lt;5ms from edge node, request never reaches origin</li>
+        <li><strong>Load Balancer</strong> — Request reaches origin. L4/L7 LB (NGINX/AWS ALB) routes to healthy app server (health checks every 5s)</li>
+        <li><strong>Rate Limit Check</strong> — Token bucket check in Redis. If limit hit, return 429 with Retry-After header</li>
+        <li><strong>App Server: Redis Lookup</strong> — Check Redis for short_code → long_url mapping. Cache hit ~95% of traffic</li>
+        <li><strong>App Server: DB Lookup (cache miss)</strong> — B+Tree index lookup on short_code. 3-4 disk reads. Result cached in Redis with TTL</li>
+        <li><strong>Expiry Check</strong> — If expires_at is set and past current time, return 404 / redirect to "expired" page</li>
+        <li><strong>Redirect Response</strong> — HTTP 301 or 302 with Location header set to long_url</li>
+        <li><strong>Analytics Event</strong> — Fire-and-forget Kafka message with click metadata (async, doesn't block response)</li>
+      </ol>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /#deep-dives -->
+
+
+<!-- ============================= RESOURCES ============================= -->
+<div id="resources" class="resources-section">
+  <div class="resources-header">
+    <h2>📚 Curated Resource Library</h2>
+    <p style="color: var(--text-muted); margin-top: 8px">Handpicked — ranked by quality and applicability to your roadmap. Each link is worth your time.</p>
+  </div>
+
+  <!-- BIG-O RESOURCES -->
+  <div style="padding: 24px 32px 0; border-bottom: 1px solid var(--border);">
+    <h3 style="font-size:1.1em; font-weight:800; color: var(--accent); margin-bottom: 16px">📊 Big-O Complexity</h3>
+  </div>
+  <div class="resources-grid">
+    <div class="resource-category">
+      <h3 style="color:var(--red)">🎬 Videos</h3>
+
+      <a class="resource-link" href="https://www.youtube.com/watch?v=Mo4vesaut8g" target="_blank">
+        <div class="resource-icon video">▶️</div>
+        <div class="resource-info">
+          <div class="resource-title">Big-O Notation — CS Dojo<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">14 min · Best visual explanation of growth rates. Clear, no fluff.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.youtube.com/watch?v=BgLTDT03QtU" target="_blank">
+        <div class="resource-icon video">▶️</div>
+        <div class="resource-info">
+          <div class="resource-title">Big-O in 5 Minutes — ByteByteGo<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">5 min · Rapid visual cheat sheet, great for review.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.youtube.com/watch?v=zUUkiEllHG0" target="_blank">
+        <div class="resource-icon video">▶️</div>
+        <div class="resource-info">
+          <div class="resource-title">Sorting Algorithms Visualized — Timo Bingmann<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">15 min · Watch sorting algorithms race — builds deep intuition for why O(n log n) wins.</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="resource-category">
+      <h3 style="color:var(--accent)">📄 Articles &amp; Interactive</h3>
+
+      <a class="resource-link" href="https://www.bigocheatsheet.com/" target="_blank">
+        <div class="resource-icon visual">📊</div>
+        <div class="resource-info">
+          <div class="resource-title">Big-O Cheat Sheet — bigocheatsheet.com<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">The definitive reference poster. Print it. Every algorithm, data structure, and complexity in one place.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.desmos.com/calculator/uzrzvkfwqf" target="_blank">
+        <div class="resource-icon visual">📈</div>
+        <div class="resource-info">
+          <div class="resource-title">Complexity Curves — Desmos Interactive<span class="resource-tag tag-free">Free</span><span class="resource-tag tag-visual">Visual</span></div>
+          <div class="resource-meta">Drag n to see how O(n), O(n log n), O(n²) diverge. Builds visceral intuition.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.programiz.com/dsa/algorithm-complexity" target="_blank">
+        <div class="resource-icon article">📝</div>
+        <div class="resource-info">
+          <div class="resource-title">Algorithm Complexity — Programiz<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Step-by-step derivations of Big-O for common patterns with worked examples.</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="resource-category">
+      <h3 style="color:var(--green)">📚 Books / Deep Reading</h3>
+
+      <a class="resource-link" href="https://www.amazon.in/Introduction-Algorithms-Thomas-H-Cormen/dp/0262046305" target="_blank">
+        <div class="resource-icon book">📗</div>
+        <div class="resource-info">
+          <div class="resource-title">CLRS — Introduction to Algorithms<span class="resource-tag tag-paid">Paid</span></div>
+          <div class="resource-meta">Chapter 3 (Growth of Functions) + Appendix A (recurrences). The mathematical bible — go here for amortized analysis proofs.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.algorist.com/" target="_blank">
+        <div class="resource-icon book">📕</div>
+        <div class="resource-info">
+          <div class="resource-title">Algorithm Design Manual — Skiena<span class="resource-tag tag-paid">Paid</span></div>
+          <div class="resource-meta">More practical than CLRS. War stories from real-world algorithm problems. Great "algorithm catalog" section.</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- ARRAY RESOURCES -->
+  <div style="padding: 24px 32px 0; border-bottom: 1px solid var(--border); border-top: 2px solid var(--border);">
+    <h3 style="font-size:1.1em; font-weight:800; color: var(--accent); margin-bottom: 16px">🔢 Array Algorithms &amp; DSA Practice</h3>
+  </div>
+  <div class="resources-grid">
+    <div class="resource-category">
+      <h3 style="color:var(--red)">🎬 Videos / Courses</h3>
+
+      <a class="resource-link" href="https://www.youtube.com/watch?v=KLlXCFG5TnA" target="_blank">
+        <div class="resource-icon video">▶️</div>
+        <div class="resource-info">
+          <div class="resource-title">Two Pointers — NeetCode<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">12 min · Best explanation of two-pointer pattern with 3 worked problems. NeetCode is the gold standard for pattern-based learning.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.youtube.com/watch?v=MK-NZ4hN7rs" target="_blank">
+        <div class="resource-icon video">▶️</div>
+        <div class="resource-info">
+          <div class="resource-title">Sliding Window — NeetCode<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">10 min · Fixed and variable window patterns with visual walkthrough.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://neetcode.io/roadmap" target="_blank">
+        <div class="resource-icon course">🗺</div>
+        <div class="resource-info">
+          <div class="resource-title">NeetCode Roadmap<span class="resource-tag tag-free">Free</span><span class="resource-tag tag-interactive">Interactive</span></div>
+          <div class="resource-meta">The best structured DSA roadmap. Follows exact patterns you need. 150 problems organized by type with video solutions.</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="resource-category">
+      <h3 style="color:var(--purple)">💻 Practice Platforms</h3>
+
+      <a class="resource-link" href="https://leetcode.com/study-plan/leetcode-75/" target="_blank">
+        <div class="resource-icon practice">⚔️</div>
+        <div class="resource-info">
+          <div class="resource-title">LeetCode 75 Study Plan<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">75 curated problems covering every essential pattern. The minimum viable problem set for interviews.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.patterns.dev/" target="_blank">
+        <div class="resource-icon article">📝</div>
+        <div class="resource-info">
+          <div class="resource-title">Leetcode Patterns — Sean Prashad<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">github.com/seanprashad/leetcode-patterns — problems sorted by pattern (sliding window, prefix sum etc.) not difficulty.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://visualgo.net/en/sorting" target="_blank">
+        <div class="resource-icon visual">🎨</div>
+        <div class="resource-info">
+          <div class="resource-title">VisuAlgo — Algorithm Visualizer<span class="resource-tag tag-free">Free</span><span class="resource-tag tag-visual">Visual</span></div>
+          <div class="resource-meta">Step-by-step animation of sorting, searching, graphs, trees. Click "play" and watch merge sort live. Irreplaceable for visual learners.</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="resource-category">
+      <h3 style="color:var(--yellow)">📊 Visualizations</h3>
+
+      <a class="resource-link" href="https://www.cs.usfca.edu/~galles/visualization/Algorithms.html" target="_blank">
+        <div class="resource-icon visual">🎬</div>
+        <div class="resource-info">
+          <div class="resource-title">USFCA Algorithm Visualizations<span class="resource-tag tag-free">Free</span><span class="resource-tag tag-visual">Visual</span></div>
+          <div class="resource-meta">Interactive step-through of B-Trees, AVL Trees, sorting, hashing. Click through B-Tree insertions to see splits live.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://algorithm-visualizer.org/" target="_blank">
+        <div class="resource-icon visual">⚡</div>
+        <div class="resource-info">
+          <div class="resource-title">Algorithm Visualizer<span class="resource-tag tag-free">Free</span><span class="resource-tag tag-interactive">Interactive</span></div>
+          <div class="resource-meta">Run actual code and watch it animate. Prefix sum, sorting, graph traversal — all with live code.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://pythontutor.com/" target="_blank">
+        <div class="resource-icon visual">🐍</div>
+        <div class="resource-info">
+          <div class="resource-title">Python Tutor — Code Execution Visualizer<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Paste any Python/Java/JS code and see variables, stack, heap update live as it runs. Essential for understanding recursion and pointers.</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- SQL / INDEXING RESOURCES -->
+  <div style="padding: 24px 32px 0; border-bottom: 1px solid var(--border); border-top: 2px solid var(--border);">
+    <h3 style="font-size:1.1em; font-weight:800; color: var(--orange); margin-bottom: 16px">🗄 SQL Indexing &amp; Database Internals</h3>
+  </div>
+  <div class="resources-grid">
+    <div class="resource-category">
+      <h3 style="color:var(--red)">🎬 Videos</h3>
+
+      <a class="resource-link" href="https://www.youtube.com/watch?v=fsG1XaZEa78" target="_blank">
+        <div class="resource-icon video">▶️</div>
+        <div class="resource-info">
+          <div class="resource-title">Database Indexing — Hussein Nasser<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">26 min · The single best video on how B-Tree indexes actually work at the page level. Includes live PostgreSQL demos.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.youtube.com/watch?v=HubezKbFL7E" target="_blank">
+        <div class="resource-icon video">▶️</div>
+        <div class="resource-info">
+          <div class="resource-title">How Databases Work Internally — Fireship<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">7 min · Fast, engaging overview of pages, B-Trees, WAL, MVCC. Great refresher before interviews.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.youtube.com/watch?v=oeYBdghaIjc" target="_blank">
+        <div class="resource-icon video">▶️</div>
+        <div class="resource-info">
+          <div class="resource-title">Indexing in PostgreSQL — CMU Database Group<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">45 min lecture · Andy Pavlo's legendary database course. Deep dive into B+Trees, hash indexes, covering indexes. Watch at 1.5×.</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="resource-category">
+      <h3 style="color:var(--accent)">📄 Articles &amp; Docs</h3>
+
+      <a class="resource-link" href="https://use-the-index-luke.com/" target="_blank">
+        <div class="resource-icon article">🏆</div>
+        <div class="resource-info">
+          <div class="resource-title">Use The Index, Luke — Markus Winand<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">The definitive free book on SQL indexing. Covers B-Tree internals, composite indexes, range scans, execution plans. Bookmark this.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.postgresql.org/docs/current/indexes.html" target="_blank">
+        <div class="resource-icon article">📝</div>
+        <div class="resource-info">
+          <div class="resource-title">PostgreSQL Official Index Documentation<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Primary source for all index types: B-Tree, Hash, GiST, GIN, BRIN. Read chapters 11-12 on indexes and EXPLAIN.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://planetscale.com/blog/how-read-mysql-explains" target="_blank">
+        <div class="resource-icon article">📝</div>
+        <div class="resource-info">
+          <div class="resource-title">How to Read MySQL EXPLAIN — PlanetScale<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Practical guide to reading MySQL/PostgreSQL EXPLAIN output. Real examples of what to look for and how to fix bad plans.</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="resource-category">
+      <h3 style="color:var(--green)">📚 Books</h3>
+
+      <a class="resource-link" href="https://www.oreilly.com/library/view/high-performance-mysql/9781492080503/" target="_blank">
+        <div class="resource-icon book">📗</div>
+        <div class="resource-info">
+          <div class="resource-title">High Performance MySQL — O'Reilly<span class="resource-tag tag-paid">Paid</span></div>
+          <div class="resource-meta">Chapters 4-5 (Optimizing Schema + Indexes). The production engineer's bible. Every indexing mistake is documented here.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://dataintensive.net/" target="_blank">
+        <div class="resource-icon book">📕</div>
+        <div class="resource-info">
+          <div class="resource-title">Designing Data-Intensive Applications — Kleppmann<span class="resource-tag tag-paid">Paid</span></div>
+          <div class="resource-meta">Chapter 3 (Storage and Retrieval) — LSM Trees vs B-Trees, SSTables, write-ahead logging. The system design bible. Non-negotiable reading.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.cs.cmu.edu/~natassa/courses/15-721/papers/btree-survey-graefe.pdf" target="_blank">
+        <div class="resource-icon book">📄</div>
+        <div class="resource-info">
+          <div class="resource-title">Modern B-Tree Techniques — Graefe (CMU Paper)<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Academic deep dive. Read if you want to understand B-Trees at implementation level — page splits, bulk loading, concurrency.</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- SYSTEM DESIGN RESOURCES -->
+  <div style="padding: 24px 32px 0; border-bottom: 1px solid var(--border); border-top: 2px solid var(--border);">
+    <h3 style="font-size:1.1em; font-weight:800; color: var(--green); margin-bottom: 16px">🏗 System Design</h3>
+  </div>
+  <div class="resources-grid">
+    <div class="resource-category">
+      <h3 style="color:var(--red)">🎬 Videos</h3>
+
+      <a class="resource-link" href="https://www.youtube.com/watch?v=fMZMm_0ZhK4" target="_blank">
+        <div class="resource-icon video">▶️</div>
+        <div class="resource-info">
+          <div class="resource-title">Design TinyURL — Gaurav Sen<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">23 min · Solid walkthrough of URL shortener design including hashing strategy, DB choice, caching. Watch before your interview.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.youtube.com/watch?v=UF9Iqmg94tk" target="_blank">
+        <div class="resource-icon video">▶️</div>
+        <div class="resource-info">
+          <div class="resource-title">Design URL Shortener — ByteByteGo<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">9 min · Alex Xu's visual breakdown — clean diagrams, great for quick review. Accompanies System Design Interview book.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.youtube.com/@ByteByteGo" target="_blank">
+        <div class="resource-icon video">▶️</div>
+        <div class="resource-info">
+          <div class="resource-title">ByteByteGo YouTube Channel<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Best visual system design videos on YouTube. Every topic is a 5-10 min animated explainer. Subscribe and watch 2 per day.</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="resource-category">
+      <h3 style="color:var(--accent)">📄 Articles / References</h3>
+
+      <a class="resource-link" href="https://github.com/donnemartin/system-design-primer" target="_blank">
+        <div class="resource-icon article">⭐</div>
+        <div class="resource-info">
+          <div class="resource-title">System Design Primer — Donne Martin (GitHub)<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">250K+ stars. Comprehensive reference: CAP theorem, consistency, caching, CDN, load balancing, sharding. The free bible of system design.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://highscalability.com/" target="_blank">
+        <div class="resource-icon article">🌐</div>
+        <div class="resource-info">
+          <div class="resource-title">High Scalability Blog<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Real architecture breakdowns from companies at scale: YouTube, Twitter, Netflix, Amazon. Read these to understand tradeoffs in practice.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.allthingsdistributed.com/2007/10/amazons_dynamo.html" target="_blank">
+        <div class="resource-icon article">📝</div>
+        <div class="resource-info">
+          <div class="resource-title">Amazon Dynamo Paper — Werner Vogels<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Original consistent hashing paper. Foundational reading for distributed systems. Sections 4 (partitioning) and 5 (replication) are most relevant.</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="resource-category">
+      <h3 style="color:var(--green)">📚 Books</h3>
+
+      <a class="resource-link" href="https://www.amazon.in/System-Design-Interview-Insiders-Guide/dp/1736049119" target="_blank">
+        <div class="resource-icon book">📗</div>
+        <div class="resource-info">
+          <div class="resource-title">System Design Interview — Alex Xu (Vol 1 &amp; 2)<span class="resource-tag tag-paid">Paid</span></div>
+          <div class="resource-meta">Chapter 8 = URL Shortener. Clean, interview-focused. Best book to start with. Pairs perfectly with ByteByteGo videos.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://dataintensive.net/" target="_blank">
+        <div class="resource-icon book">📕</div>
+        <div class="resource-info">
+          <div class="resource-title">Designing Data-Intensive Applications — Kleppmann<span class="resource-tag tag-paid">Paid</span></div>
+          <div class="resource-meta">The engineering bible. Read cover to cover over 3 months. Covers replication, partitioning, consistency, stream processing. Life-changing book.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.amazon.in/Software-Engineering-Google-Lessons-Programming/dp/1492082791" target="_blank">
+        <div class="resource-icon book">📘</div>
+        <div class="resource-info">
+          <div class="resource-title">Software Engineering at Google — Winters et al.<span class="resource-tag tag-paid">Paid</span></div>
+          <div class="resource-meta">Production engineering practices at scale. Chapter on large-scale systems is directly applicable to interview system design discussions.</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- TOOLS & PLAYGROUNDS -->
+  <div style="padding: 24px 32px 0; border-top: 2px solid var(--border);">
+    <h3 style="font-size:1.1em; font-weight:800; color: var(--purple); margin-bottom: 16px">🛠 Tools &amp; Playgrounds</h3>
+  </div>
+  <div class="resources-grid">
+    <div class="resource-category">
+      <h3 style="color:var(--purple)">⚡ Practice Tools</h3>
+
+      <a class="resource-link" href="https://excalidraw.com/" target="_blank">
+        <div class="resource-icon visual">✏️</div>
+        <div class="resource-info">
+          <div class="resource-title">Excalidraw — System Design Diagramming<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Free whiteboard tool. Use to practice drawing system design diagrams before interviews. Has pre-built icons for servers, DBs, caches.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://dbdiagram.io/" target="_blank">
+        <div class="resource-icon visual">🗄</div>
+        <div class="resource-info">
+          <div class="resource-title">dbdiagram.io — Schema Designer<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Draw DB schemas visually. Practice designing the URL shortener schema, add indexes, see relationships. Great for interview prep.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://explain.dalibo.com/" target="_blank">
+        <div class="resource-icon article">🔍</div>
+        <div class="resource-info">
+          <div class="resource-title">PostgreSQL EXPLAIN Visualizer — Dalibo<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Paste your EXPLAIN output, get a visual tree. Makes understanding query plans 10× easier than reading raw text.</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="resource-category">
+      <h3 style="color:var(--yellow)">🎯 Interview Prep Platforms</h3>
+
+      <a class="resource-link" href="https://interviewing.io/" target="_blank">
+        <div class="resource-icon practice">🎙</div>
+        <div class="resource-info">
+          <div class="resource-title">interviewing.io — Mock Interviews<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Anonymous mock interviews with real engineers from FAANG. Free practice rounds available. Best way to simulate real interview pressure.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.pramp.com/" target="_blank">
+        <div class="resource-icon practice">👥</div>
+        <div class="resource-info">
+          <div class="resource-title">Pramp — Peer Mock Interviews<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Practice with other candidates. Alternating interviewer/interviewee roles. Great for learning how to articulate solutions clearly.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.techinterviewhandbook.org/" target="_blank">
+        <div class="resource-icon article">📋</div>
+        <div class="resource-info">
+          <div class="resource-title">Tech Interview Handbook — Yangshun<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">End-to-end interview guide from resume to offer negotiation. Grind 75 problem list, behavioral questions, salary negotiation. Bookmarked by millions.</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="resource-category">
+      <h3 style="color:var(--orange)">📺 YouTube Channels (Subscribe)</h3>
+
+      <a class="resource-link" href="https://www.youtube.com/@NeetCode" target="_blank">
+        <div class="resource-icon video">▶️</div>
+        <div class="resource-info">
+          <div class="resource-title">NeetCode — DSA<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Best pattern-based DSA solutions. Every LeetCode problem explained with clean code and complexity analysis. The gold standard.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.youtube.com/@ByteByteGo" target="_blank">
+        <div class="resource-icon video">▶️</div>
+        <div class="resource-info">
+          <div class="resource-title">ByteByteGo — System Design<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Alex Xu's channel. Animated system design explainers, 5-10 mins each. Watch 2 daily as part of your routine.</div>
+        </div>
+      </a>
+
+      <a class="resource-link" href="https://www.youtube.com/@hnasr" target="_blank">
+        <div class="resource-icon video">▶️</div>
+        <div class="resource-info">
+          <div class="resource-title">Hussein Nasser — Backend/DB Internals<span class="resource-tag tag-free">Free</span></div>
+          <div class="resource-meta">Deep dives into PostgreSQL, TCP, proxies, database internals. Goes deeper than any other YouTube channel on backend engineering.</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <div style="padding: 24px 32px; border-top: 1px solid var(--border); background: rgba(88,166,255,0.03);">
+    <div class="callout callout-info" style="margin:0">
+      <div class="callout-title">🗺 Recommended Learning Order for These Resources</div>
+      <p style="margin-bottom:8px">Follow this sequence for maximum retention:</p>
+      <ol style="padding-left: 20px; margin: 0;">
+        <li style="margin-bottom:6px"><strong>Watch</strong> the NeetCode / ByteByteGo video on the topic first (5-25 min) — builds intuition</li>
+        <li style="margin-bottom:6px"><strong>Read</strong> the corresponding section in this handbook — deepens understanding</li>
+        <li style="margin-bottom:6px"><strong>Visualize</strong> with VisuAlgo / USFCA for data structures, Desmos for complexity curves</li>
+        <li style="margin-bottom:6px"><strong>Practice</strong> 2-3 LeetCode problems from the corresponding pattern</li>
+        <li style="margin-bottom:6px"><strong>Reference</strong> Use The Index Luke / System Design Primer for deeper reading</li>
+        <li style="margin-bottom:0"><strong>Mock interview</strong> on Pramp or interviewing.io once per week minimum</li>
+      </ol>
+    </div>
   </div>
 </div>
 
