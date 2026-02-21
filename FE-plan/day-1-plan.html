@@ -1,0 +1,2389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 1 — JS Internals React Lives On | Raghav's Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,600;0,800;1,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #0f0f1a;
+    --bg3: #141428;
+    --card: #12121f;
+    --border: #1e1e35;
+    --border2: #2a2a45;
+    --red: #ff3b5c;
+    --red2: #ff6b84;
+    --gold: #f5a623;
+    --gold2: #ffc85a;
+    --green: #00d68f;
+    --blue: #4d8fff;
+    --purple: #9b72ff;
+    --cyan: #00d4ff;
+    --text: #e8e8f0;
+    --text2: #a0a0c0;
+    --text3: #606080;
+    --code-bg: #0d0d1a;
+    --success: #00d68f;
+    --warn: #f5a623;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 16px;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* ── LAYOUT ── */
+  .page-wrap { position: relative; z-index: 1; }
+
+  /* ── TOP PROGRESS BAR ── */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--red), var(--gold), var(--purple));
+    width: 0%;
+    z-index: 1000;
+    transition: width 0.1s linear;
+  }
+
+  /* ── NAV ── */
+  .top-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 56px;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    z-index: 900;
+  }
+
+  .nav-brand {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--red);
+    letter-spacing: 0.05em;
+  }
+
+  .nav-day {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 24px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-size: 13px;
+    color: var(--text2);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--red); }
+
+  /* ── SIDEBAR TOC ── */
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 56px;
+    width: 240px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+    padding: 24px 0;
+    border-right: 1px solid var(--border);
+    background: rgba(10,10,15,0.7);
+    backdrop-filter: blur(10px);
+    z-index: 800;
+  }
+
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .toc-header {
+    padding: 0 20px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text3);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+
+  .toc-item {
+    display: block;
+    padding: 6px 20px;
+    font-size: 12.5px;
+    color: var(--text2);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: all 0.2s;
+    line-height: 1.4;
+  }
+
+  .toc-item:hover, .toc-item.active {
+    color: var(--red);
+    border-left-color: var(--red);
+    background: rgba(255,59,92,0.05);
+  }
+
+  .toc-item.sub {
+    padding-left: 32px;
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  .toc-item.sub:hover, .toc-item.sub.active {
+    color: var(--gold);
+    border-left-color: var(--gold);
+    background: rgba(245,166,35,0.05);
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    margin-left: 240px;
+    padding-top: 56px;
+    min-height: 100vh;
+  }
+
+  .content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 40px 120px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    margin-bottom: 72px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,59,92,0.1);
+    border: 1px solid rgba(255,59,92,0.3);
+    border-radius: 100px;
+    padding: 4px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--red);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .hero-tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--red);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 0%, #a0a0c0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero h1 span {
+    background: linear-gradient(135deg, var(--red) 0%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 18px;
+    color: var(--text2);
+    max-width: 620px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .meta-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .meta-chip .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section {
+    margin-bottom: 72px;
+    scroll-margin-top: 80px;
+  }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .section h2 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(26px, 3vw, 36px);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    margin-bottom: 16px;
+    color: #fff;
+  }
+
+  .section-intro {
+    font-size: 16px;
+    color: var(--text2);
+    max-width: 680px;
+    margin-bottom: 40px;
+    line-height: 1.7;
+  }
+
+  .subsection {
+    margin-bottom: 48px;
+    scroll-margin-top: 80px;
+  }
+
+  .subsection h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--gold);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .subsection h3::before {
+    content: attr(data-num);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    font-weight: 400;
+  }
+
+  .subsection h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 24px 0 10px;
+  }
+
+  p { margin-bottom: 16px; color: var(--text2); line-height: 1.75; }
+  p strong { color: var(--text); font-weight: 600; }
+
+  /* ── CALLOUT BOXES ── */
+  .callout {
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 24px 0;
+    border-left: 3px solid;
+    position: relative;
+  }
+
+  .callout-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .callout p { margin-bottom: 0; font-size: 15px; }
+
+  .callout.insight {
+    background: rgba(155,114,255,0.08);
+    border-color: var(--purple);
+  }
+  .callout.insight .callout-title { color: var(--purple); }
+
+  .callout.danger {
+    background: rgba(255,59,92,0.08);
+    border-color: var(--red);
+  }
+  .callout.danger .callout-title { color: var(--red); }
+
+  .callout.tip {
+    background: rgba(0,214,143,0.08);
+    border-color: var(--green);
+  }
+  .callout.tip .callout-title { color: var(--green); }
+
+  .callout.warning {
+    background: rgba(245,166,35,0.08);
+    border-color: var(--gold);
+  }
+  .callout.warning .callout-title { color: var(--gold); }
+
+  .callout.info {
+    background: rgba(77,143,255,0.08);
+    border-color: var(--blue);
+  }
+  .callout.info .callout-title { color: var(--blue); }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    position: relative;
+    margin: 24px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border2);
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-lang {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  .code-label {
+    font-size: 12px;
+    color: var(--text3);
+    font-style: italic;
+  }
+
+  .copy-btn {
+    background: var(--border2);
+    border: none;
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover { background: var(--red); color: white; }
+
+  pre {
+    background: var(--code-bg);
+    padding: 24px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    line-height: 1.75;
+  }
+
+  pre::-webkit-scrollbar { height: 4px; }
+  pre::-webkit-scrollbar-track { background: transparent; }
+  pre::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: rgba(255,255,255,0.06);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--gold2);
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+    font-size: inherit;
+    color: inherit;
+  }
+
+  /* Syntax colors */
+  .kw { color: #ff6b84; } /* keywords */
+  .fn { color: #79d4f3; } /* functions */
+  .str { color: #98c77a; } /* strings */
+  .num { color: #f5a623; } /* numbers */
+  .cm { color: #4a5568; font-style: italic; } /* comments */
+  .cl { color: #c792ea; } /* class names */
+  .var { color: #e8e8f0; } /* variables */
+  .op { color: #ff6b84; } /* operators */
+  .prop { color: #79d4f3; } /* properties */
+
+  /* ── DIAGRAMS ── */
+  .diagram {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 32px;
+    margin: 24px 0;
+    overflow-x: auto;
+  }
+
+  .diagram-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text3);
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  /* ── VIDEO EMBEDS ── */
+  .video-container {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 24px 0;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+  }
+
+  .video-container iframe {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16/9;
+    border: none;
+  }
+
+  .video-label {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text2);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .video-label::before {
+    content: '▶';
+    font-size: 11px;
+    color: var(--red);
+  }
+
+  /* ── MENTAL MODEL BOXES ── */
+  .mental-model {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 28px;
+    margin: 28px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mental-model::before {
+    content: 'MENTAL MODEL';
+    position: absolute;
+    top: 12px; right: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--purple);
+    font-weight: 600;
+  }
+
+  .mental-model h4 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--purple);
+    margin-bottom: 12px;
+  }
+
+  /* ── COMPARISON TABLE ── */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+  }
+
+  .compare-table th {
+    padding: 12px 16px;
+    background: var(--bg3);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    text-align: left;
+    border-bottom: 1px solid var(--border2);
+  }
+
+  .compare-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+
+  .compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .compare-table code { font-size: 12px; }
+
+  /* ── KNOWLEDGE CHECK ── */
+  .knowledge-check {
+    background: linear-gradient(135deg, rgba(255,59,92,0.05) 0%, rgba(155,114,255,0.05) 100%);
+    border: 1px solid rgba(255,59,92,0.2);
+    border-radius: 16px;
+    padding: 32px;
+    margin: 48px 0;
+  }
+
+  .kc-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .kc-badge {
+    background: var(--red);
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    padding: 6px 14px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .kc-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    font-family: 'Fraunces', serif;
+  }
+
+  .kc-subtitle {
+    font-size: 13px;
+    color: var(--text3);
+    margin-bottom: 24px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .question-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .question-item {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .question-item:hover { border-color: var(--red); }
+
+  .question-item summary {
+    padding: 14px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 14.5px;
+    color: var(--text);
+    line-height: 1.5;
+    list-style: none;
+  }
+
+  .question-item summary::-webkit-details-marker { display: none; }
+
+  .q-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--red);
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .q-arrow {
+    margin-left: auto;
+    color: var(--text3);
+    font-size: 12px;
+    padding-top: 3px;
+    flex-shrink: 0;
+    transition: transform 0.3s;
+  }
+
+  .question-item[open] .q-arrow { transform: rotate(90deg); }
+  .question-item[open] { border-color: var(--gold); }
+
+  .question-answer {
+    padding: 0 18px 18px 42px;
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.7;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    margin-top: 0;
+  }
+
+  .question-answer code { font-size: 12px; }
+
+  /* ── EVENT LOOP DIAGRAM SVG ── */
+  .diagram svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* ── STEP LIST ── */
+  .steps {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 20px 0;
+  }
+
+  .step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    width: 28px;
+    height: 28px;
+    background: var(--red);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-text { font-size: 15px; color: var(--text2); line-height: 1.6; }
+  .step-text strong { color: var(--text); }
+
+  /* ── PILL TAGS ── */
+  .tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 16px 0;
+  }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    border: 1px solid;
+  }
+
+  .tag.red { color: var(--red); border-color: rgba(255,59,92,0.3); background: rgba(255,59,92,0.08); }
+  .tag.gold { color: var(--gold); border-color: rgba(245,166,35,0.3); background: rgba(245,166,35,0.08); }
+  .tag.green { color: var(--green); border-color: rgba(0,214,143,0.3); background: rgba(0,214,143,0.08); }
+  .tag.purple { color: var(--purple); border-color: rgba(155,114,255,0.3); background: rgba(155,114,255,0.08); }
+  .tag.blue { color: var(--blue); border-color: rgba(77,143,255,0.3); background: rgba(77,143,255,0.08); }
+
+  /* ── DAILY SCHEDULE ── */
+  .schedule {
+    display: grid;
+    gap: 12px;
+    margin: 24px 0;
+  }
+
+  .schedule-item {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 16px;
+    align-items: start;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .schedule-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  .schedule-task { font-size: 14px; color: var(--text2); }
+  .schedule-task strong { color: var(--text); display: block; margin-bottom: 4px; }
+
+  /* ── SCROLL TO TOP ── */
+  #scroll-top {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    width: 44px; height: 44px;
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #scroll-top.visible { opacity: 1; }
+  #scroll-top:hover { transform: translateY(-3px); }
+
+  /* ── HIGHLIGHT ANIMATION ── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-in {
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+  }
+
+  /* ── INLINE DIAGRAM STYLES ── */
+  .closure-diagram {
+    display: grid;
+    gap: 0;
+    margin: 8px 0;
+  }
+
+  .scope-box {
+    border: 2px dashed;
+    border-radius: 8px;
+    padding: 14px 18px;
+    position: relative;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  .scope-label {
+    position: absolute;
+    top: -10px;
+    left: 12px;
+    background: var(--bg2);
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── EVENT LOOP VISUAL ── */
+  .el-diagram {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    overflow-x: auto;
+    padding: 8px 0;
+  }
+
+  .el-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 110px;
+  }
+
+  .el-col-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 4px;
+    text-align: center;
+  }
+
+  .el-cell {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1.3;
+    border: 1px solid;
+  }
+
+  .el-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--text3);
+    padding-top: 40px;
+  }
+
+  /* ── RESOURCE LINKS ── */
+  .resource-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .resource-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .resource-card:hover {
+    border-color: var(--blue);
+    background: rgba(77,143,255,0.05);
+    transform: translateY(-2px);
+  }
+
+  .resource-type {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .resource-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .resource-desc {
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  /* ── BEFORE/AFTER SPLIT ── */
+  .ba-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin: 20px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border2);
+  }
+
+  .ba-pane { overflow: hidden; }
+
+  .ba-header {
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ba-bad .ba-header { background: rgba(255,59,92,0.15); color: var(--red); }
+  .ba-good .ba-header { background: rgba(0,214,143,0.1); color: var(--green); }
+  .ba-bad pre, .ba-good pre { border-radius: 0; }
+
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .content { padding: 40px 20px 80px; }
+    .ba-split { grid-template-columns: 1fr; }
+    .el-diagram { min-width: 600px; }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- NAV -->
+<nav class="top-nav">
+  <div class="nav-brand">RAGHAV.DEV</div>
+  <div class="nav-day">DAY 01 / 60</div>
+  <ul class="nav-links">
+    <li><a href="#closures">Closures</a></li>
+    <li><a href="#prototype">Prototype</a></li>
+    <li><a href="#eventloop">Event Loop</a></li>
+    <li><a href="#immutability">Immutability</a></li>
+    <li><a href="#check">Check</a></li>
+  </ul>
+</nav>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="toc-header">Table of Contents</div>
+  <a class="toc-item" href="#hero">Overview</a>
+  <a class="toc-item" href="#closures">1. Closures</a>
+  <a class="toc-item sub" href="#closure-definition">What is a Closure</a>
+  <a class="toc-item sub" href="#lexical-scope">Lexical Scope</a>
+  <a class="toc-item sub" href="#stale-closure">Stale Closures in React</a>
+  <a class="toc-item sub" href="#closure-fixes">3 Ways to Fix</a>
+  <a class="toc-item sub" href="#closure-loops">Loop Bug</a>
+  <a class="toc-item sub" href="#memory-leaks">Memory Leaks</a>
+  <a class="toc-item" href="#prototype">2. Prototype Chain</a>
+  <a class="toc-item sub" href="#proto-chain">The Chain</a>
+  <a class="toc-item sub" href="#this-binding">4 Rules of 'this'</a>
+  <a class="toc-item sub" href="#arrow-this">Arrow Functions</a>
+  <a class="toc-item" href="#eventloop">3. Event Loop</a>
+  <a class="toc-item sub" href="#call-stack">Call Stack</a>
+  <a class="toc-item sub" href="#queues">Task Queues</a>
+  <a class="toc-item sub" href="#order">Execution Order</a>
+  <a class="toc-item sub" href="#react-batching">React & Batching</a>
+  <a class="toc-item" href="#immutability">4. Immutability</a>
+  <a class="toc-item sub" href="#why-immutable">Why React Needs It</a>
+  <a class="toc-item sub" href="#clone-types">Clone Types</a>
+  <a class="toc-item sub" href="#immer">Immer & Structural Sharing</a>
+  <a class="toc-item" href="#check">Knowledge Check</a>
+  <a class="toc-item" href="#resources">Resources</a>
+  <a class="toc-item" href="#tasks">Today's Tasks</a>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+<div class="content">
+
+  <!-- HERO -->
+  <div class="hero animate-in" id="hero">
+    <div class="hero-tag">Day 01 — Month 1 — Week 1</div>
+    <h1>The JS Engine Room<br><span>React Lives On</span></h1>
+    <p class="hero-sub">
+      Before you understand React, you need to understand what JavaScript is actually doing underneath. Closures, prototypes, the event loop, and immutability are not "nice to know" — they are the EXACT mechanisms that make React hooks work, cause stale closure bugs, explain why batching exists, and require immutable state updates. Skip this and you're building on sand.
+    </p>
+    <div class="hero-meta">
+      <div class="meta-chip"><div class="dot" style="background:var(--red)"></div> 4 Core Topics</div>
+      <div class="meta-chip"><div class="dot" style="background:var(--gold)"></div> 8 Hours Deep Work</div>
+      <div class="meta-chip"><div class="dot" style="background:var(--green)"></div> 10 Knowledge Checks</div>
+      <div class="meta-chip"><div class="dot" style="background:var(--purple)"></div> React-connected examples throughout</div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       SECTION 1 — CLOSURES
+  ════════════════════════════════════════════ -->
+  <section class="section animate-in" id="closures">
+    <div class="section-label">Topic 01</div>
+    <h2>Closures & Lexical Scope</h2>
+    <p class="section-intro">
+      The #1 source of subtle bugs in React hooks is the stale closure. You will hit this bug. Every React developer hits this bug. The ones who fix it in 30 seconds are the ones who understand closures cold. The ones who spend 3 hours debugging are the ones who don't.
+    </p>
+
+    <!-- 1.1 DEFINITION -->
+    <div class="subsection" id="closure-definition">
+      <h3 data-num="1.1">What is a Closure?</h3>
+
+      <p>A <strong>closure</strong> is a function that <strong>remembers the variables from its outer (enclosing) scope</strong> even after that outer scope has finished executing and its execution context no longer exists on the call stack.</p>
+
+      <p>This sounds abstract. Let's make it concrete.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">javascript</span>
+          <span class="code-label">The simplest closure</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="kw">function</span> <span class="fn">outer</span>() {
+  <span class="kw">const</span> <span class="var">message</span> = <span class="str">"I am from outer"</span>;  <span class="cm">// lives in outer's scope</span>
+
+  <span class="kw">function</span> <span class="fn">inner</span>() {
+    console.<span class="fn">log</span>(<span class="var">message</span>);  <span class="cm">// inner CLOSES OVER message</span>
+  }
+
+  <span class="kw">return</span> <span class="var">inner</span>;
+}
+
+<span class="kw">const</span> <span class="var">fn</span> = <span class="fn">outer</span>();   <span class="cm">// outer() returns inner function, outer's stack frame gone</span>
+<span class="fn">fn</span>();                  <span class="cm">// prints "I am from outer" — but HOW?</span>
+                       <span class="cm">// outer() finished running. How does inner still see message?</span></code></pre>
+      </div>
+
+      <p>When <code>outer()</code> executes, JavaScript creates a scope (an environment) for it. <code>message</code> lives in that environment. Normally, when a function finishes, its scope gets garbage collected. But <code>inner</code> has a <strong>reference to that scope</strong>. So JavaScript keeps it alive as long as <code>inner</code> exists. This surviving scope + function combination is the closure.</p>
+
+      <div class="mental-model">
+        <h4>The Backpack Mental Model</h4>
+        <p style="color:var(--text2)">Imagine every function carries a <strong>backpack</strong> containing all the variables it references from its outer scopes. When the function travels (is returned, passed as callback, stored), it takes its backpack with it. The backpack keeps those outer variables alive and accessible forever.</p>
+      </div>
+
+      <!-- DIAGRAM: Closure structure -->
+      <div class="diagram">
+        <div class="diagram-title">How a Closure Keeps its Scope Alive</div>
+        <div style="display:flex;flex-direction:column;gap:12px;font-family:'JetBrains Mono',monospace;font-size:12px;">
+          <div class="scope-box" style="border-color:var(--gold);color:var(--gold)">
+            <span class="scope-label" style="color:var(--gold)">OUTER FUNCTION SCOPE</span>
+            <span style="color:var(--text2)">const message = <span style="color:var(--str)">"I am from outer"</span></span>
+            <div style="margin-top:10px;padding:10px;background:rgba(155,114,255,0.08);border-radius:6px;border:1px solid rgba(155,114,255,0.3)">
+              <div class="scope-box" style="border-color:var(--purple);border-style:solid;margin-top:6px">
+                <span class="scope-label" style="color:var(--purple)">INNER FUNCTION (the closure)</span>
+                <span style="color:var(--text2)">console.log(<span style="color:var(--red)">message</span>)  <span style="color:var(--text3)">← references outer scope</span></span>
+                <div style="margin-top:8px;padding:6px 10px;background:rgba(0,214,143,0.08);border-radius:4px;font-size:11px;color:var(--green)">
+                  🎒 Backpack: { message: "I am from outer" }  — kept alive even after outer() returns
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center;color:var(--text3);font-size:11px">↓ outer() returns inner ↓ outer's stack frame is gone ↓ but the SCOPE survives in inner's backpack</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1.2 LEXICAL SCOPE -->
+    <div class="subsection" id="lexical-scope">
+      <h3 data-num="1.2">Lexical Scope — Where Variables Are Found</h3>
+
+      <p><strong>Lexical scope</strong> means: the scope of a variable is determined by WHERE it is written in the code, not where the code runs. JavaScript uses lexical scope (as opposed to dynamic scope which some other languages use).</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">javascript</span>
+          <span class="code-label">Lexical scope — scope is determined at write time</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="kw">const</span> <span class="var">x</span> = <span class="str">"global"</span>;
+
+<span class="kw">function</span> <span class="fn">outer</span>() {
+  <span class="kw">const</span> <span class="var">x</span> = <span class="str">"outer"</span>;
+
+  <span class="kw">function</span> <span class="fn">inner</span>() {
+    console.<span class="fn">log</span>(<span class="var">x</span>);  <span class="cm">// "outer" — looks up the chain to where inner is WRITTEN</span>
+  }
+
+  <span class="fn">inner</span>();
+}
+
+<span class="fn">outer</span>(); <span class="cm">// prints "outer", not "global"</span>
+
+<span class="cm">// Scope chain lookup order:</span>
+<span class="cm">// inner's own scope → outer's scope → global scope → error</span></code></pre>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-title">💡 Why Lexical Scope Matters for React</div>
+        <p>When you write a React hook callback, <strong>it captures variables from where it was written</strong> (the render function). This is EXACTLY why stale closures happen — the callback was written at render time, so it sees the values from that render, not future renders.</p>
+      </div>
+    </div>
+
+    <!-- 1.3 STALE CLOSURES IN REACT -->
+    <div class="subsection" id="stale-closure">
+      <h3 data-num="1.3">The Stale Closure Bug in React</h3>
+
+      <p>This is the most important practical application of closures for you. When a useEffect, event handler, or setTimeout captures a state value, it captures the VALUE at the time the function was created. If state updates, the captured value is stale — it's still the old one.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">jsx</span>
+          <span class="code-label">🐛 THE BUG — Stale closure in useEffect</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="kw">function</span> <span class="fn">Counter</span>() {
+  <span class="kw">const</span> [<span class="var">count</span>, <span class="var">setCount</span>] = <span class="fn">useState</span>(<span class="num">0</span>);
+
+  <span class="fn">useEffect</span>(() => {
+    <span class="cm">// This effect runs ONCE (empty deps array)</span>
+    <span class="cm">// The callback CLOSES OVER count — captures count = 0</span>
+    <span class="cm">// count is now frozen at 0 inside this closure FOREVER</span>
+    <span class="kw">const</span> <span class="var">timer</span> = <span class="fn">setInterval</span>(() => {
+      console.<span class="fn">log</span>(<span class="var">count</span>);         <span class="cm">// Always prints 0 🐛</span>
+      <span class="fn">setCount</span>(<span class="var">count</span> + <span class="num">1</span>);       <span class="cm">// Always sets to 0 + 1 = 1 🐛</span>
+    }, <span class="num">1000</span>);
+
+    <span class="kw">return</span> () => <span class="fn">clearInterval</span>(<span class="var">timer</span>);
+  }, []); <span class="cm">// empty array = effect runs once, closure captures count=0</span>
+  
+  <span class="kw">return</span> <span class="op">&lt;</span><span class="var">div</span><span class="op">&gt;</span>{<span class="var">count</span>}<span class="op">&lt;/</span><span class="var">div</span><span class="op">&gt;</span>;
+}</code></pre>
+      </div>
+
+      <p>Here's what happens step by step:</p>
+
+      <ol class="steps">
+        <li class="step"><div class="step-num">1</div><div class="step-text">Component renders for the first time. <code>count = 0</code>.</div></li>
+        <li class="step"><div class="step-num">2</div><div class="step-text">useEffect runs. Its callback function is created. It <strong>closes over</strong> the current <code>count</code>, which is <code>0</code>. The closure's backpack now contains <code>{ count: 0 }</code>.</div></li>
+        <li class="step"><div class="step-num">3</div><div class="step-text">The interval starts. Every second, it reads <code>count</code> from its backpack — always <code>0</code>. It sets count to <code>0 + 1 = 1</code>.</div></li>
+        <li class="step"><div class="step-num">4</div><div class="step-text">React re-renders with <code>count = 1</code>. But the setInterval callback was created in the old render — it still has the OLD backpack with <code>count = 0</code>. It's a zombie from the past.</div></li>
+      </ol>
+
+      <div class="callout danger">
+        <div class="callout-title">🚨 The Root Cause</div>
+        <p>Closures capture variables <strong>at the time the function is created</strong>. The empty dependency array <code>[]</code> tells React "don't recreate this effect." So the setInterval callback is created exactly once with <code>count = 0</code> and never updated.</p>
+      </div>
+    </div>
+
+    <!-- 1.4 THREE FIXES -->
+    <div class="subsection" id="closure-fixes">
+      <h3 data-num="1.4">3 Ways to Fix Stale Closures</h3>
+
+      <div class="ba-split" style="display:block;margin-bottom:20px">
+      </div>
+
+      <h4>Fix 1 — Add to Dependency Array (Recreate Effect)</h4>
+      <p>Tell React: "When count changes, recreate the effect with a fresh closure."</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">jsx</span>
+          <span class="code-label">Fix 1: Correct deps array</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="fn">useEffect</span>(() => {
+  <span class="kw">const</span> <span class="var">timer</span> = <span class="fn">setInterval</span>(() => {
+    <span class="fn">setCount</span>(<span class="var">count</span> + <span class="num">1</span>);  <span class="cm">// count is always fresh now</span>
+  }, <span class="num">1000</span>);
+  <span class="kw">return</span> () => <span class="fn">clearInterval</span>(<span class="var">timer</span>);
+}, [<span class="var">count</span>]);  <span class="cm">// ← add count as dependency</span>
+
+<span class="cm">// Downside: effect restarts on every count change</span>
+<span class="cm">// clearInterval + setInterval called every second = wasteful</span></code></pre>
+      </div>
+
+      <h4>Fix 2 — Functional Update Form (Best for Counters)</h4>
+      <p>The <code>setCount(prev => ...)</code> form gives you the <strong>latest state value</strong> as an argument — you never need to read <code>count</code> from the closure at all.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">jsx</span>
+          <span class="code-label">Fix 2: Functional update — bypasses stale closure entirely</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="fn">useEffect</span>(() => {
+  <span class="kw">const</span> <span class="var">timer</span> = <span class="fn">setInterval</span>(() => {
+    <span class="fn">setCount</span>(<span class="var">prev</span> => <span class="var">prev</span> + <span class="num">1</span>);  
+    <span class="cm">// ↑ prev is ALWAYS the latest queued state</span>
+    <span class="cm">// ↑ React provides it. We don't read count from closure at all.</span>
+    <span class="cm">// ↑ No stale closure possible here.</span>
+  }, <span class="num">1000</span>);
+  <span class="kw">return</span> () => <span class="fn">clearInterval</span>(<span class="var">timer</span>);
+}, []);  <span class="cm">// ← empty array is fine now! We don't use count inside.</span></code></pre>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-title">✅ When to use functional updates</div>
+        <p>Any time your new state <strong>depends on the previous state</strong>, use the functional form. This is not just about stale closures — it's also safer in concurrent mode where multiple updates may batch.</p>
+      </div>
+
+      <h4>Fix 3 — useRef as an Always-Fresh Value</h4>
+      <p>A ref is a mutable container that doesn't trigger re-renders. Reading from a ref always gives you the latest value, bypassing the closure problem.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">jsx</span>
+          <span class="code-label">Fix 3: useRef for always-current value</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="kw">function</span> <span class="fn">Counter</span>() {
+  <span class="kw">const</span> [<span class="var">count</span>, <span class="var">setCount</span>] = <span class="fn">useState</span>(<span class="num">0</span>);
+  <span class="kw">const</span> <span class="var">countRef</span> = <span class="fn">useRef</span>(<span class="var">count</span>);   <span class="cm">// ref holds current count</span>
+
+  <span class="cm">// Keep ref synced with state</span>
+  <span class="fn">useEffect</span>(() => {
+    <span class="var">countRef</span>.<span class="prop">current</span> = <span class="var">count</span>;
+  });  <span class="cm">// runs every render, no deps</span>
+
+  <span class="fn">useEffect</span>(() => {
+    <span class="kw">const</span> <span class="var">timer</span> = <span class="fn">setInterval</span>(() => {
+      console.<span class="fn">log</span>(<span class="var">countRef</span>.<span class="prop">current</span>);  <span class="cm">// always latest! refs are mutable</span>
+      <span class="fn">setCount</span>(<span class="var">countRef</span>.<span class="prop">current</span> + <span class="num">1</span>);
+    }, <span class="num">1000</span>);
+    <span class="kw">return</span> () => <span class="fn">clearInterval</span>(<span class="var">timer</span>);
+  }, []); <span class="cm">// effect runs once, but reads from ref (always fresh)</span>
+}</code></pre>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-title">⚠️ The useLatest Pattern</div>
+        <p>Fix 3 is commonly wrapped into a <code>useLatest</code> hook — a hook that always gives you a ref pointing to the latest value. You'll build this in the custom hooks week. For now, understand the mechanism: <strong>refs are NOT captured by closures — they are live references to a mutable object.</strong></p>
+      </div>
+    </div>
+
+    <!-- 1.5 LOOP BUG -->
+    <div class="subsection" id="closure-loops">
+      <h3 data-num="1.5">The Classic Closure-in-Loop Bug</h3>
+
+      <p>This is a famous JavaScript interview question and appears in real code when you're attaching event listeners or creating async operations in a loop.</p>
+
+      <div class="ba-split">
+        <div class="ba-pane ba-bad">
+          <div class="ba-header">❌ BUG — var creates one shared binding</div>
+          <pre><code><span class="kw">for</span> (<span class="kw">var</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">3</span>; <span class="var">i</span>++) {
+  <span class="fn">setTimeout</span>(() => {
+    console.<span class="fn">log</span>(<span class="var">i</span>);  <span class="cm">// prints 3, 3, 3</span>
+  }, <span class="num">1000</span>);
+}
+<span class="cm">// WHY? var has function scope.</span>
+<span class="cm">// All 3 callbacks close over</span>
+<span class="cm">// THE SAME i variable.</span>
+<span class="cm">// When they run, i = 3.</span></code></pre>
+        </div>
+        <div class="ba-pane ba-good">
+          <div class="ba-header">✅ FIX — let creates per-iteration binding</div>
+          <pre><code><span class="kw">for</span> (<span class="kw">let</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">3</span>; <span class="var">i</span>++) {
+  <span class="fn">setTimeout</span>(() => {
+    console.<span class="fn">log</span>(<span class="var">i</span>);  <span class="cm">// prints 0, 1, 2</span>
+  }, <span class="num">1000</span>);
+}
+<span class="cm">// WHY? let has block scope.</span>
+<span class="cm">// Each iteration gets its OWN</span>
+<span class="cm">// i binding. Each callback</span>
+<span class="cm">// closes over its own i.</span></code></pre>
+        </div>
+      </div>
+
+      <p>The <code>var</code> fix using IIFE (Immediately Invoked Function Expression) — the old way before <code>let</code> existed:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">javascript</span>
+          <span class="code-label">IIFE fix — creates a new scope per iteration manually</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="kw">for</span> (<span class="kw">var</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> <span class="op">&lt;</span> <span class="num">3</span>; <span class="var">i</span>++) {
+  (<span class="kw">function</span>(<span class="var">j</span>) {     <span class="cm">// IIFE creates new scope, j is a copy of i</span>
+    <span class="fn">setTimeout</span>(() => {
+      console.<span class="fn">log</span>(<span class="var">j</span>);  <span class="cm">// prints 0, 1, 2 ✅</span>
+    }, <span class="num">1000</span>);
+  })(<span class="var">i</span>);           <span class="cm">// pass current i as argument j</span>
+}
+<span class="cm">// Each IIFE call creates its own scope with its own j</span>
+<span class="cm">// j is bound by value at time of call</span></code></pre>
+      </div>
+    </div>
+
+    <!-- 1.6 MEMORY LEAKS -->
+    <div class="subsection" id="memory-leaks">
+      <h3 data-num="1.6">Closures & Memory Leaks</h3>
+
+      <p>Closures keep their outer scope alive. This is a feature, but it becomes a problem when a closure outlives its usefulness and holds large objects in memory that should have been garbage collected.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">jsx</span>
+          <span class="code-label">Memory leak — closure keeps large data alive</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="fn">useEffect</span>(() => {
+  <span class="kw">const</span> <span class="var">largeDataSet</span> = <span class="fn">fetchLargeData</span>();  <span class="cm">// 50MB of data</span>
+  
+  <span class="kw">const</span> <span class="var">handleClick</span> = () => {
+    <span class="cm">// This callback closes over largeDataSet</span>
+    console.<span class="fn">log</span>(<span class="var">largeDataSet</span>.<span class="prop">length</span>);
+  };
+
+  document.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, <span class="var">handleClick</span>);
+  
+  <span class="cm">// ❌ If you forget the cleanup, handleClick lives forever</span>
+  <span class="cm">// ❌ It keeps largeDataSet in memory forever</span>
+  <span class="cm">// ❌ Memory leak!</span>
+  
+  <span class="kw">return</span> () => {
+    document.<span class="fn">removeEventListener</span>(<span class="str">'click'</span>, <span class="var">handleClick</span>);
+    <span class="cm">// ✅ When event listener is removed, handleClick has no more references</span>
+    <span class="cm">// ✅ handleClick gets garbage collected</span>
+    <span class="cm">// ✅ largeDataSet gets garbage collected</span>
+  };
+}, []);</code></pre>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-title">✅ Rule</div>
+        <p>Every time you add a subscription, event listener, timer, or observer in useEffect — you MUST return a cleanup function that removes it. This is not just good practice; it's the mechanism that prevents closure-based memory leaks.</p>
+      </div>
+    </div>
+
+    <div class="video-container">
+      <iframe src="https://www.youtube.com/embed/3a0I8ICR1Vg" allowfullscreen loading="lazy" title="JavaScript Closures Explained"></iframe>
+      <div class="video-label">JavaScript Closures Explained (Fireship) — 6 min, worth every second</div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════════════════════════════════
+       SECTION 2 — PROTOTYPE CHAIN
+  ════════════════════════════════════════════ -->
+  <section class="section animate-in" id="prototype">
+    <div class="section-label">Topic 02</div>
+    <h2>Prototype Chain & <em style="font-style:italic;color:var(--gold)">this</em> Binding</h2>
+    <p class="section-intro">
+      Understanding the prototype chain explains how JavaScript's inheritance works. Understanding <code>this</code> explains why React class components needed <code>.bind(this)</code> and why hooks solved it. You need both to read and maintain any React codebase confidently.
+    </p>
+
+    <div class="subsection" id="proto-chain">
+      <h3 data-num="2.1">The Prototype Chain</h3>
+
+      <p>Every JavaScript object has an internal property called <code>[[Prototype]]</code> (accessible via <code>__proto__</code> or <code>Object.getPrototypeOf()</code>). This is a reference to another object. When you access a property on an object, JavaScript looks for it in this order:</p>
+
+      <ol class="steps">
+        <li class="step"><div class="step-num">1</div><div class="step-text">Check the object's <strong>own properties</strong> first.</div></li>
+        <li class="step"><div class="step-num">2</div><div class="step-text">If not found, check the object's <strong>[[Prototype]]</strong> (its parent).</div></li>
+        <li class="step"><div class="step-num">3</div><div class="step-text">If not found, check the parent's <strong>[[Prototype]]</strong> (grandparent). Keep going up the chain.</div></li>
+        <li class="step"><div class="step-num">4</div><div class="step-text">Eventually reach <strong>Object.prototype</strong>. If still not found, return <code>undefined</code>.</div></li>
+      </ol>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">javascript</span>
+          <span class="code-label">Prototype chain in action</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="kw">const</span> <span class="var">animal</span> = {
+  <span class="var">breathes</span>: <span class="kw">true</span>,
+  <span class="fn">eat</span>() { console.<span class="fn">log</span>(<span class="str">'nom nom'</span>); }
+};
+
+<span class="kw">const</span> <span class="var">dog</span> = <span class="cl">Object</span>.<span class="fn">create</span>(<span class="var">animal</span>);  <span class="cm">// dog's [[Prototype]] = animal</span>
+<span class="var">dog</span>.<span class="var">name</span> = <span class="str">'Rex'</span>;               <span class="cm">// own property</span>
+
+console.<span class="fn">log</span>(<span class="var">dog</span>.<span class="var">name</span>);           <span class="cm">// "Rex" — own property ✅</span>
+console.<span class="fn">log</span>(<span class="var">dog</span>.<span class="var">breathes</span>);       <span class="cm">// true — found in animal (prototype) ✅</span>
+<span class="var">dog</span>.<span class="fn">eat</span>();                        <span class="cm">// "nom nom" — found in animal (prototype) ✅</span>
+console.<span class="fn">log</span>(<span class="var">dog</span>.<span class="var">flySpeed</span>);       <span class="cm">// undefined — not found anywhere ✅</span>
+
+<span class="cm">// Chain: dog → animal → Object.prototype → null</span>
+console.<span class="fn">log</span>(<span class="cl">Object</span>.<span class="fn">getPrototypeOf</span>(<span class="var">dog</span>) === <span class="var">animal</span>);        <span class="cm">// true</span>
+console.<span class="fn">log</span>(<span class="cl">Object</span>.<span class="fn">getPrototypeOf</span>(<span class="var">animal</span>) === <span class="cl">Object</span>.<span class="prop">prototype</span>); <span class="cm">// true</span></code></pre>
+      </div>
+
+      <!-- Prototype diagram -->
+      <div class="diagram">
+        <div class="diagram-title">Prototype Chain Visual</div>
+        <div class="el-diagram" style="justify-content:center;gap:0;">
+          <div class="el-col">
+            <div class="el-col-title">dog</div>
+            <div class="el-cell" style="border-color:var(--red);color:var(--red);background:rgba(255,59,92,0.08)">name: "Rex"</div>
+            <div class="el-cell" style="border-color:var(--border);color:var(--text3);font-size:10px;margin-top:4px">[[Prototype]] →</div>
+          </div>
+          <div class="el-arrow">→</div>
+          <div class="el-col">
+            <div class="el-col-title">animal</div>
+            <div class="el-cell" style="border-color:var(--gold);color:var(--gold);background:rgba(245,166,35,0.08)">breathes: true</div>
+            <div class="el-cell" style="border-color:var(--gold);color:var(--gold);background:rgba(245,166,35,0.08)">eat: fn()</div>
+            <div class="el-cell" style="border-color:var(--border);color:var(--text3);font-size:10px;margin-top:4px">[[Prototype]] →</div>
+          </div>
+          <div class="el-arrow">→</div>
+          <div class="el-col">
+            <div class="el-col-title">Object.prototype</div>
+            <div class="el-cell" style="border-color:var(--blue);color:var(--blue);background:rgba(77,143,255,0.08)">toString: fn()</div>
+            <div class="el-cell" style="border-color:var(--blue);color:var(--blue);background:rgba(77,143,255,0.08)">hasOwnProp: fn()</div>
+            <div class="el-cell" style="border-color:var(--border);color:var(--text3);font-size:10px;margin-top:4px">[[Prototype]] = null</div>
+          </div>
+          <div class="el-arrow">→</div>
+          <div class="el-col">
+            <div class="el-col-title">End</div>
+            <div class="el-cell" style="border-color:var(--text3);color:var(--text3)">null</div>
+          </div>
+        </div>
+        <p style="text-align:center;font-size:11px;color:var(--text3);margin-top:12px;font-family:'JetBrains Mono',monospace">dog.flySpeed → not in dog → not in animal → not in Object.prototype → undefined</p>
+      </div>
+    </div>
+
+    <!-- THIS BINDING -->
+    <div class="subsection" id="this-binding">
+      <h3 data-num="2.2">The 4 Rules of <code>this</code> Binding</h3>
+
+      <p><code>this</code> in JavaScript refers to the execution context — the object that "owns" the currently executing function. It is determined at CALL TIME (when the function is called), not at write time. This trips everyone up.</p>
+
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Rule</th>
+            <th>When It Applies</th>
+            <th>this =</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Default</strong></td>
+            <td>Standalone function call: <code>fn()</code></td>
+            <td><code>undefined</code> (strict mode) or <code>globalThis</code></td>
+          </tr>
+          <tr>
+            <td><strong>2. Implicit</strong></td>
+            <td>Method call: <code>obj.method()</code></td>
+            <td>The object before the dot (<code>obj</code>)</td>
+          </tr>
+          <tr>
+            <td><strong>3. Explicit</strong></td>
+            <td><code>fn.call(ctx)</code> / <code>fn.apply(ctx)</code> / <code>fn.bind(ctx)</code></td>
+            <td>The first argument you pass</td>
+          </tr>
+          <tr>
+            <td><strong>4. new</strong></td>
+            <td><code>new Fn()</code></td>
+            <td>The newly created object</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">javascript</span>
+          <span class="code-label">All 4 rules demonstrated</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="cm">// Rule 1: Default binding</span>
+<span class="kw">function</span> <span class="fn">show</span>() {
+  console.<span class="fn">log</span>(<span class="kw">this</span>);  <span class="cm">// undefined (strict) or window (non-strict)</span>
+}
+<span class="fn">show</span>();
+
+<span class="cm">// Rule 2: Implicit binding</span>
+<span class="kw">const</span> <span class="var">user</span> = {
+  <span class="var">name</span>: <span class="str">'Raghav'</span>,
+  <span class="fn">greet</span>() {
+    console.<span class="fn">log</span>(<span class="kw">this</span>.<span class="var">name</span>);  <span class="cm">// "Raghav" — this = user</span>
+  }
+};
+<span class="var">user</span>.<span class="fn">greet</span>();   <span class="cm">// ✅ "Raghav"</span>
+
+<span class="cm">// Breaking implicit binding — THIS IS THE REACT CLASS BUG</span>
+<span class="kw">const</span> <span class="var">detached</span> = <span class="var">user</span>.<span class="var">greet</span>;  <span class="cm">// function extracted from object</span>
+<span class="fn">detached</span>();  <span class="cm">// ❌ undefined.name → TypeError (or window in non-strict)</span>
+              <span class="cm">// The dot (.) relationship is lost when you extract the fn</span>
+
+<span class="cm">// Rule 3: Explicit binding</span>
+<span class="fn">detached</span>.<span class="fn">call</span>(<span class="var">user</span>);    <span class="cm">// ✅ "Raghav" — force this = user</span>
+<span class="fn">detached</span>.<span class="fn">apply</span>(<span class="var">user</span>);   <span class="cm">// ✅ "Raghav" — same</span>
+<span class="kw">const</span> <span class="var">bound</span> = <span class="fn">detached</span>.<span class="fn">bind</span>(<span class="var">user</span>);
+<span class="fn">bound</span>();                  <span class="cm">// ✅ "Raghav" — permanently bound</span>
+
+<span class="cm">// Rule 4: new binding</span>
+<span class="kw">function</span> <span class="cl">Person</span>(<span class="var">name</span>) {
+  <span class="kw">this</span>.<span class="var">name</span> = <span class="var">name</span>;  <span class="cm">// this = the new object being created</span>
+}
+<span class="kw">const</span> <span class="var">p</span> = <span class="kw">new</span> <span class="cl">Person</span>(<span class="str">'Raghav'</span>);
+console.<span class="fn">log</span>(<span class="var">p</span>.<span class="var">name</span>);  <span class="cm">// "Raghav"</span></code></pre>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-title">💡 Why React Class Components Needed .bind(this)</div>
+        <p>In React class components, you'd do <code>&lt;button onClick={this.handleClick}&gt;</code>. This passes the method as a callback — extracting it from the object (Rule 2 broken, Rule 1 applies). When the click fires, <code>this</code> is <code>undefined</code> in strict mode. The fix: <code>this.handleClick = this.handleClick.bind(this)</code> in the constructor. This is Rule 3 (explicit binding) — permanently binding <code>this</code> to the component instance.</p>
+      </div>
+    </div>
+
+    <!-- ARROW FUNCTIONS -->
+    <div class="subsection" id="arrow-this">
+      <h3 data-num="2.3">Arrow Functions & Lexical <code>this</code></h3>
+
+      <p>Arrow functions do not have their own <code>this</code>. They <strong>inherit this</strong> from the enclosing lexical scope at the time they're defined. This is why arrow functions solved the class component binding problem.</p>
+
+      <div class="ba-split">
+        <div class="ba-pane ba-bad">
+          <div class="ba-header">❌ Regular function — this lost</div>
+          <pre><code><span class="kw">class</span> <span class="cl">Button</span> <span class="kw">extends</span> <span class="cl">Component</span> {
+  <span class="var">label</span> = <span class="str">'Click me'</span>;
+
+  <span class="fn">handleClick</span>() {
+    <span class="cm">// this is undefined when called</span>
+    <span class="cm">// as an event handler callback</span>
+    console.<span class="fn">log</span>(<span class="kw">this</span>.<span class="var">label</span>); <span class="cm">// 💥</span>
+  }
+
+  <span class="fn">render</span>() {
+    <span class="kw">return</span> <span class="op">&lt;</span><span class="var">button</span>
+      onClick={<span class="kw">this</span>.<span class="var">handleClick</span>}
+    <span class="op">&gt;</span>...<span class="op">&lt;/</span><span class="var">button</span><span class="op">&gt;</span>
+  }
+}</code></pre>
+        </div>
+        <div class="ba-pane ba-good">
+          <div class="ba-header">✅ Arrow function — this preserved</div>
+          <pre><code><span class="kw">class</span> <span class="cl">Button</span> <span class="kw">extends</span> <span class="cl">Component</span> {
+  <span class="var">label</span> = <span class="str">'Click me'</span>;
+
+  <span class="cm">// Arrow fn: this = the class instance</span>
+  <span class="cm">// (lexically bound where defined)</span>
+  <span class="var">handleClick</span> = () => {
+    console.<span class="fn">log</span>(<span class="kw">this</span>.<span class="var">label</span>); <span class="cm">// ✅</span>
+  }
+
+  <span class="fn">render</span>() {
+    <span class="kw">return</span> <span class="op">&lt;</span><span class="var">button</span>
+      onClick={<span class="kw">this</span>.<span class="var">handleClick</span>}
+    <span class="op">&gt;</span>...<span class="op">&lt;/</span><span class="var">button</span><span class="op">&gt;</span>
+  }
+}</code></pre>
+        </div>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-title">✅ Why Hooks Eliminated This Entirely</div>
+        <p>Function components have no <code>this</code> at all. You never need to think about binding in modern React hooks-based components. This is one of the biggest quality-of-life improvements hooks brought. Understanding why it was needed in class components gives you full context for why React made the switch.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════════════════════════════════
+       SECTION 3 — EVENT LOOP
+  ════════════════════════════════════════════ -->
+  <section class="section animate-in" id="eventloop">
+    <div class="section-label">Topic 03</div>
+    <h2>The Event Loop, Microtasks & Macrotasks</h2>
+    <p class="section-intro">
+      JavaScript is single-threaded. It can only do one thing at a time. But it handles async code, timers, network requests, and user events all seemingly simultaneously. The Event Loop is the mechanism that makes this possible. Understanding it explains React's batching, why Promises resolve before setTimeout, and what "blocking the main thread" actually means.
+    </p>
+
+    <div class="subsection" id="call-stack">
+      <h3 data-num="3.1">The Call Stack</h3>
+
+      <p>The <strong>call stack</strong> is where JavaScript tracks which function is currently executing and which functions called it. It's a LIFO stack (Last In, First Out).</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">javascript</span>
+          <span class="code-label">Call stack tracing</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="kw">function</span> <span class="fn">a</span>() {
+  <span class="fn">b</span>();
+  console.<span class="fn">log</span>(<span class="str">'a done'</span>);
+}
+
+<span class="kw">function</span> <span class="fn">b</span>() {
+  <span class="fn">c</span>();
+  console.<span class="fn">log</span>(<span class="str">'b done'</span>);
+}
+
+<span class="kw">function</span> <span class="fn">c</span>() {
+  console.<span class="fn">log</span>(<span class="str">'c done'</span>);
+}
+
+<span class="fn">a</span>();
+
+<span class="cm">// Call stack at deepest point:</span>
+<span class="cm">// [a, b, c]  ← c is executing (top of stack)</span>
+<span class="cm">// c() finishes → popped → [a, b] → b logs → popped → [a] → a logs → popped → []</span>
+
+<span class="cm">// Output: "c done", "b done", "a done"</span></code></pre>
+      </div>
+
+      <p><strong>Stack overflow</strong> happens when the call stack runs out of space — usually from infinite recursion. The browser typically gives you ~10,000 frames before it throws a "Maximum call stack size exceeded" error.</p>
+    </div>
+
+    <div class="subsection" id="queues">
+      <h3 data-num="3.2">The Two Task Queues</h3>
+
+      <p>When async operations complete (timers fire, promises resolve, network requests finish), their callbacks are placed in a queue and wait until the call stack is empty before running.</p>
+
+      <p>There are <strong>two queues</strong>, and they have different priorities:</p>
+
+      <table class="compare-table">
+        <thead>
+          <tr><th>Queue</th><th>Also Called</th><th>What Goes Here</th><th>Priority</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Microtask Queue</strong></td>
+            <td>Job Queue</td>
+            <td><code>Promise.then/catch/finally</code>, <code>queueMicrotask()</code>, <code>MutationObserver</code></td>
+            <td><strong style="color:var(--green)">HIGH — runs all microtasks before next macrotask</strong></td>
+          </tr>
+          <tr>
+            <td><strong>Macrotask Queue</strong></td>
+            <td>Task Queue, Callback Queue</td>
+            <td><code>setTimeout</code>, <code>setInterval</code>, <code>setImmediate</code>, I/O, UI events</td>
+            <td><strong style="color:var(--gold)">LOWER — one macrotask per event loop iteration</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Event loop diagram -->
+      <div class="diagram">
+        <div class="diagram-title">The Event Loop — One Iteration</div>
+        <div class="el-diagram">
+          <div class="el-col">
+            <div class="el-col-title">Call Stack</div>
+            <div class="el-cell" style="border-color:var(--red);color:var(--red);background:rgba(255,59,92,0.08)">fn3() ← top</div>
+            <div class="el-cell" style="border-color:var(--red);color:var(--red);background:rgba(255,59,92,0.08)">fn2()</div>
+            <div class="el-cell" style="border-color:var(--red);color:var(--red);background:rgba(255,59,92,0.08)">fn1()</div>
+          </div>
+          <div class="el-arrow">↓<br><span style="font-size:10px;color:var(--text3)">stack empties</span></div>
+          <div class="el-col">
+            <div class="el-col-title">Microtask Queue</div>
+            <div class="el-cell" style="border-color:var(--green);color:var(--green);background:rgba(0,214,143,0.08)">Promise.then cb</div>
+            <div class="el-cell" style="border-color:var(--green);color:var(--green);background:rgba(0,214,143,0.08)">Promise.then cb</div>
+            <div style="font-size:10px;color:var(--green);text-align:center;padding:4px">← ALL drained first</div>
+          </div>
+          <div class="el-arrow">→<br><span style="font-size:10px;color:var(--text3)">then</span></div>
+          <div class="el-col">
+            <div class="el-col-title">Macrotask Queue</div>
+            <div class="el-cell" style="border-color:var(--gold);color:var(--gold);background:rgba(245,166,35,0.08)">setTimeout cb</div>
+            <div class="el-cell" style="border-color:var(--gold);color:var(--gold);background:rgba(245,166,35,0.08)">click event cb</div>
+            <div style="font-size:10px;color:var(--gold);text-align:center;padding:4px">← ONE per iteration</div>
+          </div>
+          <div class="el-arrow">→<br><span style="font-size:10px;color:var(--text3)">cycle</span></div>
+          <div class="el-col">
+            <div class="el-col-title">Browser Paint</div>
+            <div class="el-cell" style="border-color:var(--purple);color:var(--purple);background:rgba(155,114,255,0.08)">Render frame</div>
+            <div style="font-size:10px;color:var(--purple);text-align:center;padding:4px">~60 times/sec</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection" id="order">
+      <h3 data-num="3.3">Execution Order — The Classic Interview Question</h3>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">javascript</span>
+          <span class="code-label">What is the output? Think before reading the answer.</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code>console.<span class="fn">log</span>(<span class="str">'1'</span>);                          <span class="cm">// synchronous</span>
+
+<span class="fn">setTimeout</span>(() => console.<span class="fn">log</span>(<span class="str">'2'</span>), <span class="num">0</span>);    <span class="cm">// macrotask (even with 0ms!)</span>
+
+<span class="cl">Promise</span>.<span class="fn">resolve</span>().<span class="fn">then</span>(() => {
+  console.<span class="fn">log</span>(<span class="str">'3'</span>);                       <span class="cm">// microtask</span>
+  <span class="fn">setTimeout</span>(() => console.<span class="fn">log</span>(<span class="str">'4'</span>), <span class="num">0</span>); <span class="cm">// macrotask (queued from microtask)</span>
+});
+
+console.<span class="fn">log</span>(<span class="str">'5'</span>);                          <span class="cm">// synchronous</span>
+
+<span class="cm">// Output: 1, 5, 3, 2, 4</span>
+<span class="cm">// 
+// Step by step:
+// 1. console.log('1') runs — synchronous. Stack: []. Output: "1"
+// 2. setTimeout(...0) — callback queued in MACROTASK queue. Stack continues.
+// 3. Promise.resolve().then(...) — .then callback queued in MICROTASK queue.
+// 4. console.log('5') runs — synchronous. Stack: []. Output: "5"
+// --- Stack is now empty. Event loop checks queues ---
+// 5. MICROTASK queue has items. Run ALL of them first.
+//    → console.log('3') runs. Output: "3"
+//    → setTimeout('4') queued in macrotask. 
+// 6. Microtask queue empty. Take ONE from macrotask.
+//    → setTimeout('2') callback runs. Output: "2"
+// 7. Check microtask queue again (empty). Take next macrotask.
+//    → setTimeout('4') callback runs. Output: "4"</span></code></pre>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-title">💡 The Key Rule</div>
+        <p>After EVERY macrotask (and after the initial synchronous code), JavaScript drains the <strong>entire microtask queue</strong> before picking the next macrotask or repainting the screen. This is why promises resolve before setTimeout callbacks, even <code>setTimeout(fn, 0)</code>.</p>
+      </div>
+    </div>
+
+    <div class="subsection" id="react-batching">
+      <h3 data-num="3.4">React's Batching & the Event Loop</h3>
+
+      <p>React "batches" multiple setState calls — instead of re-rendering after each one, it groups them and does one render. This is directly related to the event loop.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">jsx</span>
+          <span class="code-label">React 17 vs React 18 batching</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="cm">// React 17: only batches inside React event handlers</span>
+<span class="kw">function</span> <span class="fn">handleClick</span>() {
+  <span class="fn">setCount</span>(<span class="var">c</span> => <span class="var">c</span> + <span class="num">1</span>);  <span class="cm">// batched ✅</span>
+  <span class="fn">setName</span>(<span class="str">'Raghav'</span>);     <span class="cm">// batched ✅</span>
+}  <span class="cm">// → 1 render</span>
+
+<span class="kw">function</span> <span class="fn">handleClickAsync</span>() {
+  <span class="fn">setTimeout</span>(() => {
+    <span class="fn">setCount</span>(<span class="var">c</span> => <span class="var">c</span> + <span class="num">1</span>);  <span class="cm">// NOT batched in React 17</span>
+    <span class="fn">setName</span>(<span class="str">'Raghav'</span>);     <span class="cm">// NOT batched in React 17</span>
+  }, <span class="num">0</span>);
+} <span class="cm">// → 2 renders in React 17 ❌</span>
+
+<span class="cm">// React 18: batches EVERYTHING automatically</span>
+<span class="cm">// The same setTimeout code above → 1 render ✅</span>
+<span class="cm">// Works in: setTimeout, Promises, native event handlers, fetch callbacks</span>
+
+<span class="cm">// To opt out of batching (rare): use flushSync</span>
+<span class="kw">import</span> { <span class="fn">flushSync</span> } <span class="kw">from</span> <span class="str">'react-dom'</span>;
+
+<span class="fn">flushSync</span>(() => <span class="fn">setCount</span>(<span class="var">c</span> => <span class="var">c</span> + <span class="num">1</span>));  <span class="cm">// renders immediately</span>
+<span class="fn">setName</span>(<span class="str">'Raghav'</span>);   <span class="cm">// separate render</span></code></pre>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-title">⚡ requestAnimationFrame & React</div>
+        <p>React uses <code>requestAnimationFrame</code> (rAF) internally for scheduling. rAF callbacks run just before the browser paints — roughly 60 times per second (every 16.67ms). React's scheduler uses this to prioritize urgent updates (user input) and defer non-urgent ones. This is the foundation of React 18's Concurrent Mode scheduling.</p>
+      </div>
+
+    </div>
+
+    <div class="video-container">
+      <iframe src="https://www.youtube.com/embed/8aGhZQkoFbQ" allowfullscreen loading="lazy" title="What the heck is the event loop anyway?"></iframe>
+      <div class="video-label">Philip Roberts — "What the heck is the event loop anyway?" (JSConf) — The gold standard explanation. 26 min. WATCH THIS.</div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════════════════════════════════
+       SECTION 4 — IMMUTABILITY
+  ════════════════════════════════════════════ -->
+  <section class="section animate-in" id="immutability">
+    <div class="section-label">Topic 04</div>
+    <h2>Immutability & Structural Sharing</h2>
+    <p class="section-intro">
+      React requires immutable state updates. This isn't a stylistic choice — it's a technical requirement baked into how React detects changes. Mutate state directly and React won't know anything changed. No re-render. Users see stale UI. Understanding WHY this is required is essential.
+    </p>
+
+    <div class="subsection" id="why-immutable">
+      <h3 data-num="4.1">Why React Requires Immutable Updates</h3>
+
+      <p>JavaScript primitives (numbers, strings, booleans) are compared by value. Objects and arrays are compared by <strong>reference</strong> — by their address in memory.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">javascript</span>
+          <span class="code-label">Value vs reference comparison</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="cm">// Primitives — compared by VALUE</span>
+<span class="num">5</span> === <span class="num">5</span>         <span class="cm">// true ✅</span>
+<span class="str">"hi"</span> === <span class="str">"hi"</span>   <span class="cm">// true ✅</span>
+
+<span class="cm">// Objects — compared by REFERENCE (memory address)</span>
+{} === {}         <span class="cm">// false ❌ — different objects in memory even if same shape</span>
+[] === []         <span class="cm">// false ❌</span>
+
+<span class="kw">const</span> <span class="var">a</span> = { <span class="var">x</span>: <span class="num">1</span> };
+<span class="kw">const</span> <span class="var">b</span> = <span class="var">a</span>;           <span class="cm">// b points to SAME object as a</span>
+<span class="var">a</span> === <span class="var">b</span>;                <span class="cm">// true — same reference</span>
+<span class="var">b</span>.<span class="var">x</span> = <span class="num">2</span>;               <span class="cm">// mutates the SHARED object</span>
+console.<span class="fn">log</span>(<span class="var">a</span>.<span class="var">x</span>);      <span class="cm">// 2 — a was also mutated!</span></code></pre>
+      </div>
+
+      <p>React uses <code>Object.is()</code> (essentially <code>===</code> with two edge case fixes) to compare old state with new state. If the references are the same, React assumes nothing changed and skips re-rendering.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">jsx</span>
+          <span class="code-label">❌ Mutating state — React never re-renders</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="kw">const</span> [<span class="var">user</span>, <span class="var">setUser</span>] = <span class="fn">useState</span>({ <span class="var">name</span>: <span class="str">'Raghav'</span>, <span class="var">age</span>: <span class="num">25</span> });
+
+<span class="cm">// ❌ WRONG — mutating the existing state object</span>
+<span class="var">user</span>.<span class="var">age</span> = <span class="num">26</span>;     <span class="cm">// changed the object, but same reference!</span>
+<span class="fn">setUser</span>(<span class="var">user</span>);    <span class="cm">// React: old === new (same reference) → skip render ❌</span>
+
+<span class="cm">// ✅ CORRECT — create a NEW object</span>
+<span class="fn">setUser</span>({ ...<span class="var">user</span>, <span class="var">age</span>: <span class="num">26</span> });  
+<span class="cm">// {...user} creates a new object → new reference</span>
+<span class="cm">// React: old !== new → trigger re-render ✅</span></code></pre>
+      </div>
+
+      <!-- Diagram: reference equality -->
+      <div class="diagram">
+        <div class="diagram-title">Object.is() — How React Detects Changes</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;font-family:'JetBrains Mono',monospace;font-size:12px;">
+          <div>
+            <div style="color:var(--red);font-size:11px;font-weight:700;margin-bottom:8px;letter-spacing:0.1em">❌ MUTATION (same reference)</div>
+            <div style="background:rgba(255,59,92,0.06);border:1px solid rgba(255,59,92,0.2);border-radius:8px;padding:12px;">
+              <div style="color:var(--text3)">Memory Address 0x1234:</div>
+              <div style="color:var(--text2);margin:4px 0">{ name: 'Raghav', age: 25 }</div>
+              <div style="color:var(--text3);font-size:10px;margin:6px 0">↓ user.age = 26 (mutates in place)</div>
+              <div style="color:var(--text3)">Memory Address 0x1234:</div>
+              <div style="color:var(--text2);margin:4px 0">{ name: 'Raghav', age: 26 }</div>
+              <div style="color:var(--red);font-size:11px;margin-top:8px">old ref (0x1234) === new ref (0x1234) → NO RENDER</div>
+            </div>
+          </div>
+          <div>
+            <div style="color:var(--green);font-size:11px;font-weight:700;margin-bottom:8px;letter-spacing:0.1em">✅ IMMUTABLE (new reference)</div>
+            <div style="background:rgba(0,214,143,0.06);border:1px solid rgba(0,214,143,0.2);border-radius:8px;padding:12px;">
+              <div style="color:var(--text3)">Memory Address 0x1234:</div>
+              <div style="color:var(--text2);margin:4px 0">{ name: 'Raghav', age: 25 }</div>
+              <div style="color:var(--text3);font-size:10px;margin:6px 0">↓ setUser({...user, age: 26}) creates NEW object</div>
+              <div style="color:var(--text3)">Memory Address 0x5678:</div>
+              <div style="color:var(--text2);margin:4px 0">{ name: 'Raghav', age: 26 }</div>
+              <div style="color:var(--green);font-size:11px;margin-top:8px">old ref (0x1234) !== new ref (0x5678) → RE-RENDER ✅</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="subsection" id="clone-types">
+      <h3 data-num="4.2">Shallow Clone vs Deep Clone</h3>
+
+      <p>Spread operator and <code>Object.assign</code> create <strong>shallow clones</strong> — they only copy the top level. Nested objects are still shared by reference.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">javascript</span>
+          <span class="code-label">Shallow vs deep clone — the difference matters</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="kw">const</span> <span class="var">state</span> = {
+  <span class="var">user</span>: { <span class="var">name</span>: <span class="str">'Raghav'</span>, <span class="var">address</span>: { <span class="var">city</span>: <span class="str">'Bangalore'</span> } },
+  <span class="var">count</span>: <span class="num">5</span>
+};
+
+<span class="cm">// Shallow clone — ONE level deep only</span>
+<span class="kw">const</span> <span class="var">shallow</span> = { ...<span class="var">state</span> };
+<span class="var">shallow</span> === <span class="var">state</span>              <span class="cm">// false ✅ new top-level object</span>
+<span class="var">shallow</span>.<span class="var">user</span> === <span class="var">state</span>.<span class="var">user</span>  <span class="cm">// true ❌ same nested object!</span>
+
+<span class="cm">// This means mutating nested properties is still a problem:</span>
+<span class="var">shallow</span>.<span class="var">user</span>.<span class="var">name</span> = <span class="str">'Changed'</span>;  <span class="cm">// also mutates state.user.name!</span>
+
+<span class="cm">// For nested updates, spread each level:</span>
+<span class="kw">const</span> <span class="var">updated</span> = {
+  ...<span class="var">state</span>,
+  <span class="var">user</span>: {
+    ...<span class="var">state</span>.<span class="var">user</span>,   <span class="cm">// new user object</span>
+    <span class="var">address</span>: {
+      ...<span class="var">state</span>.<span class="var">user</span>.<span class="var">address</span>,  <span class="cm">// new address object</span>
+      <span class="var">city</span>: <span class="str">'Mumbai'</span>
+    }
+  }
+};
+<span class="cm">// Every level is new. All references changed. React can detect changes at any level.</span>
+
+<span class="cm">// Deep clone options:</span>
+<span class="kw">const</span> <span class="var">deep1</span> = <span class="cl">JSON</span>.<span class="fn">parse</span>(<span class="cl">JSON</span>.<span class="fn">stringify</span>(<span class="var">state</span>));  <span class="cm">// works but: loses functions, Dates, undefined</span>
+<span class="kw">const</span> <span class="var">deep2</span> = <span class="cl">structuredClone</span>(<span class="var">state</span>);            <span class="cm">// modern, handles most types, native API</span></code></pre>
+      </div>
+
+      <table class="compare-table">
+        <thead><tr><th>Method</th><th>Depth</th><th>Performance</th><th>Caveats</th></tr></thead>
+        <tbody>
+          <tr><td><code>{ ...obj }</code> / <code>Object.assign</code></td><td>Shallow (1 level)</td><td>Very fast</td><td>Nested objects shared</td></tr>
+          <tr><td>Manual spread per level</td><td>As deep as you go</td><td>Fast</td><td>Verbose for deep nesting</td></tr>
+          <tr><td><code>structuredClone()</code></td><td>Full deep clone</td><td>Slow for large objects</td><td>Can't clone functions, Proxies</td></tr>
+          <tr><td><code>JSON.parse(JSON.stringify())</code></td><td>Full deep clone</td><td>Very slow</td><td>Loses functions, Date, undefined, NaN</td></tr>
+          <tr><td>Immer <code>produce()</code></td><td>Smart — only clones changed paths</td><td>Very fast (structural sharing)</td><td>Requires Immer library</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection" id="immer">
+      <h3 data-num="4.3">Immer & Structural Sharing — The Smart Solution</h3>
+
+      <p>Immer lets you write "mutating" code that actually produces immutable updates under the hood. It tracks which parts of the state tree you touched and creates new objects only along the path of change, reusing everything else. This is <strong>structural sharing</strong>.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">javascript</span>
+          <span class="code-label">Immer — write mutations, get immutability</span>
+          <button class="copy-btn" onclick="copyCode(this)">copy</button>
+        </div>
+        <pre><code><span class="kw">import</span> { <span class="fn">produce</span> } <span class="kw">from</span> <span class="str">'immer'</span>;
+
+<span class="kw">const</span> <span class="var">state</span> = {
+  <span class="var">users</span>: [
+    { <span class="var">id</span>: <span class="num">1</span>, <span class="var">profile</span>: { <span class="var">name</span>: <span class="str">'Raghav'</span>, <span class="var">city</span>: <span class="str">'Bangalore'</span> } },
+    { <span class="var">id</span>: <span class="num">2</span>, <span class="var">profile</span>: { <span class="var">name</span>: <span class="str">'Priya'</span>, <span class="var">city</span>: <span class="str">'Mumbai'</span> } }
+  ],
+  <span class="var">settings</span>: { <span class="var">theme</span>: <span class="str">'dark'</span> }
+};
+
+<span class="cm">// Without Immer — you'd need to spread every level</span>
+<span class="kw">const</span> <span class="var">updated</span> = {
+  ...<span class="var">state</span>,
+  <span class="var">users</span>: <span class="var">state</span>.<span class="var">users</span>.<span class="fn">map</span>(<span class="var">u</span> => 
+    <span class="var">u</span>.<span class="var">id</span> === <span class="num">1</span> ? { ...<span class="var">u</span>, <span class="var">profile</span>: { ...<span class="var">u</span>.<span class="var">profile</span>, <span class="var">city</span>: <span class="str">'Delhi'</span> } } : <span class="var">u</span>
+  )
+};
+
+<span class="cm">// With Immer — write mutations directly, Immer handles immutability</span>
+<span class="kw">const</span> <span class="var">updatedImmer</span> = <span class="fn">produce</span>(<span class="var">state</span>, <span class="var">draft</span> => {
+  <span class="var">draft</span>.<span class="var">users</span>[<span class="num">0</span>].<span class="var">profile</span>.<span class="var">city</span> = <span class="str">'Delhi'</span>;  <span class="cm">// looks like mutation</span>
+  <span class="cm">// Immer creates a new state object with ONLY the changed nodes replaced</span>
+  <span class="cm">// state.users[1], state.settings → SAME reference as before (reused)</span>
+});
+
+console.<span class="fn">log</span>(<span class="var">updatedImmer</span>.<span class="var">users</span>[<span class="num">1</span>] === <span class="var">state</span>.<span class="var">users</span>[<span class="num">1</span>]);  <span class="cm">// true — reused!</span>
+console.<span class="fn">log</span>(<span class="var">updatedImmer</span>.<span class="var">settings</span> === <span class="var">state</span>.<span class="var">settings</span>);  <span class="cm">// true — reused!</span></code></pre>
+      </div>
+
+      <!-- Structural sharing diagram -->
+      <div class="diagram">
+        <div class="diagram-title">Structural Sharing — Only Changed Nodes Are New</div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;font-family:'JetBrains Mono',monospace;font-size:11px;">
+          <div>
+            <div style="text-align:center;color:var(--text3);margin-bottom:8px;font-size:10px;letter-spacing:0.1em">BEFORE (state)</div>
+            <div style="border:1px solid var(--border2);border-radius:8px;padding:12px;background:var(--bg2)">
+              <div style="color:var(--gold);text-align:center;margin-bottom:8px">root {}</div>
+              <div style="display:flex;justify-content:space-around">
+                <div style="border:1px solid var(--border2);border-radius:4px;padding:6px;text-align:center;color:var(--text2)">users[]</div>
+                <div style="border:1px solid var(--border2);border-radius:4px;padding:6px;text-align:center;color:var(--text2)">settings{}</div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <div style="border:1px solid var(--border2);border-radius:4px;padding:6px;text-align:center;color:var(--text2);flex:1">user[0]<br>Bangalore</div>
+                <div style="border:1px solid var(--border2);border-radius:4px;padding:6px;text-align:center;color:var(--text2);flex:1">user[1]<br>Mumbai</div>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center;color:var(--red);font-size:20px">→</div>
+          <div>
+            <div style="text-align:center;color:var(--text3);margin-bottom:8px;font-size:10px;letter-spacing:0.1em">AFTER (updatedImmer)</div>
+            <div style="border:1px solid var(--border2);border-radius:8px;padding:12px;background:var(--bg2)">
+              <div style="color:var(--green);text-align:center;margin-bottom:8px">root {} ← NEW</div>
+              <div style="display:flex;justify-content:space-around">
+                <div style="border:1px solid var(--green);border-radius:4px;padding:6px;text-align:center;color:var(--green)">users[] ← NEW</div>
+                <div style="border:1px dashed var(--text3);border-radius:4px;padding:6px;text-align:center;color:var(--text3)">settings{} reused</div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <div style="border:1px solid var(--green);border-radius:4px;padding:6px;text-align:center;color:var(--green);flex:1">user[0] ← NEW<br>Delhi</div>
+                <div style="border:1px dashed var(--text3);border-radius:4px;padding:6px;text-align:center;color:var(--text3);flex:1">user[1] reused<br>Mumbai</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p style="text-align:center;font-size:11px;color:var(--green);margin-top:12px;font-family:'JetBrains Mono',monospace">Only the nodes along the path of change are new. Everything else reuses the same reference. O(depth) not O(n).</p>
+      </div>
+
+      <div class="callout insight">
+        <div class="callout-title">💡 Why This Matters for React Performance</div>
+        <p>With structural sharing, React can detect changes precisely. A memoized component receiving <code>state.settings</code> as a prop will <strong>not re-render</strong> when only <code>state.users[0]</code> changed — because <code>settings</code> reference is unchanged. This is the foundation of fine-grained React optimization.</p>
+      </div>
+
+      <div class="callout tip">
+        <div class="callout-title">✅ Immer in Redux Toolkit</div>
+        <p>Redux Toolkit uses Immer internally in all slice reducers. This is why you can write <code>state.count += 1</code> inside a RTK reducer and it works — Immer converts it to an immutable update automatically. This isn't magic; now you know exactly why.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ════════════════════════════════════════════
+       KNOWLEDGE CHECK
+  ════════════════════════════════════════════ -->
+  <section class="section" id="check">
+    <div class="knowledge-check">
+      <div class="kc-header">
+        <div class="kc-badge">Knowledge Check</div>
+        <div class="kc-title">Day 1 — All 10 Questions</div>
+      </div>
+      <p class="kc-subtitle">// Answer EVERY question before moving to Day 2. Click to reveal answers. Be honest with yourself.</p>
+
+      <ol class="question-list">
+
+        <details class="question-item">
+          <summary>
+            <span class="q-num">Q01</span>
+            Write a useEffect that causes a stale closure bug with a counter. Explain exactly WHY it happens mechanically — what the closure is capturing and why it's stale. Then fix it using all 3 methods.
+            <span class="q-arrow">▶</span>
+          </summary>
+          <div class="question-answer">
+            <p><strong>The bug:</strong> A <code>setInterval</code> inside <code>useEffect(fn, [])</code> captures <code>count</code> at mount time (when count = 0). The empty deps array means the effect never re-runs, so the interval callback always has the old count in its closure.</p>
+            <p><strong>Fix 1 — deps array:</strong> Add <code>count</code> to dependency array. Effect re-runs and recreates interval with fresh count. Downside: interval restarts every second.</p>
+            <p><strong>Fix 2 — functional update:</strong> Use <code>setCount(prev => prev + 1)</code>. You never read <code>count</code> from the closure at all — React provides the latest queued value as <code>prev</code>. Best for this use case.</p>
+            <p><strong>Fix 3 — useRef:</strong> Store count in a ref (<code>countRef.current = count</code> in an every-render effect), read from <code>countRef.current</code> inside the interval. Refs are mutable containers — reading from them bypasses the closure problem.</p>
+          </div>
+        </details>
+
+        <details class="question-item">
+          <summary>
+            <span class="q-num">Q02</span>
+            What is the output of: Promise.resolve().then(()=>console.log('A')); setTimeout(()=>console.log('B'),0); console.log('C')? Explain with exact event loop mechanics.
+            <span class="q-arrow">▶</span>
+          </summary>
+          <div class="question-answer">
+            <p><strong>Output: C, A, B</strong></p>
+            <p>1. <code>console.log('C')</code> — synchronous, runs immediately. Output: <em>C</em>.</p>
+            <p>2. <code>setTimeout</code> callback queued in <strong>macrotask queue</strong>. Continues.</p>
+            <p>3. <code>Promise.resolve().then(...)</code> — Promise is already resolved, so callback queued immediately in <strong>microtask queue</strong>.</p>
+            <p>4. Call stack empties. Event loop checks microtask queue FIRST. Runs <code>console.log('A')</code>. Output: <em>A</em>.</p>
+            <p>5. Microtask queue empty. Takes one macrotask. Runs <code>console.log('B')</code>. Output: <em>B</em>.</p>
+          </div>
+        </details>
+
+        <details class="question-item">
+          <summary>
+            <span class="q-num">Q03</span>
+            Why did React 17 not batch setState calls inside setTimeout, but React 18 does? What specific mechanism changed?
+            <span class="q-arrow">▶</span>
+          </summary>
+          <div class="question-answer">
+            <p>React 17 batched updates only when they happened inside a React-controlled event handler. React wrapped event handler calls in a "batching context." Code running asynchronously (setTimeout, Promises, native event listeners) was outside this context, so each setState triggered its own render.</p>
+            <p>React 18 introduced automatic batching by changing the scheduler to always batch state updates regardless of where they originate. React 18 uses a new root API (<code>createRoot</code>) that opts into this behavior. Every state update — regardless of setTimeout, Promise, or native event — is now batched within the same microtask/macrotask execution.</p>
+          </div>
+        </details>
+
+        <details class="question-item">
+          <summary>
+            <span class="q-num">Q04</span>
+            const a = {x: {y: 1}}; const b = {...a}; b.x.y = 99; Does a.x.y change? Why? How do you prevent it?
+            <span class="q-arrow">▶</span>
+          </summary>
+          <div class="question-answer">
+            <p><strong>Yes, a.x.y changes to 99.</strong> The spread operator <code>{...a}</code> creates a shallow clone — only the top level is new. <code>b.x</code> and <code>a.x</code> point to the SAME nested object in memory. Mutating <code>b.x.y</code> mutates the shared object.</p>
+            <p><strong>Prevention — spread each level:</strong> <code>const b = { ...a, x: { ...a.x } }</code>. Now <code>b.x</code> is a new object. Mutating <code>b.x.y</code> won't affect <code>a.x</code>.</p>
+            <p><strong>Or use structuredClone:</strong> <code>const b = structuredClone(a)</code> — fully deep clones all levels. Everything is independent.</p>
+          </div>
+        </details>
+
+        <details class="question-item">
+          <summary>
+            <span class="q-num">Q05</span>
+            Explain the 4 this-binding rules with one code example for each. Then show how arrow functions "break" rule 2.
+            <span class="q-arrow">▶</span>
+          </summary>
+          <div class="question-answer">
+            <p><strong>Rule 1 — Default:</strong> <code>function fn() { console.log(this); } fn();</code> → <code>undefined</code> in strict mode.</p>
+            <p><strong>Rule 2 — Implicit:</strong> <code>const obj = { greet() { console.log(this.name); } }; obj.greet();</code> → <code>this = obj</code>.</p>
+            <p><strong>Rule 3 — Explicit:</strong> <code>greet.call({ name: 'Raghav' });</code> → <code>this = { name: 'Raghav' }</code>.</p>
+            <p><strong>Rule 4 — new:</strong> <code>function P(n) { this.name = n; } const p = new P('R');</code> → <code>this = p</code>.</p>
+            <p><strong>Arrow breaks rule 2:</strong> <code>const obj = { greet: () => { console.log(this); } }; obj.greet();</code> → The arrow function inherits <code>this</code> from where it was WRITTEN (module scope or global), NOT from <code>obj</code>. So <code>this</code> is <code>undefined</code>, not <code>obj</code>. Arrow functions have no own <code>this</code>.</p>
+          </div>
+        </details>
+
+        <details class="question-item">
+          <summary>
+            <span class="q-num">Q06</span>
+            What is structural sharing in Immer? Draw or describe a state tree before and after one nested property change, showing which nodes are reused vs newly created.
+            <span class="q-arrow">▶</span>
+          </summary>
+          <div class="question-answer">
+            <p>Structural sharing: when you update a nested property, Immer only creates new object nodes along the path from root to the changed property. Every other node keeps the same reference.</p>
+            <p><strong>Example:</strong> State = <code>{ users: [{ profile: { city: 'B' } }, { profile: { city: 'M' } }], settings: {} }</code>. You change <code>users[0].profile.city</code>.</p>
+            <p><strong>New nodes:</strong> root (new), users array (new), users[0] (new), users[0].profile (new).</p>
+            <p><strong>Reused (same reference):</strong> users[1], users[1].profile, settings.</p>
+            <p>This means memoized components receiving <code>state.settings</code> as a prop won't re-render — their prop reference didn't change. React's equality check passes and render is skipped.</p>
+          </div>
+        </details>
+
+        <details class="question-item">
+          <summary>
+            <span class="q-num">Q07</span>
+            Why does Object.is() matter for React? Give 2 examples where it differs from ===.
+            <span class="q-arrow">▶</span>
+          </summary>
+          <div class="question-answer">
+            <p>React uses <code>Object.is()</code> to compare old and new state/props in useState, useEffect dependency comparison, and React.memo shallow comparison.</p>
+            <p><strong>Difference 1:</strong> <code>NaN === NaN</code> is <code>false</code>, but <code>Object.is(NaN, NaN)</code> is <code>true</code>. With Object.is, setting state to NaN when it's already NaN will bail out (no re-render). With ===, React would always re-render.</p>
+            <p><strong>Difference 2:</strong> <code>+0 === -0</code> is <code>true</code>, but <code>Object.is(+0, -0)</code> is <code>false</code>. This is a very edge case but matters for specific numeric animations or physics simulations.</p>
+          </div>
+        </details>
+
+        <details class="question-item">
+          <summary>
+            <span class="q-num">Q08</span>
+            Write a closure-in-loop bug using var. Fix it two different ways and explain WHY each fix works.
+            <span class="q-arrow">▶</span>
+          </summary>
+          <div class="question-answer">
+            <p><strong>Bug:</strong> <code>for (var i = 0; i &lt; 3; i++) { setTimeout(() => console.log(i), 100); }</code> — prints 3, 3, 3. All callbacks close over the SAME <code>i</code> (var has function scope, one binding for entire loop).</p>
+            <p><strong>Fix 1 — let:</strong> <code>for (let i = 0; i &lt; 3; i++) { ... }</code> — let has block scope, creates a new binding per iteration. Each callback closes over its own i. Output: 0, 1, 2.</p>
+            <p><strong>Fix 2 — IIFE:</strong> Wrap body in <code>(function(j) { setTimeout(() => console.log(j), 100); })(i)</code>. The IIFE call creates a new scope, and j is a per-call parameter that captures the current value of i. Each callback has its own j. Output: 0, 1, 2.</p>
+          </div>
+        </details>
+
+        <details class="question-item">
+          <summary>
+            <span class="q-num">Q09</span>
+            You have a useEffect that subscribes to a WebSocket. The effect has no cleanup function. Explain the memory leak: what stays in memory, why, and how closures are involved.
+            <span class="q-arrow">▶</span>
+          </summary>
+          <div class="question-answer">
+            <p>The useEffect creates a WebSocket connection and attaches an onmessage handler. This handler closes over component state or props. When the component unmounts (user navigates away), the WebSocket connection stays open and the handler stays attached.</p>
+            <p><strong>What stays in memory:</strong> The WebSocket object, the event handler function (which holds its closure), and everything in the closure's "backpack" — potentially component state, props, or large data the handler references.</p>
+            <p><strong>Why closures are involved:</strong> The handler function closes over the component's scope. As long as the handler exists (attached to the still-open WebSocket), JavaScript's garbage collector cannot free any of the closed-over variables.</p>
+            <p><strong>Fix:</strong> Return a cleanup from useEffect: <code>return () => { ws.close(); ws.onmessage = null; };</code>. When component unmounts, React calls this cleanup, closing the WebSocket and removing the handler. Now the closure can be garbage collected.</p>
+          </div>
+        </details>
+
+        <details class="question-item">
+          <summary>
+            <span class="q-num">Q10</span>
+            What does it mean for JavaScript to be "single-threaded"? Why doesn't React's "interruptible rendering" (Fiber) contradict this?
+            <span class="q-arrow">▶</span>
+          </summary>
+          <div class="question-answer">
+            <p><strong>Single-threaded:</strong> JavaScript can only execute one piece of code at a time. There is one call stack. There is no parallel execution of JS code in the same context.</p>
+            <p><strong>Why Fiber doesn't contradict it:</strong> Fiber doesn't create multiple threads. Instead, React breaks rendering work into small units (one fiber per component). After processing each unit, React can yield control back to the event loop — allowing the browser to process user input or paint frames.</p>
+            <p>This is cooperative scheduling, not parallelism. React voluntarily pauses after each fiber unit and asks: "Is there something more urgent (like a user keystroke) that needs to run?" If yes, React processes that first. The rendering work is spread across multiple event loop turns, interleaved with higher-priority tasks. All of it still runs on ONE thread, ONE call stack at a time.</p>
+          </div>
+        </details>
+
+      </ol>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════
+       RESOURCES
+  ════════════════════════════════════════════ -->
+  <section class="section" id="resources">
+    <div class="section-label">References</div>
+    <h2>Read These — No Excuses</h2>
+    <p class="section-intro">Every link here is hand-picked. Read them in order of priority if you have limited time. The MDN docs especially — bookmark them, live in them.</p>
+
+    <div class="resource-grid">
+      <a class="resource-card" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures" target="_blank" rel="noopener">
+        <div class="resource-type" style="color:var(--gold)">📖 MDN Docs</div>
+        <div class="resource-name">Closures — MDN Web Docs</div>
+        <div class="resource-desc">The definitive reference. Read every example.</div>
+      </a>
+      <a class="resource-card" href="https://javascript.info/closure" target="_blank" rel="noopener">
+        <div class="resource-type" style="color:var(--blue)">📚 Article</div>
+        <div class="resource-name">Closure — javascript.info</div>
+        <div class="resource-desc">Best explanations on the internet. Full chapter.</div>
+      </a>
+      <a class="resource-card" href="https://javascript.info/prototype-inheritance" target="_blank" rel="noopener">
+        <div class="resource-type" style="color:var(--blue)">📚 Article</div>
+        <div class="resource-name">Prototypal Inheritance — javascript.info</div>
+        <div class="resource-desc">Clear diagrams + interactive examples.</div>
+      </a>
+      <a class="resource-card" href="https://developer.mozilla.org/en-US/docs/Web/API/HTML_DOM_API/Microtask_guide" target="_blank" rel="noopener">
+        <div class="resource-type" style="color:var(--gold)">📖 MDN Docs</div>
+        <div class="resource-name">Microtask Guide — MDN</div>
+        <div class="resource-desc">Definitive guide to microtask queue behavior.</div>
+      </a>
+      <a class="resource-card" href="https://javascript.info/event-loop" target="_blank" rel="noopener">
+        <div class="resource-type" style="color:var(--blue)">📚 Article</div>
+        <div class="resource-name">Event Loop — javascript.info</div>
+        <div class="resource-desc">With visual diagrams and interactive demos.</div>
+      </a>
+      <a class="resource-card" href="https://react.dev/learn/updating-objects-in-state" target="_blank" rel="noopener">
+        <div class="resource-type" style="color:var(--cyan)">⚛️ React Docs</div>
+        <div class="resource-name">Updating Objects in State — React.dev</div>
+        <div class="resource-desc">Official docs on immutability in React.</div>
+      </a>
+      <a class="resource-card" href="https://immerjs.github.io/immer/" target="_blank" rel="noopener">
+        <div class="resource-type" style="color:var(--green)">📦 Library Docs</div>
+        <div class="resource-name">Immer Documentation</div>
+        <div class="resource-desc">Full Immer docs with structural sharing deep dive.</div>
+      </a>
+      <a class="resource-card" href="https://overreacted.io/a-complete-guide-to-useeffect/" target="_blank" rel="noopener">
+        <div class="resource-type" style="color:var(--red)">🔥 Must Read</div>
+        <div class="resource-name">A Complete Guide to useEffect — Dan Abramov</div>
+        <div class="resource-desc">The single most important React article ever written. Closures + effects explained by React's creator.</div>
+      </a>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- TODAY'S TASKS -->
+  <section class="section" id="tasks">
+    <div class="section-label">Action Plan</div>
+    <h2>Today's 8-Hour Schedule</h2>
+    <p class="section-intro">Read this doc. Build every example. Don't just copy-paste — TYPE THE CODE. Break it intentionally. Fix it. The understanding comes from the doing.</p>
+
+    <div class="schedule">
+      <div class="schedule-item">
+        <div class="schedule-time">7:00 – 9:30am</div>
+        <div class="schedule-task">
+          <strong>Theory Block — Read this document completely</strong>
+          Closures → Prototype chain → Event Loop → Immutability. Draw diagrams on paper as you read. Redraw the closure backpack, prototype chain, and event loop from memory before continuing.
+        </div>
+      </div>
+      <div class="schedule-item">
+        <div class="schedule-time">10:00 – 1:00pm</div>
+        <div class="schedule-task">
+          <strong>Build Block — Code every example</strong>
+          (1) Stale closure bug — create it, confirm it breaks, apply all 3 fixes. (2) Prototype chain — build a 3-level chain, trace property lookup manually. (3) Event loop — paste the Q02 code and run it, then add more async layers and predict output before running. (4) Shallow vs deep clone — demonstrate the nested mutation bug with React state.
+        </div>
+      </div>
+      <div class="schedule-item">
+        <div class="schedule-time">2:00 – 5:00pm</div>
+        <div class="schedule-task">
+          <strong>React Integration Build</strong>
+          Build a Counter component that uses each fix for stale closures (3 versions side by side). Build a state object with 3 levels of nesting — update a deeply nested field correctly without Immer, then add Immer and compare. Read: Dan Abramov's Complete Guide to useEffect (overreacted.io) — this is 30-40 min but essential.
+        </div>
+      </div>
+      <div class="schedule-item">
+        <div class="schedule-time">6:00 – 8:00pm</div>
+        <div class="schedule-task">
+          <strong>Knowledge Check + Reflection</strong>
+          Answer all 10 knowledge check questions WITHOUT looking at answers first. Check your answers. Re-read any section where you got an answer wrong. Write 3 insights from today in your Notion doc — in your own words, no copy-paste.
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warning" style="margin-top:32px">
+      <div class="callout-title">⚡ Tomorrow — Day 2</div>
+      <p>Day 2 covers React Fiber Architecture — the internal engine of React. We'll go deep into fiber nodes, the work loop, render phase vs commit phase, and priority lanes. Make sure today's closures and event loop are solid before Day 2, because Fiber builds directly on the event loop mechanics.</p>
+    </div>
+
+    <div style="margin-top:48px;padding:32px;background:linear-gradient(135deg,rgba(255,59,92,0.08),rgba(155,114,255,0.08));border:1px solid rgba(255,59,92,0.2);border-radius:16px;text-align:center;">
+      <div style="font-family:'Fraunces',serif;font-size:28px;font-weight:900;color:#fff;margin-bottom:8px">Day 01 of 60.</div>
+      <div style="font-size:16px;color:var(--text2)">My attitude is that if you push me towards something that you think is a weakness, then I will turn that perceived weakness into a strength.</div>
+      <div style="margin-top:16px;display:flex;justify-content:center;gap:8px;">
+        <span class="tag red">React Fiber →</span>
+        <span class="tag gold">Reconciliation →</span>
+        <span class="tag purple">Hooks internals →</span>
+        <span class="tag green">60 days to beast mode</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+</main>
+
+<script>
+  // ── PROGRESS BAR ──────────────────────────────────
+  const bar = document.getElementById('progress-bar');
+  const scrollTop = document.getElementById('scroll-top');
+
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const total = document.body.scrollHeight - window.innerHeight;
+    bar.style.width = (scrolled / total * 100) + '%';
+    scrollTop.classList.toggle('visible', scrolled > 400);
+    updateActiveToc();
+  });
+
+  // ── ACTIVE TOC ──────────────────────────────────
+  function updateActiveToc() {
+    const sections = document.querySelectorAll('[id]');
+    const tocLinks = document.querySelectorAll('.toc-item');
+    let currentId = '';
+
+    sections.forEach(section => {
+      if (window.scrollY >= section.offsetTop - 100) {
+        currentId = section.id;
+      }
+    });
+
+    tocLinks.forEach(link => {
+      link.classList.toggle('active', link.getAttribute('href') === '#' + currentId);
+    });
+  }
+
+  // ── COPY CODE ──────────────────────────────────
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    const text = pre.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'copied!';
+      btn.style.background = 'var(--green)';
+      btn.style.color = '#000';
+      setTimeout(() => {
+        btn.textContent = 'copy';
+        btn.style.background = '';
+        btn.style.color = '';
+      }, 2000);
+    });
+  }
+
+  // ── ANIMATE IN ON SCROLL ──────────────────────────────────
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.animation = 'fadeInUp 0.5s ease forwards';
+        entry.target.style.opacity = '1';
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll('.section').forEach(el => {
+    if (!el.classList.contains('animate-in')) {
+      el.style.opacity = '0';
+      observer.observe(el);
+    }
+  });
+
+  // ── INITIAL ANIMATE-IN ──────────────────────────────────
+  document.querySelectorAll('.animate-in').forEach((el, i) => {
+    el.style.animationDelay = (i * 0.1) + 's';
+  });
+</script>
+</body>
+</html>
