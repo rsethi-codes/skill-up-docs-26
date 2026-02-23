@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 2 — React Fiber Architecture | Raghav's Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0c0c14;--ink2:#111120;--ink3:#181830;
+  --wire:#1e1e3a;--wire2:#252545;--wire3:#32325a;
+  --cyan:#00e5ff;--cyan2:#4dfcff;--cyan-dim:rgba(0,229,255,0.12);--cyan-glow:rgba(0,229,255,0.06);
+  --amber:#ffb300;--amber2:#ffd54f;--amber-dim:rgba(255,179,0,0.12);
+  --green:#00e676;--green-dim:rgba(0,230,118,0.1);
+  --red:#ff4f6d;--red-dim:rgba(255,79,109,0.1);
+  --violet:#b388ff;--violet-dim:rgba(179,136,255,0.1);
+  --text:#d8d8f0;--text2:#9090b8;--text3:#505070;
+  --mono:'IBM Plex Mono',monospace;--serif:'Lora',serif;--sans:'Syne',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--serif);background:var(--ink);color:var(--text);line-height:1.75;font-size:16px;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);pointer-events:none;z-index:0;}
+#prog{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--cyan),var(--amber),var(--violet));z-index:1000;transition:width .1s linear;}
+.topbar{position:fixed;top:0;left:0;right:0;height:52px;background:rgba(12,12,20,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--wire);display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:900;}
+.tb-brand{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--cyan);letter-spacing:.08em;}
+.tb-day{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;}
+.tb-nav{display:flex;gap:20px;list-style:none;}
+.tb-nav a{font-family:var(--mono);font-size:11px;color:var(--text2);text-decoration:none;transition:color .2s;}
+.tb-nav a:hover{color:var(--cyan);}
+.sidebar{position:fixed;left:0;top:52px;width:220px;height:calc(100vh - 52px);overflow-y:auto;padding:20px 0;border-right:1px solid var(--wire);background:rgba(12,12,20,.75);backdrop-filter:blur(8px);z-index:800;}
+.sidebar::-webkit-scrollbar{width:3px}.sidebar::-webkit-scrollbar-thumb{background:var(--wire2);border-radius:2px}
+.toc-head{padding:0 16px 10px;font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--wire);margin-bottom:10px;}
+.toc-link{display:block;padding:5px 16px;font-family:var(--mono);font-size:11px;color:var(--text3);text-decoration:none;border-left:2px solid transparent;transition:all .2s;line-height:1.4;}
+.toc-link:hover,.toc-link.on{color:var(--cyan);border-left-color:var(--cyan);background:var(--cyan-glow);}
+.toc-link.sub{padding-left:26px;font-size:10.5px;}
+.toc-link.sub:hover,.toc-link.sub.on{color:var(--amber);border-left-color:var(--amber);background:var(--amber-dim);}
+.main{margin-left:220px;padding-top:52px;position:relative;z-index:1;}
+.content{max-width:880px;margin:0 auto;padding:56px 36px 120px;}
+.hero{margin-bottom:64px;padding-bottom:48px;border-bottom:1px solid var(--wire);}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--cyan-dim);border:1px solid rgba(0,229,255,.3);border-radius:4px;padding:4px 12px;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--cyan);letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px;}
+.hero-badge::before{content:'';width:6px;height:6px;background:var(--cyan);border-radius:50%;animation:blink 1.8s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+.hero h1{font-family:var(--sans);font-size:clamp(32px,5vw,54px);font-weight:800;line-height:1.06;letter-spacing:-.02em;margin-bottom:14px;}
+.hero h1 em{font-style:normal;color:var(--cyan);}
+.hero-desc{font-size:17px;color:var(--text2);max-width:600px;line-height:1.7;margin-bottom:28px;}
+.hero-chips{display:flex;gap:10px;flex-wrap:wrap;}
+.chip{font-family:var(--mono);font-size:10px;padding:3px 10px;border-radius:3px;border:1px solid;}
+.chip.c{color:var(--cyan);border-color:rgba(0,229,255,.3);background:var(--cyan-glow);}
+.chip.a{color:var(--amber);border-color:rgba(255,179,0,.3);background:var(--amber-dim);}
+.chip.g{color:var(--green);border-color:rgba(0,230,118,.3);background:var(--green-dim);}
+.chip.v{color:var(--violet);border-color:rgba(179,136,255,.3);background:var(--violet-dim);}
+.section{margin-bottom:72px;scroll-margin-top:72px;}
+.sec-label{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-bottom:6px;display:flex;align-items:center;gap:10px;}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--wire);}
+.section h2{font-family:var(--sans);font-size:clamp(24px,3vw,34px);font-weight:800;letter-spacing:-.01em;line-height:1.15;margin-bottom:12px;color:#fff;}
+.sec-intro{font-size:16px;color:var(--text2);max-width:660px;margin-bottom:36px;line-height:1.75;}
+.subsec{margin-bottom:44px;scroll-margin-top:72px;}
+.subsec h3{font-family:var(--sans);font-size:20px;font-weight:700;color:var(--amber);margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+.num{font-family:var(--mono);font-size:10px;color:var(--text3);font-weight:400;flex-shrink:0;}
+.subsec h4{font-family:var(--sans);font-size:15px;font-weight:700;color:var(--text);margin:20px 0 8px;}
+p{margin-bottom:14px;color:var(--text2);line-height:1.78;}
+p strong{color:var(--text);font-weight:600;}
+p em{color:var(--cyan);font-style:normal;}
+.callout{border-radius:8px;padding:18px 22px;margin:22px 0;border-left:3px solid;}
+.callout-title{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;margin-bottom:8px;}
+.callout p{margin-bottom:0;font-size:14.5px;}
+.callout.insight{background:rgba(179,136,255,.07);border-color:var(--violet);}
+.callout.insight .callout-title{color:var(--violet);}
+.callout.danger{background:var(--red-dim);border-color:var(--red);}
+.callout.danger .callout-title{color:var(--red);}
+.callout.tip{background:var(--green-dim);border-color:var(--green);}
+.callout.tip .callout-title{color:var(--green);}
+.callout.warn{background:var(--amber-dim);border-color:var(--amber);}
+.callout.warn .callout-title{color:var(--amber);}
+.callout.info{background:var(--cyan-glow);border-color:var(--cyan);}
+.callout.info .callout-title{color:var(--cyan);}
+.code-block{border-radius:10px;overflow:hidden;margin:22px 0;border:1px solid var(--wire2);}
+.code-head{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:var(--ink3);border-bottom:1px solid var(--wire);}
+.code-lang{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);}
+.code-note{font-family:var(--mono);font-size:10px;color:var(--text3);font-style:italic;}
+.copy-btn{background:var(--wire2);border:none;color:var(--text2);font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:3px;cursor:pointer;transition:all .2s;}
+.copy-btn:hover{background:var(--cyan);color:var(--ink);}
+pre{background:#08080f;padding:22px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.8;}
+pre::-webkit-scrollbar{height:3px}pre::-webkit-scrollbar-thumb{background:var(--wire2);border-radius:2px}
+code{font-family:var(--mono);font-size:12.5px;background:rgba(255,255,255,.06);padding:2px 5px;border-radius:3px;color:var(--amber2);}
+pre code{background:none;padding:0;font-size:inherit;color:inherit;}
+.kw{color:#ff6b8a}.fn{color:#4dfcff}.str{color:#9ecb76}.num{color:#ffb300}.cm{color:#3a3a60;font-style:italic}.cl{color:#b388ff}.var{color:#d8d8f0}.op{color:#ff6b8a}.prop{color:#4dfcff}.at{color:#ffb300}
+.diagram{background:var(--ink2);border:1px solid var(--wire2);border-radius:10px;padding:28px;margin:22px 0;overflow-x:auto;}
+.diag-title{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);text-align:center;margin-bottom:22px;}
+.fiber-node{background:var(--ink3);border:1px solid var(--wire2);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:11.5px;}
+.fiber-field{display:flex;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid var(--wire);}
+.fiber-field:last-child{border-bottom:none;}
+.ff-key{color:var(--cyan);font-weight:600;min-width:150px;flex-shrink:0;}
+.ff-val{color:var(--text2);font-size:11px;flex:1;}
+.ff-type{color:var(--violet);font-size:10px;margin-left:auto;flex-shrink:0;}
+.ctable{width:100%;border-collapse:collapse;margin:20px 0;font-size:13.5px;}
+.ctable th{padding:10px 14px;background:var(--ink3);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);text-align:left;border-bottom:1px solid var(--wire2);}
+.ctable td{padding:10px 14px;border-bottom:1px solid var(--wire);color:var(--text2);vertical-align:top;line-height:1.6;}
+.ctable tr:hover td{background:rgba(255,255,255,.015);}
+.ctable code{font-size:11.5px;}
+.video-wrap{border-radius:10px;overflow:hidden;margin:22px 0;border:1px solid var(--wire2);}
+.video-wrap iframe{display:block;width:100%;aspect-ratio:16/9;border:none;}
+.video-cap{padding:10px 14px;background:var(--ink2);border-top:1px solid var(--wire);font-family:var(--mono);font-size:11px;color:var(--text2);display:flex;align-items:center;gap:8px;}
+.video-cap::before{content:'▶';font-size:10px;color:var(--cyan);}
+.steps{list-style:none;display:flex;flex-direction:column;gap:12px;margin:16px 0;}
+.step{display:flex;gap:14px;align-items:flex-start;}
+.step-n{width:26px;height:26px;background:var(--cyan);color:var(--ink);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px;}
+.step-t{font-size:14.5px;color:var(--text2);line-height:1.65;}
+.step-t strong{color:var(--text);}
+.ba{display:grid;grid-template-columns:1fr 1fr;margin:20px 0;border-radius:8px;overflow:hidden;border:1px solid var(--wire2);}
+.ba-head{padding:8px 14px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:7px;}
+.ba-bad .ba-head{background:rgba(255,79,109,.12);color:var(--red);}
+.ba-good .ba-head{background:rgba(0,230,118,.08);color:var(--green);}
+.ba-pane pre{border-radius:0;}
+.kc-block{background:linear-gradient(135deg,rgba(0,229,255,.04),rgba(179,136,255,.04));border:1px solid rgba(0,229,255,.18);border-radius:12px;padding:30px;margin:48px 0;}
+.kc-hdr{display:flex;align-items:center;gap:14px;margin-bottom:24px;}
+.kc-badge{background:var(--cyan);color:var(--ink);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;padding:5px 12px;border-radius:4px;flex-shrink:0;text-transform:uppercase;}
+.kc-title{font-family:var(--sans);font-size:20px;font-weight:800;color:#fff;}
+.kc-sub{font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:20px;}
+.q-list{list-style:none;display:flex;flex-direction:column;gap:10px;}
+details.q{background:var(--ink2);border:1px solid var(--wire2);border-radius:8px;overflow:hidden;transition:border-color .2s;cursor:pointer;}
+details.q:hover{border-color:var(--cyan);}
+details.q[open]{border-color:var(--amber);}
+details.q summary{padding:13px 16px;display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text);line-height:1.5;list-style:none;}
+details.q summary::-webkit-details-marker{display:none;}
+.q-num{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--cyan);padding-top:2px;flex-shrink:0;}
+.q-arr{margin-left:auto;color:var(--text3);font-size:11px;padding-top:3px;flex-shrink:0;transition:transform .3s;}
+details.q[open] .q-arr{transform:rotate(90deg);}
+.q-ans{padding:14px 16px 16px 36px;font-size:13.5px;color:var(--text2);line-height:1.72;border-top:1px solid var(--wire);}
+.q-ans code{font-size:11.5px;}
+.sched{display:flex;flex-direction:column;gap:10px;margin:20px 0;}
+.sched-row{display:grid;grid-template-columns:130px 1fr;gap:14px;background:var(--ink2);border:1px solid var(--wire);border-radius:8px;padding:14px;}
+.sched-time{font-family:var(--mono);font-size:11px;color:var(--amber);font-weight:600;}
+.sched-task{font-size:13.5px;color:var(--text2);}
+.sched-task strong{color:var(--text);display:block;margin-bottom:3px;font-size:14px;}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin:18px 0;}
+.res-card{background:var(--ink2);border:1px solid var(--wire);border-radius:8px;padding:14px;text-decoration:none;transition:all .2s;display:flex;flex-direction:column;gap:5px;}
+.res-card:hover{border-color:var(--cyan);background:var(--cyan-glow);transform:translateY(-2px);}
+.res-type{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;}
+.res-name{font-family:var(--sans);font-size:13px;font-weight:700;color:var(--text);line-height:1.3;}
+.res-desc{font-size:11.5px;color:var(--text3);}
+#top-btn{position:fixed;bottom:28px;right:28px;width:42px;height:42px;background:var(--cyan);color:var(--ink);border:none;border-radius:6px;font-size:16px;cursor:pointer;opacity:0;transition:opacity .3s,transform .3s;z-index:999;display:flex;align-items:center;justify-content:center;}
+#top-btn.show{opacity:1;}
+#top-btn:hover{transform:translateY(-3px);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.fade-in{animation:fadeUp .5s ease forwards;opacity:0;}
+hr.div{border:none;border-top:1px solid var(--wire);margin:56px 0;}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0}.content{padding:36px 16px 80px}.ba{grid-template-columns:1fr}.tb-nav{display:none}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<button id="top-btn" onclick="scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<nav class="topbar">
+  <div class="tb-brand">RAGHAV.DEV</div>
+  <div class="tb-day">DAY 02 / 60</div>
+  <ul class="tb-nav">
+    <li><a href="#why-fiber">Why Fiber</a></li>
+    <li><a href="#node">Node</a></li>
+    <li><a href="#two-trees">Two Trees</a></li>
+    <li><a href="#phases">Phases</a></li>
+    <li><a href="#lanes">Lanes</a></li>
+    <li><a href="#work-loop">Work Loop</a></li>
+    <li><a href="#check">Check</a></li>
+  </ul>
+</nav>
+
+<aside class="sidebar">
+  <div class="toc-head">Contents</div>
+  <a class="toc-link" href="#hero">Overview</a>
+  <a class="toc-link" href="#why-fiber">1. Why Fiber Exists</a>
+  <a class="toc-link sub" href="#stack-problem">The Stack Problem</a>
+  <a class="toc-link sub" href="#fiber-solution">What Fiber Achieves</a>
+  <a class="toc-link" href="#node">2. Fiber Node Structure</a>
+  <a class="toc-link sub" href="#all-fields">All 12 Fields</a>
+  <a class="toc-link sub" href="#hooks-list">Hooks Linked List</a>
+  <a class="toc-link sub" href="#tree-nav">Tree Navigation</a>
+  <a class="toc-link" href="#two-trees">3. Two-Tree Architecture</a>
+  <a class="toc-link sub" href="#current-wip">Current vs WIP</a>
+  <a class="toc-link sub" href="#double-buffer">Double Buffering</a>
+  <a class="toc-link sub" href="#alternate">Alternate Pointer</a>
+  <a class="toc-link" href="#phases">4. Render vs Commit</a>
+  <a class="toc-link sub" href="#render-phase">Render Phase</a>
+  <a class="toc-link sub" href="#commit-phase">Commit Phase (3 sub-phases)</a>
+  <a class="toc-link sub" href="#effect-timing">useEffect vs useLayoutEffect</a>
+  <a class="toc-link sub" href="#strict-mode">Strict Mode Why</a>
+  <a class="toc-link" href="#lanes">5. Priority Lanes</a>
+  <a class="toc-link sub" href="#lane-types">5 Lane Categories</a>
+  <a class="toc-link sub" href="#start-transition">startTransition</a>
+  <a class="toc-link sub" href="#bitmask">Bitmask Representation</a>
+  <a class="toc-link" href="#work-loop">6. The Work Loop</a>
+  <a class="toc-link sub" href="#wl-algo">Algorithm</a>
+  <a class="toc-link sub" href="#yielding">Yielding to Browser</a>
+  <a class="toc-link sub" href="#concurrency">Concurrency in Action</a>
+  <a class="toc-link" href="#check">Knowledge Check</a>
+  <a class="toc-link" href="#resources">Resources</a>
+  <a class="toc-link" href="#tasks">Today's Tasks</a>
+</aside>
+
+<main class="main">
+<div class="content">
+
+<!-- HERO -->
+<div class="hero fade-in" id="hero">
+  <div class="hero-badge">Day 02 — Month 1 — Week 1</div>
+  <h1>React <em>Fiber</em><br>Architecture</h1>
+  <p class="hero-desc">The engine under everything React does. Most developers answer "virtual DOM" when asked how React works internally — that answer is 8 years out of date. The real answer is Fiber, and knowing it cold is the single biggest differentiator between a mid-level and a senior React engineer in technical interviews.</p>
+  <div class="hero-chips">
+    <span class="chip c">Why Fiber Was Built</span>
+    <span class="chip a">Fiber Node Structure</span>
+    <span class="chip g">Two-Tree Architecture</span>
+    <span class="chip v">Render vs Commit Phase</span>
+    <span class="chip c">Priority Lanes</span>
+    <span class="chip a">The Work Loop</span>
+    <span class="chip g">10 Knowledge Checks</span>
+  </div>
+</div>
+
+<!-- CONNECTION TO DAY 1 -->
+<div class="callout info fade-in">
+  <div class="callout-title">🔗 Connection to Day 1</div>
+  <p>Yesterday you learned that JavaScript is <strong>single-threaded</strong> — one call stack, one thing at a time. Fiber exists entirely because of this constraint. Every design decision in Fiber is an answer to the question: "How do we do heavy rendering work without blocking the one thread the browser has?" Without Day 1 internalized, Fiber feels arbitrary. With it, Fiber feels inevitable.</p>
+</div>
+
+<hr class="div">
+
+<!-- ════════════════════ SECTION 1 — WHY FIBER ════════════════════ -->
+<section class="section fade-in" id="why-fiber">
+  <div class="sec-label">Topic 01</div>
+  <h2>Why Fiber Was Built</h2>
+  <p class="sec-intro">To understand why Fiber exists, you must first understand what was broken before it — and feel the pain of the problem it solved.</p>
+
+  <div class="subsec" id="stack-problem">
+    <h3><span class="num">1.1</span> The Stack Reconciler Problem</h3>
+
+    <p>Before React 16, React used what's called the <strong>Stack Reconciler</strong>. When state changed, React would traverse the entire component tree recursively — calling every component function from root to leaves — in one uninterruptible synchronous run.</p>
+
+    <p>The word <strong>uninterruptible</strong> is the entire problem. A recursive function builds frames on the JavaScript call stack. Once that stack starts growing, the only way out is to either complete the recursion or throw an error. The browser cannot respond to clicks, cannot run animations, cannot paint a frame while the stack is mid-recursion. Everything freezes.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">pseudocode</span><span class="code-note">Stack Reconciler — simplified</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// React 15 — Recursive, synchronous, CANNOT be interrupted</span>
+<span class="kw">function</span> <span class="fn">reconcile</span>(<span class="var">currentNode</span>, <span class="var">newElement</span>) {
+  <span class="fn">updateNode</span>(<span class="var">currentNode</span>, <span class="var">newElement</span>);
+
+  <span class="cm">// Recursive call for EVERY child</span>
+  <span class="cm">// ↓ on a tree 200 levels deep, this builds a stack 200 frames tall</span>
+  <span class="cm">// ↓ that stack CANNOT be paused or interrupted</span>
+  <span class="var">newElement</span>.<span class="prop">children</span>.<span class="fn">forEach</span>(<span class="var">child</span> => {
+    <span class="fn">reconcile</span>(<span class="var">currentNode</span>.<span class="fn">findChild</span>(<span class="var">child</span>), <span class="var">child</span>);
+  });
+}
+
+<span class="cm">// If this takes 200ms on a large tree:</span>
+<span class="cm">// → main thread BLOCKED for 200ms</span>
+<span class="cm">// → user clicks during those 200ms? IGNORED</span>
+<span class="cm">// → CSS animations? FROZEN</span>
+<span class="cm">// → browser paint? DELAYED</span>
+<span class="cm">// → everything feels janky and unresponsive</span></code></pre>
+    </div>
+
+    <div class="diagram">
+      <div class="diag-title">Stack Reconciler vs Fiber Reconciler</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;font-family:var(--mono);font-size:11.5px;">
+        <div>
+          <div style="color:var(--red);font-size:10px;font-weight:700;letter-spacing:.1em;margin-bottom:10px;text-transform:uppercase">❌ Stack (React ≤ 15)</div>
+          <div style="background:var(--ink3);border:1px solid rgba(255,79,109,.25);border-radius:6px;padding:14px;">
+            <div style="color:var(--text2);margin-bottom:8px;font-size:11px">Call stack builds with recursion:</div>
+            <div style="color:var(--red)">reconcile(App)</div>
+            <div style="color:var(--red);margin-left:14px">→ reconcile(Header)</div>
+            <div style="color:var(--red);margin-left:28px">→ reconcile(Nav)</div>
+            <div style="color:var(--red);margin-left:42px">→ reconcile(NavItem)</div>
+            <div style="color:var(--red);margin-left:42px">→ reconcile(NavItem)</div>
+            <div style="color:var(--red);margin-left:28px">→ reconcile(Logo)</div>
+            <div style="color:var(--red);margin-left:14px">→ reconcile(Main)</div>
+            <div style="color:var(--red);margin-left:28px">→ reconcile(...)</div>
+            <div style="margin-top:10px;padding:8px;background:rgba(255,79,109,.08);border-radius:4px;color:var(--red);font-size:10px">Blocked until ALL done. Can't stop. Can't prioritize. Can't interrupt.</div>
+          </div>
+        </div>
+        <div>
+          <div style="color:var(--cyan);font-size:10px;font-weight:700;letter-spacing:.1em;margin-bottom:10px;text-transform:uppercase">✅ Fiber (React 16+)</div>
+          <div style="background:var(--ink3);border:1px solid rgba(0,229,255,.25);border-radius:6px;padding:14px;">
+            <div style="color:var(--text2);margin-bottom:8px;font-size:11px">Iterative linked list traversal:</div>
+            <div style="color:var(--cyan)">workUnit = App fiber</div>
+            <div style="color:var(--text3);font-size:10px;margin:3px 0">↓ process unit (microseconds)</div>
+            <div style="color:var(--cyan)">workUnit = Header fiber</div>
+            <div style="color:var(--green);font-size:10px;margin:3px 0">→ check deadline: is time up?</div>
+            <div style="color:var(--cyan)">workUnit = Nav fiber</div>
+            <div style="color:var(--green);font-size:10px;margin:3px 0">→ urgent keystroke! yield, handle it first</div>
+            <div style="color:var(--cyan)">workUnit = Nav fiber (resume)</div>
+            <div style="margin-top:10px;padding:8px;background:var(--cyan-glow);border-radius:4px;color:var(--cyan);font-size:10px">Each fiber = one unit. Can pause after any unit. Resumes where it stopped.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <div class="callout-title">🎯 The Real Pain Point</div>
+      <p>Facebook's news feed was <strong>literally janky</strong>. Typing in search was sluggish on older phones. Scrolling caused stutter. The Stack Reconciler couldn't differentiate between "user just typed a character (urgent)" and "background data sync (can wait)". It treated everything equally — and processed it all synchronously. That's what drove 2 years of React Fiber development.</p>
+    </div>
+  </div>
+
+  <div class="subsec" id="fiber-solution">
+    <h3><span class="num">1.2</span> What Fiber Set Out to Achieve</h3>
+
+    <p>The React team's goals for Fiber were explicit:</p>
+
+    <ol class="steps">
+      <li class="step"><div class="step-n">1</div><div class="step-t"><strong>Interruptible rendering</strong> — pause work, do something urgent, resume exactly where we stopped</div></li>
+      <li class="step"><div class="step-n">2</div><div class="step-t"><strong>Priority scheduling</strong> — user input gets processed before background syncs</div></li>
+      <li class="step"><div class="step-n">3</div><div class="step-t"><strong>Abortable work</strong> — discard in-progress renders if they become stale (user typed again)</div></li>
+      <li class="step"><div class="step-n">4</div><div class="step-t"><strong>Reusable work</strong> — prepare multiple versions of the UI and choose which to show (future: Offscreen API)</div></li>
+    </ol>
+
+    <p>To achieve all of this, they replaced the implicit call stack (which the JS runtime manages) with an <strong>explicit data structure React controls</strong> — a linked list of fiber nodes. React traverses this list iteratively, not recursively. After each unit of work, it can decide to continue or yield.</p>
+
+    <div class="callout insight">
+      <div class="callout-title">💡 The Core Insight</div>
+      <p>The problem wasn't recursion itself — it was that the <strong>call stack is controlled by the JavaScript runtime</strong>, not by React. By replacing the call stack with a linked list that React owns, React gets to decide when to advance, when to pause, and when to abandon. Same algorithm, different data structure, total control.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ════════════════════ SECTION 2 — FIBER NODE STRUCTURE ════════════════════ -->
+<section class="section fade-in" id="node">
+  <div class="sec-label">Topic 02</div>
+  <h2>Fiber Node Structure</h2>
+  <p class="sec-intro">Every React component in your app — every div, every function, every class — corresponds to one fiber node. When React builds or updates your component tree, it's actually building a linked list of these objects. Knowing what's inside each fiber means you can reason about anything React does.</p>
+
+  <div class="subsec" id="all-fields">
+    <h3><span class="num">2.1</span> All 12 Critical Fields</h3>
+
+    <p>A Fiber node is a plain JavaScript object. Here are the fields that matter — each one corresponds directly to something you use daily as a React developer:</p>
+
+    <div class="diagram">
+      <div class="diag-title">Fiber Node — Every Field You Need to Know</div>
+      <div class="fiber-node">
+        <div class="fiber-field">
+          <span class="ff-key">type</span>
+          <span class="ff-val">The component itself — a function reference, a class, or a DOM string like <code>"div"</code> or <code>"button"</code></span>
+          <span class="ff-type">Function | Class | string</span>
+        </div>
+        <div class="fiber-field">
+          <span class="ff-key">key</span>
+          <span class="ff-val">The <code>key</code> prop you write in JSX. Used during reconciliation to identify component instances. null if no key provided.</span>
+          <span class="ff-type">string | null</span>
+        </div>
+        <div class="fiber-field">
+          <span class="ff-key">stateNode</span>
+          <span class="ff-val">For host components (div, span): the actual DOM node. For class components: the class instance. For function components: null.</span>
+          <span class="ff-type">DOM | Instance | null</span>
+        </div>
+        <div class="fiber-field">
+          <span class="ff-key">return</span>
+          <span class="ff-val">Pointer to the parent fiber. How React traverses back up the tree after finishing a subtree.</span>
+          <span class="ff-type">Fiber | null</span>
+        </div>
+        <div class="fiber-field">
+          <span class="ff-key">child</span>
+          <span class="ff-val">Pointer to the FIRST child fiber only. Additional children are accessed via the first child's <code>sibling</code> pointers.</span>
+          <span class="ff-type">Fiber | null</span>
+        </div>
+        <div class="fiber-field">
+          <span class="ff-key">sibling</span>
+          <span class="ff-val">Pointer to the next sibling fiber. Children of a parent form a singly-linked list through these pointers.</span>
+          <span class="ff-type">Fiber | null</span>
+        </div>
+        <div class="fiber-field">
+          <span class="ff-key">pendingProps</span>
+          <span class="ff-val">Props at the START of this render cycle — the "input" being processed. Not yet committed to the DOM.</span>
+          <span class="ff-type">Props object</span>
+        </div>
+        <div class="fiber-field">
+          <span class="ff-key">memoizedProps</span>
+          <span class="ff-val">Props from the LAST committed render. What's actually on screen right now. Used for diffing on next render.</span>
+          <span class="ff-type">Props object</span>
+        </div>
+        <div class="fiber-field">
+          <span class="ff-key">memoizedState</span>
+          <span class="ff-val">For function components: the HEAD of the hooks linked list (ALL hooks live here). For class components: the state object.</span>
+          <span class="ff-type">Hook | StateObj</span>
+        </div>
+        <div class="fiber-field">
+          <span class="ff-key">flags</span>
+          <span class="ff-val">A bitmask marking what work needs to happen during commit. Placement (insert), Update (prop change), Deletion, ChildDeletion, etc.</span>
+          <span class="ff-type">number (bitmask)</span>
+        </div>
+        <div class="fiber-field">
+          <span class="ff-key">lanes</span>
+          <span class="ff-val">Priority bitmask for pending work on this fiber. Which "lane" this update belongs to (Sync, Transition, Idle, etc.)</span>
+          <span class="ff-type">number (bitmask)</span>
+        </div>
+        <div class="fiber-field">
+          <span class="ff-key">alternate</span>
+          <span class="ff-val">Pointer to the counterpart fiber in the OTHER tree. Current fiber → WIP fiber. WIP fiber → current fiber. They point at each other.</span>
+          <span class="ff-type">Fiber | null</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-title">⚡ pendingProps vs memoizedProps — Why Both?</div>
+      <p>When React starts processing a component, it sets <code>pendingProps</code> to the new props. After the component renders successfully, it copies <code>pendingProps</code> into <code>memoizedProps</code>. If React aborts the render mid-way (higher priority work arrived), <code>memoizedProps</code> still holds the last <em>committed</em> state — what's actually on screen. This two-field system is what allows React to discard in-progress work without corrupting the displayed UI.</p>
+    </div>
+  </div>
+
+  <div class="subsec" id="hooks-list">
+    <h3><span class="num">2.2</span> The Hooks Linked List — Where Your State Actually Lives</h3>
+
+    <p>Here is the connection most developers never learn: <strong>all your hooks are stored as a linked list on <code>fiber.memoizedState</code></strong>. Each <code>useState</code>, each <code>useEffect</code>, each <code>useRef</code> — all of them are nodes in this list, in the exact order you called them.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-note">Component with 3 hooks</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="kw">function</span> <span class="cl">Counter</span>() {
+  <span class="kw">const</span> [<span class="var">count</span>, <span class="var">setCount</span>] = <span class="fn">useState</span>(<span class="num">0</span>);       <span class="cm">// Hook Node 1</span>
+  <span class="kw">const</span> [<span class="var">name</span>, <span class="var">setName</span>]   = <span class="fn">useState</span>(<span class="str">''</span>);       <span class="cm">// Hook Node 2</span>
+  <span class="fn">useEffect</span>(() => { <span class="cm">/* sync */</span> }, [<span class="var">count</span>]);  <span class="cm">// Hook Node 3</span>
+  <span class="kw">return</span> <span class="op">&lt;</span><span class="var">div</span><span class="op">&gt;</span>{<span class="var">count</span>}<span class="op">&lt;/</span><span class="var">div</span><span class="op">&gt;</span>;
+}</code></pre>
+    </div>
+
+    <div class="diagram">
+      <div class="diag-title">fiber.memoizedState → Hooks Linked List</div>
+      <div style="display:flex;align-items:center;gap:0;font-family:var(--mono);font-size:11px;overflow-x:auto;padding-bottom:8px;flex-wrap:nowrap;">
+        <div style="text-align:center;margin-right:10px;flex-shrink:0;">
+          <div style="background:var(--amber-dim);border:1px solid rgba(255,179,0,.3);border-radius:6px;padding:8px 12px;margin-bottom:4px;color:var(--amber)">Counter Fiber</div>
+          <div style="font-size:9px;color:var(--text3)">memoizedState ↓</div>
+        </div>
+        <div style="font-size:18px;color:var(--text3);margin:0 8px;flex-shrink:0;">→</div>
+        <div style="background:var(--ink3);border:1px solid var(--cyan);border-radius:6px;padding:10px 14px;min-width:150px;margin-right:8px;flex-shrink:0;">
+          <div style="color:var(--cyan);font-size:9px;margin-bottom:6px;font-weight:600;letter-spacing:.1em">HOOK 1 — useState</div>
+          <div style="color:var(--text2)">memoizedState: <span style="color:var(--amber)">0</span></div>
+          <div style="color:var(--text2)">queue: updateQueue</div>
+          <div style="color:var(--text3);margin-top:4px;font-size:10px">next ↓</div>
+        </div>
+        <div style="font-size:18px;color:var(--text3);margin:0 8px;flex-shrink:0;">→</div>
+        <div style="background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;padding:10px 14px;min-width:150px;margin-right:8px;flex-shrink:0;">
+          <div style="color:var(--cyan);font-size:9px;margin-bottom:6px;font-weight:600;letter-spacing:.1em">HOOK 2 — useState</div>
+          <div style="color:var(--text2)">memoizedState: <span style="color:var(--amber)">""</span></div>
+          <div style="color:var(--text2)">queue: updateQueue</div>
+          <div style="color:var(--text3);margin-top:4px;font-size:10px">next ↓</div>
+        </div>
+        <div style="font-size:18px;color:var(--text3);margin:0 8px;flex-shrink:0;">→</div>
+        <div style="background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;padding:10px 14px;min-width:150px;flex-shrink:0;">
+          <div style="color:var(--cyan);font-size:9px;margin-bottom:6px;font-weight:600;letter-spacing:.1em">HOOK 3 — useEffect</div>
+          <div style="color:var(--text2)">memoizedState: deps</div>
+          <div style="color:var(--text2)">destroy: cleanup fn</div>
+          <div style="color:var(--text3);margin-top:4px;font-size:10px">next → null</div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:10px 14px;background:var(--red-dim);border:1px solid rgba(255,79,109,.2);border-radius:6px;font-family:var(--mono);font-size:10.5px;color:var(--text2)">
+        ⚠️ On every render, React traverses this list <strong style="color:var(--red)">in order, by index</strong>. Hook 1 always = first useState. Hook 2 always = second useState. If you call hooks conditionally or inside a loop, the list order changes → wrong state assigned to wrong hook → you get someone else's state. This is why the "Rules of Hooks" exist — they are a <strong style="color:var(--red)">technical requirement</strong> of the linked list architecture.
+      </div>
+    </div>
+  </div>
+
+  <div class="subsec" id="tree-nav">
+    <h3><span class="num">2.3</span> How Fiber Navigates the Tree — child / sibling / return</h3>
+
+    <p>The three pointer fields (<code>child</code>, <code>sibling</code>, <code>return</code>) form a specific traversal pattern. Understanding this pattern is how you understand the work loop.</p>
+
+    <div class="diagram">
+      <div class="diag-title">Fiber Tree Traversal — The DFS Loop</div>
+      <div style="font-family:var(--mono);font-size:11px;">
+        <div style="display:flex;align-items:center;gap:0;margin-bottom:8px;">
+          <div style="background:var(--ink3);border:1px solid var(--amber);border-radius:6px;padding:8px 14px;color:var(--amber);">App</div>
+          <div style="padding:0 10px;color:var(--text3);font-size:10px;">→ child</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0;margin-left:80px;margin-bottom:8px;">
+          <div style="background:var(--ink3);border:1px solid var(--cyan);border-radius:6px;padding:8px 14px;color:var(--cyan);">Header</div>
+          <div style="padding:0 10px;color:var(--text3);font-size:10px;">→ sibling</div>
+          <div style="background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;padding:8px 14px;color:var(--text);">Main</div>
+          <div style="padding:0 10px;color:var(--text3);font-size:10px;">→ sibling</div>
+          <div style="background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;padding:8px 14px;color:var(--text);">Footer</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0;margin-left:160px;margin-bottom:14px;">
+          <div style="background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;padding:8px 14px;color:var(--text);">Nav</div>
+          <div style="padding:0 10px;color:var(--text3);font-size:10px;">→ sibling</div>
+          <div style="background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;padding:8px 14px;color:var(--text);">Logo</div>
+        </div>
+        <div style="padding:12px 14px;background:var(--cyan-glow);border:1px solid rgba(0,229,255,.15);border-radius:6px;color:var(--text2);font-size:10.5px;line-height:1.7;">
+          <strong style="color:var(--cyan)">Work order:</strong> App → Header (via child) → Nav (via child) → no child → Logo (via sibling) → no child, no sibling → Header (via return) → no more children, go to sibling Main → ... → Footer → done<br>
+          <strong style="color:var(--cyan)">Key insight:</strong> React can pause after processing ANY single node and resume exactly there. The <code>return</code> pointer replaces the call stack's implicit "go back to caller" mechanism.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="video-wrap">
+    <iframe src="https://www.youtube.com/embed/ZCuYPiUIONs" allowfullscreen loading="lazy" title="Fiber Explained"></iframe>
+    <div class="video-cap">Philip Fabianek — "How React Fiber Works" — 20 min. Visual walkthrough of the fiber tree. Watch before the work loop section.</div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ════════════════════ SECTION 3 — TWO TREE ARCHITECTURE ════════════════════ -->
+<section class="section fade-in" id="two-trees">
+  <div class="sec-label">Topic 03</div>
+  <h2>The Two-Tree Architecture</h2>
+  <p class="sec-intro">React always maintains two fiber trees simultaneously. This is the mechanism that lets React discard an in-progress render without showing broken UI — and commit a completed render atomically, with no visible flash of incomplete state.</p>
+
+  <div class="subsec" id="current-wip">
+    <h3><span class="num">3.1</span> Current Tree vs Work-In-Progress Tree</h3>
+
+    <p>At every moment, React's root holds a pointer to the <strong>current tree</strong> — the fiber tree that reflects what's currently on screen. When an update triggers, React creates a new <strong>work-in-progress (WIP) tree</strong> and builds it incrementally.</p>
+
+    <div class="diagram">
+      <div class="diag-title">Two Trees — What Each Is For</div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:start;font-family:var(--mono);font-size:11px;">
+        <div>
+          <div style="text-align:center;color:var(--green);font-size:10px;font-weight:600;letter-spacing:.1em;margin-bottom:8px;padding:6px;border-radius:4px;background:var(--green-dim);border:1px solid rgba(0,230,118,.2);">CURRENT TREE</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;">
+              <span style="color:var(--text)">App</span><span style="background:var(--green-dim);color:var(--green);font-size:9px;padding:2px 6px;border-radius:3px;">on screen</span>
+            </div>
+            <div style="background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;">
+              <span style="color:var(--text)">Header</span><span style="background:var(--green-dim);color:var(--green);font-size:9px;padding:2px 6px;border-radius:3px;">on screen</span>
+            </div>
+            <div style="background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;">
+              <span style="color:var(--text)">Main</span><span style="background:var(--green-dim);color:var(--green);font-size:9px;padding:2px 6px;border-radius:3px;">on screen</span>
+            </div>
+          </div>
+          <div style="margin-top:10px;padding:8px;background:var(--green-dim);border:1px solid rgba(0,230,118,.15);border-radius:6px;color:var(--green);font-size:10px">Never modified during reconciliation. Stable. What the user sees.</div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:24px;color:var(--amber);padding-top:50px;">⇄</div>
+        <div>
+          <div style="text-align:center;color:var(--cyan);font-size:10px;font-weight:600;letter-spacing:.1em;margin-bottom:8px;padding:6px;border-radius:4px;background:var(--cyan-dim);border:1px solid rgba(0,229,255,.2);">WORK-IN-PROGRESS TREE</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="background:var(--ink3);border:1px solid var(--cyan);border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;">
+              <span style="color:var(--text)">App</span><span style="background:var(--cyan-dim);color:var(--cyan);font-size:9px;padding:2px 6px;border-radius:3px;">being built</span>
+            </div>
+            <div style="background:var(--ink3);border:1px solid var(--cyan);border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;">
+              <span style="color:var(--text)">Header</span><span style="background:var(--cyan-dim);color:var(--cyan);font-size:9px;padding:2px 6px;border-radius:3px;">being built</span>
+            </div>
+            <div style="background:var(--ink3);border:1px solid var(--amber);border-radius:6px;padding:8px 12px;display:flex;justify-content:space-between;">
+              <span style="color:var(--amber)">Main (updated)</span><span style="background:var(--amber-dim);color:var(--amber);font-size:9px;padding:2px 6px;border-radius:3px;">pending commit</span>
+            </div>
+          </div>
+          <div style="margin-top:10px;padding:8px;background:var(--cyan-dim);border:1px solid rgba(0,229,255,.15);border-radius:6px;color:var(--cyan);font-size:10px">React's draft. Built incrementally. Can be discarded at any time without affecting the screen.</div>
+        </div>
+      </div>
+    </div>
+
+    <p>The <code>alternate</code> pointer on each fiber connects the two trees: every fiber in the current tree points to its WIP counterpart, and vice versa. They mirror each other.</p>
+  </div>
+
+  <div class="subsec" id="double-buffer">
+    <h3><span class="num">3.2</span> Double Buffering — The Atomic Swap</h3>
+
+    <p>When the WIP tree is complete and all DOM mutations have been applied, React performs a single pointer swap. The WIP tree becomes the current tree. This is called <strong>double buffering</strong>.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">pseudocode</span><span class="code-note">The commit phase finalization</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// After ALL DOM mutations are applied to the real DOM...</span>
+<span class="cm">// After ALL layout effects (useLayoutEffect) have run...</span>
+<span class="cm">// React performs ONE atomic pointer swap:</span>
+
+<span class="var">root</span>.<span class="prop">current</span> = <span class="var">workInProgressRoot</span>;
+
+<span class="cm">// That's it. The new tree is now "current".</span>
+<span class="cm">// The old current tree is now the free pool for the NEXT WIP.</span>
+
+<span class="cm">// Why this is safe:</span>
+<span class="cm">// → The DOM was already mutated BEFORE this pointer swap</span>
+<span class="cm">// → The swap just updates React's internal bookkeeping</span>
+<span class="cm">// → From the user's perspective it is instantaneous</span>
+<span class="cm">// → No half-rendered states. No flicker. Ever.</span></code></pre>
+    </div>
+
+    <div class="callout insight">
+      <div class="callout-title">💡 This Is Literally Computer Graphics</div>
+      <p>Computer graphics uses the same pattern: draw the next frame into an <strong>off-screen buffer</strong> while the current frame is displayed. When the next frame is ready, swap the buffers in one atomic operation — the user never sees an incomplete frame. React uses the exact same idea. The work-in-progress tree IS the off-screen buffer. The commit is the buffer swap.</p>
+    </div>
+  </div>
+
+  <div class="subsec" id="alternate">
+    <h3><span class="num">3.3</span> The Alternate Pointer — Memory Efficiency</h3>
+
+    <p>Instead of creating brand-new fiber objects on every render, React reuses the old current fibers as the next WIP. After the swap, the old current tree is repopulated with new data when the next render starts. No garbage collection pressure on every update.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">javascript</span><span class="code-note">createWorkInProgress — from React source, simplified</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="kw">function</span> <span class="fn">createWorkInProgress</span>(<span class="var">current</span>, <span class="var">pendingProps</span>) {
+  <span class="kw">let</span> <span class="var">wip</span> = <span class="var">current</span>.<span class="prop">alternate</span>;
+
+  <span class="kw">if</span> (<span class="var">wip</span> === <span class="kw">null</span>) {
+    <span class="cm">// First ever render — create fresh fiber</span>
+    <span class="var">wip</span> = <span class="fn">createFiber</span>(<span class="var">current</span>.<span class="prop">tag</span>, <span class="var">pendingProps</span>, <span class="var">current</span>.<span class="prop">key</span>);
+    <span class="var">wip</span>.<span class="prop">alternate</span>     = <span class="var">current</span>;
+    <span class="var">current</span>.<span class="prop">alternate</span> = <span class="var">wip</span>;
+  } <span class="kw">else</span> {
+    <span class="cm">// Subsequent render — REUSE the existing alternate object</span>
+    <span class="cm">// Just reset it. Much cheaper than new object allocation.</span>
+    <span class="var">wip</span>.<span class="prop">pendingProps</span>   = <span class="var">pendingProps</span>;
+    <span class="var">wip</span>.<span class="prop">flags</span>          = <span class="num">0</span>;  <span class="cm">// clear effect flags</span>
+    <span class="var">wip</span>.<span class="prop">subtreeFlags</span>   = <span class="num">0</span>;
+    <span class="var">wip</span>.<span class="prop">deletions</span>      = <span class="kw">null</span>;
+  }
+
+  <span class="cm">// Copy over current render's data as starting point</span>
+  <span class="var">wip</span>.<span class="prop">memoizedProps</span>  = <span class="var">current</span>.<span class="prop">memoizedProps</span>;
+  <span class="var">wip</span>.<span class="prop">memoizedState</span>  = <span class="var">current</span>.<span class="prop">memoizedState</span>;  <span class="cm">// ← hooks list copied</span>
+  <span class="var">wip</span>.<span class="prop">lanes</span>          = <span class="var">current</span>.<span class="prop">lanes</span>;
+
+  <span class="kw">return</span> <span class="var">wip</span>;
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ════════════════════ SECTION 4 — RENDER VS COMMIT ════════════════════ -->
+<section class="section fade-in" id="phases">
+  <div class="sec-label">Topic 04</div>
+  <h2>Render Phase vs Commit Phase</h2>
+  <p class="sec-intro">React's total work is split into two completely distinct phases with radically different properties. Understanding the split explains why side effects in render are dangerous, why useLayoutEffect prevents flicker while useEffect doesn't, and why Strict Mode double-invokes your components.</p>
+
+  <div class="subsec" id="render-phase">
+    <h3><span class="num">4.1</span> The Render Phase (Reconciliation)</h3>
+
+    <p>The render phase is React's "computation" — calling component functions, processing hooks, comparing old and new fiber trees, and marking fibers with what work needs to happen. It produces a description of changes. It does NOT touch the DOM.</p>
+
+    <div class="diagram">
+      <div class="diag-title">Render Phase Properties</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:13.5px;">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;">
+            <div style="width:8px;height:8px;background:var(--cyan);border-radius:50%;flex-shrink:0;margin-top:5px;"></div>
+            <div style="color:var(--text2)"><strong style="color:var(--text)">Interruptible</strong> — can be paused mid-way and resumed later, or discarded entirely</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;">
+            <div style="width:8px;height:8px;background:var(--cyan);border-radius:50%;flex-shrink:0;margin-top:5px;"></div>
+            <div style="color:var(--text2)"><strong style="color:var(--text)">Async</strong> in Concurrent Mode — can be spread across multiple browser frames</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;">
+            <div style="width:8px;height:8px;background:var(--cyan);border-radius:50%;flex-shrink:0;margin-top:5px;"></div>
+            <div style="color:var(--text2)"><strong style="color:var(--text)">May run multiple times</strong> — React may restart a render if higher priority work arrives</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;">
+            <div style="width:8px;height:8px;background:var(--red);border-radius:50%;flex-shrink:0;margin-top:5px;"></div>
+            <div style="color:var(--text2)"><strong style="color:var(--text)">Must be pure</strong> — no DOM mutations, no network calls, no subscriptions, no timers</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;">
+            <div style="width:8px;height:8px;background:var(--red);border-radius:50%;flex-shrink:0;margin-top:5px;"></div>
+            <div style="color:var(--text2)"><strong style="color:var(--text)">No DOM access</strong> — React may not have committed to the DOM yet at this point</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;">
+            <div style="width:8px;height:8px;background:var(--red);border-radius:50%;flex-shrink:0;margin-top:5px;"></div>
+            <div style="color:var(--text2)"><strong style="color:var(--text)">No observability guarantee</strong> — component may be called without its output ever committing</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p>During the render phase for each fiber, React:</p>
+    <ol class="steps">
+      <li class="step"><div class="step-n">1</div><div class="step-t"><strong>Calls the component function</strong> — <code>Counter(props)</code> — and receives the returned JSX</div></li>
+      <li class="step"><div class="step-n">2</div><div class="step-t"><strong>Processes hooks</strong> — traverses the linked list on <code>fiber.memoizedState</code>, returns state values in order</div></li>
+      <li class="step"><div class="step-n">3</div><div class="step-t"><strong>Diffs children</strong> — compares new JSX children against existing fiber children. What's new? What changed? What was deleted?</div></li>
+      <li class="step"><div class="step-n">4</div><div class="step-t"><strong>Tags fibers with flags</strong> — stamps <code>Placement</code>, <code>Update</code>, <code>Deletion</code> bitmasks onto WIP fibers for the commit phase to execute</div></li>
+    </ol>
+
+    <div class="callout danger">
+      <div class="callout-title">🚨 Why Side Effects in Render Are Dangerous in Concurrent Mode</div>
+      <p>In Concurrent Mode, React may call your component function <strong>2, 3, or more times</strong> before committing once. If your render body has a side effect — incrementing an analytics counter, writing to a ref, logging to a remote server — it fires multiple times for what the user sees as a single update. This is not a bug in React; it is React exercising its right to restart interrupted renders. Your render function must be a pure function of its props and state.</p>
+    </div>
+  </div>
+
+  <div class="subsec" id="commit-phase">
+    <h3><span class="num">4.2</span> The Commit Phase — 3 Sub-Phases</h3>
+
+    <p>After the render phase produces a complete WIP tree with all flags set, React enters the commit phase. This phase is always <strong>synchronous</strong> — it runs to completion, cannot be interrupted. It has three sub-phases, executed in strict order:</p>
+
+    <div class="diagram">
+      <div class="diag-title">The 3 Sub-Phases of Commit — In Order</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:13.5px;">
+        <div style="background:var(--ink3);border:1px solid rgba(179,136,255,.3);border-radius:8px;padding:16px 18px;">
+          <div style="font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--violet);margin-bottom:8px;">① BEFORE MUTATION PHASE</div>
+          <div style="color:var(--text2);">Reads the DOM <em>before</em> any changes are made. Runs <code>getSnapshotBeforeUpdate</code> for class components. Safe to measure DOM layout here — nothing has changed yet.</div>
+          <div style="margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--text3);">DOM STATE: unchanged from previous render</div>
+        </div>
+        <div style="background:var(--ink3);border:1px solid rgba(255,79,109,.3);border-radius:8px;padding:16px 18px;">
+          <div style="font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--red);margin-bottom:8px;">② MUTATION PHASE</div>
+          <div style="color:var(--text2);">Applies ALL DOM mutations — inserts new nodes, updates existing nodes' props/attrs, removes deleted nodes. Runs <code>useLayoutEffect</code> <strong>cleanup functions</strong> from the previous render.</div>
+          <div style="margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--text3);">DOM STATE: updated to new render. Screen NOT yet painted.</div>
+        </div>
+        <div style="background:var(--ink3);border:1px solid rgba(0,230,118,.3);border-radius:8px;padding:16px 18px;">
+          <div style="font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--green);margin-bottom:8px;">③ LAYOUT PHASE</div>
+          <div style="color:var(--text2);">Runs <code>useLayoutEffect</code> callbacks synchronously. <code>root.current = workInProgress</code> swap happens here. After this sub-phase, the browser is given control to paint the screen.</div>
+          <div style="margin-top:6px;font-family:var(--mono);font-size:10px;color:var(--text3);">After layout phase: browser paints. Then useEffect fires asynchronously.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsec" id="effect-timing">
+    <h3><span class="num">4.3</span> useLayoutEffect vs useEffect — The Exact Difference</h3>
+
+    <p>Now that you know the commit sub-phases, the difference between these two hooks is trivial to explain:</p>
+
+    <table class="ctable">
+      <thead><tr><th>Hook</th><th>When It Fires</th><th>Synchronous?</th><th>Use Case</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>useLayoutEffect</code></td>
+          <td>After mutation phase, before browser paint (Layout Phase)</td>
+          <td><strong style="color:var(--red)">Yes — blocks paint</strong></td>
+          <td>Read DOM measurements (offsetHeight, getBoundingClientRect) and immediately write back. Prevents visual flicker from wrong initial layout.</td>
+        </tr>
+        <tr>
+          <td><code>useEffect</code></td>
+          <td>After browser has painted (scheduled asynchronously)</td>
+          <td><strong style="color:var(--green)">No — doesn't block paint</strong></td>
+          <td>Subscriptions, data fetching, analytics, event listeners, WebSocket connections. Anything that doesn't need to happen before the user sees the screen.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-note">When to use useLayoutEffect — tooltip positioning example</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="kw">function</span> <span class="cl">Tooltip</span>({ <span class="var">children</span>, <span class="var">tooltipText</span> }) {
+  <span class="kw">const</span> <span class="var">tooltipRef</span> = <span class="fn">useRef</span>(<span class="kw">null</span>);
+  <span class="kw">const</span> [<span class="var">position</span>, <span class="var">setPosition</span>] = <span class="fn">useState</span>({ <span class="var">top</span>: <span class="num">0</span>, <span class="var">left</span>: <span class="num">0</span> });
+
+  <span class="fn">useLayoutEffect</span>(() => {
+    <span class="cm">// Fires AFTER DOM mutation (tooltip is in the DOM)</span>
+    <span class="cm">// Fires BEFORE browser has painted (user hasn't seen it yet)</span>
+    <span class="kw">const</span> <span class="var">rect</span> = <span class="var">tooltipRef</span>.<span class="prop">current</span>.<span class="fn">getBoundingClientRect</span>();
+    <span class="kw">const</span> <span class="var">newPos</span> = <span class="fn">calculatePosition</span>(<span class="var">rect</span>);  <span class="cm">// flip if near edge</span>
+    <span class="fn">setPosition</span>(<span class="var">newPos</span>);
+    <span class="cm">// ↑ This triggers a synchronous re-render (also in layout phase)</span>
+    <span class="cm">// ↑ User sees tooltip in CORRECT position from the start</span>
+    <span class="cm">// ↑ If we used useEffect: user sees tooltip flash at wrong position first</span>
+  });
+
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="var">div</span> <span class="at">ref</span>={<span class="var">tooltipRef</span>} <span class="at">style</span>={<span class="var">position</span>}<span class="op">&gt;</span>
+      {<span class="var">tooltipText</span>}
+    <span class="op">&lt;/</span><span class="var">div</span><span class="op">&gt;</span>
+  );
+}</code></pre>
+    </div>
+  </div>
+
+  <div class="subsec" id="strict-mode">
+    <h3><span class="num">4.4</span> Why Strict Mode Double-Invokes Your Components</h3>
+
+    <div class="callout warn">
+      <div class="callout-title">⚡ The "Why did this run twice?" Question</div>
+      <p>In development with <code>&lt;React.StrictMode&gt;</code>, React intentionally calls your component function <strong>twice</strong> per render (and calls <code>useEffect</code> setup+cleanup twice on mount). This confuses every developer who first sees it. But now you understand why: because the render phase <em>may</em> run multiple times before committing (Concurrent Mode), your component must be <strong>idempotent</strong> — calling it twice must produce the same result with zero side effects. Strict Mode surfaces violations during development so you fix them before they cause real bugs in Concurrent Mode production.</p>
+    </div>
+
+    <div class="ba">
+      <div class="ba-pane ba-bad">
+        <div class="ba-head">❌ Breaks in Strict Mode (and Concurrent Mode)</div>
+        <pre><code><span class="kw">let</span> <span class="var">renders</span> = <span class="num">0</span>;
+
+<span class="kw">function</span> <span class="cl">MyComp</span>() {
+  <span class="cm">// Side effect in render body!</span>
+  <span class="var">renders</span>++;
+  <span class="fn">logAnalytics</span>(<span class="str">'render'</span>);
+  <span class="cm">// In Strict Mode: fires TWICE</span>
+  <span class="cm">// Analytics shows 2x the events</span>
+  <span class="cm">// renders = 2 for 1 user action</span>
+  <span class="kw">return</span> <span class="op">&lt;</span><span class="var">div</span><span class="op">&gt;</span>{<span class="var">renders</span>}<span class="op">&lt;/</span><span class="var">div</span><span class="op">&gt;</span>
+}</code></pre>
+      </div>
+      <div class="ba-pane ba-good">
+        <div class="ba-head">✅ Pure — works correctly always</div>
+        <pre><code><span class="kw">function</span> <span class="cl">MyComp</span>({ <span class="var">count</span> }) {
+  <span class="cm">// Pure: same input → same output</span>
+  <span class="cm">// No side effects in body</span>
+  <span class="cm">// Calling it 1x or 10x: same result</span>
+  <span class="kw">return</span> <span class="op">&lt;</span><span class="var">div</span><span class="op">&gt;</span>{<span class="var">count</span>}<span class="op">&lt;/</span><span class="var">div</span><span class="op">&gt;</span>;
+  <span class="cm">// Analytics? Put in useEffect.</span>
+  <span class="cm">// External writes? Put in useEffect.</span>
+  <span class="cm">// Render = pure computation only.</span>
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ════════════════════ SECTION 5 — PRIORITY LANES ════════════════════ -->
+<section class="section fade-in" id="lanes">
+  <div class="sec-label">Topic 05</div>
+  <h2>Priority Lanes in React 18</h2>
+  <p class="sec-intro">Not all state updates are equally urgent. A user clicking a button needs an immediate response. A background data sync can wait. React 18's lane system is the mechanism for expressing and enforcing this priority ordering.</p>
+
+  <div class="subsec" id="lane-types">
+    <h3><span class="num">5.1</span> The 5 Lane Categories</h3>
+
+    <div class="diagram">
+      <div class="diag-title">React 18 Priority Lanes — Highest to Lowest</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-family:var(--mono);font-size:11px;">
+        <div style="display:grid;grid-template-columns:170px 100px 1fr 100px;gap:10px;padding:6px 14px;background:var(--ink3);border-radius:4px;font-size:9px;color:var(--text3);font-weight:600;letter-spacing:.1em;text-transform:uppercase;">
+          <span>Lane</span><span>Priority</span><span>Triggered By</span><span>Interruptible?</span>
+        </div>
+        <div style="display:grid;grid-template-columns:170px 100px 1fr 100px;gap:10px;padding:10px 14px;background:var(--ink3);border:1px solid rgba(255,79,109,.25);border-radius:6px;align-items:center;">
+          <span style="color:var(--red);font-weight:600;">SyncLane</span>
+          <span style="color:var(--red);font-size:10px;padding:2px 6px;background:rgba(255,79,109,.12);border-radius:3px;border:1px solid rgba(255,79,109,.25);">1 — Critical</span>
+          <span style="color:var(--text2);">Discrete input: click, keyboard, focus events</span>
+          <span style="color:var(--red);font-size:10px;padding:2px 6px;background:rgba(255,79,109,.1);border-radius:3px;">No</span>
+        </div>
+        <div style="display:grid;grid-template-columns:170px 100px 1fr 100px;gap:10px;padding:10px 14px;background:var(--ink3);border:1px solid rgba(255,138,101,.2);border-radius:6px;align-items:center;">
+          <span style="color:#ff8a65;font-weight:600;">InputContinuousLane</span>
+          <span style="color:#ff8a65;font-size:10px;padding:2px 6px;background:rgba(255,138,101,.1);border-radius:3px;border:1px solid rgba(255,138,101,.2);">2 — High</span>
+          <span style="color:var(--text2);">Scroll, drag, mousemove (continuous)</span>
+          <span style="color:var(--red);font-size:10px;padding:2px 6px;background:rgba(255,79,109,.1);border-radius:3px;">No</span>
+        </div>
+        <div style="display:grid;grid-template-columns:170px 100px 1fr 100px;gap:10px;padding:10px 14px;background:var(--ink3);border:1px solid rgba(255,179,0,.2);border-radius:6px;align-items:center;">
+          <span style="color:var(--amber);font-weight:600;">DefaultLane</span>
+          <span style="color:var(--amber);font-size:10px;padding:2px 6px;background:var(--amber-dim);border-radius:3px;border:1px solid rgba(255,179,0,.25);">3 — Normal</span>
+          <span style="color:var(--text2);">setTimeout, Promises, normal data fetching</span>
+          <span style="color:var(--green);font-size:10px;padding:2px 6px;background:var(--green-dim);border-radius:3px;">Yes</span>
+        </div>
+        <div style="display:grid;grid-template-columns:170px 100px 1fr 100px;gap:10px;padding:10px 14px;background:var(--ink3);border:1px solid rgba(0,229,255,.2);border-radius:6px;align-items:center;">
+          <span style="color:var(--cyan);font-weight:600;">TransitionLane</span>
+          <span style="color:var(--cyan);font-size:10px;padding:2px 6px;background:var(--cyan-dim);border-radius:3px;border:1px solid rgba(0,229,255,.2);">4 — Low</span>
+          <span style="color:var(--text2);">startTransition() wrapped state updates</span>
+          <span style="color:var(--green);font-size:10px;padding:2px 6px;background:var(--green-dim);border-radius:3px;">Yes</span>
+        </div>
+        <div style="display:grid;grid-template-columns:170px 100px 1fr 100px;gap:10px;padding:10px 14px;background:var(--ink3);border:1px solid var(--wire2);border-radius:6px;align-items:center;">
+          <span style="color:var(--text3);font-weight:600;">IdleLane</span>
+          <span style="color:var(--text3);font-size:10px;padding:2px 6px;background:var(--wire);border-radius:3px;border:1px solid var(--wire2);">5 — Background</span>
+          <span style="color:var(--text2);">Offscreen components, background prefetch</span>
+          <span style="color:var(--green);font-size:10px;padding:2px 6px;background:var(--green-dim);border-radius:3px;">Yes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsec" id="start-transition">
+    <h3><span class="num">5.2</span> startTransition — Your API to Control Lanes</h3>
+
+    <p><code>startTransition</code> is React's public API that lets you mark a state update as low-priority (TransitionLane). When you do, React will process urgent SyncLane updates (like typing) first, and may even discard and restart the transition render if more input arrives.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-note">startTransition — real search box example</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="kw">import</span> { <span class="fn">useTransition</span>, <span class="fn">useState</span> } <span class="kw">from</span> <span class="str">'react'</span>;
+
+<span class="kw">function</span> <span class="cl">Search</span>({ <span class="var">items</span> }) {
+  <span class="kw">const</span> [<span class="var">query</span>, <span class="var">setQuery</span>]     = <span class="fn">useState</span>(<span class="str">''</span>);
+  <span class="kw">const</span> [<span class="var">filtered</span>, <span class="var">setFiltered</span>] = <span class="fn">useState</span>(<span class="var">items</span>);
+  <span class="kw">const</span> [<span class="var">isPending</span>, <span class="fn">startTransition</span>] = <span class="fn">useTransition</span>();
+
+  <span class="kw">function</span> <span class="fn">handleChange</span>(<span class="var">e</span>) {
+    <span class="kw">const</span> <span class="var">val</span> = <span class="var">e</span>.<span class="prop">target</span>.<span class="prop">value</span>;
+
+    <span class="cm">// URGENT — input must feel instant (SyncLane)</span>
+    <span class="fn">setQuery</span>(<span class="var">val</span>);
+
+    <span class="cm">// NON-URGENT — filtering can be deferred (TransitionLane)</span>
+    <span class="cm">// React will interrupt this if user types again</span>
+    <span class="fn">startTransition</span>(() => {
+      <span class="fn">setFiltered</span>(<span class="var">items</span>.<span class="fn">filter</span>(<span class="var">i</span> => <span class="var">i</span>.<span class="fn">includes</span>(<span class="var">val</span>)));
+    });
+  }
+
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="var">div</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="var">input</span> <span class="at">value</span>={<span class="var">query</span>} <span class="at">onChange</span>={<span class="var">handleChange</span>} <span class="op">/&gt;</span>
+      {<span class="cm">/* isPending = true while transition is in-flight */</span>}
+      {<span class="var">isPending</span>
+        ? <span class="op">&lt;</span><span class="var">span</span><span class="op">&gt;</span>Filtering...<span class="op">&lt;/</span><span class="var">span</span><span class="op">&gt;</span>
+        : <span class="op">&lt;</span><span class="cl">ResultsList</span> <span class="at">items</span>={<span class="var">filtered</span>} <span class="op">/&gt;</span>
+      }
+    <span class="op">&lt;/</span><span class="var">div</span><span class="op">&gt;</span>
+  );
+}
+
+<span class="cm">// What React does under the hood:</span>
+<span class="cm">// User types 'r' → setQuery fires → SyncLane → IMMEDIATE render of input</span>
+<span class="cm">// setFiltered fires → TransitionLane → React starts filtering render...</span>
+<span class="cm">// User types 're' before filter finishes → React DISCARDS old transition</span>
+<span class="cm">// Starts NEW transition render with 're' query</span>
+<span class="cm">// Input ALWAYS feels instant. Filter catches up when it can.</span></code></pre>
+    </div>
+  </div>
+
+  <div class="subsec" id="bitmask">
+    <h3><span class="num">5.3</span> Lanes as Bitmasks — Why It's Fast</h3>
+
+    <p>React uses bitmask operations for lanes because they're extremely fast — a single bitwise AND operation can check "does this fiber have any work in this set of lanes?" across all 31 possible lanes simultaneously.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">javascript</span><span class="code-note">Lanes as bitmasks — from ReactFiberLane.js (simplified)</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// Each lane is a power of 2 (one bit in a 32-bit integer)</span>
+<span class="kw">const</span> <span class="var">NoLanes</span>              = <span class="num">0b000000000000000000000000000</span>; <span class="cm">// 0</span>
+<span class="kw">const</span> <span class="var">SyncLane</span>             = <span class="num">0b000000000000000000000000001</span>; <span class="cm">// 1</span>
+<span class="kw">const</span> <span class="var">InputContinuousLane</span>  = <span class="num">0b000000000000000000000000100</span>; <span class="cm">// 4</span>
+<span class="kw">const</span> <span class="var">DefaultLane</span>          = <span class="num">0b000000000000000000000010000</span>; <span class="cm">// 16</span>
+<span class="kw">const</span> <span class="var">TransitionLanes</span>      = <span class="num">0b000000001111111111111000000</span>; <span class="cm">// multiple transition lanes</span>
+<span class="kw">const</span> <span class="var">IdleLane</span>             = <span class="num">0b010000000000000000000000000</span>; <span class="cm">// large</span>
+
+<span class="cm">// Check if root has ANY sync work pending (single CPU instruction):</span>
+<span class="kw">if</span> (<span class="var">root</span>.<span class="prop">pendingLanes</span> & <span class="var">SyncLane</span>) {
+  <span class="cm">// There IS sync work. Process immediately.</span>
+}
+
+<span class="cm">// Add a lane to a set (mark as having pending work):</span>
+<span class="var">fiber</span>.<span class="prop">lanes</span> |= <span class="var">TransitionLanes</span>;
+
+<span class="cm">// Remove a lane from a set (mark as processed):</span>
+<span class="var">root</span>.<span class="prop">pendingLanes</span> &= ~<span class="var">SyncLane</span>;
+
+<span class="cm">// Get the highest priority lane (lowest bit = highest priority):</span>
+<span class="kw">const</span> <span class="var">highestPriorityLane</span> = <span class="var">pendingLanes</span> & -<span class="var">pendingLanes</span>; <span class="cm">// bit trick</span></code></pre>
+    </div>
+
+    <div class="callout insight">
+      <div class="callout-title">💡 Why You Care About Bitmasks</div>
+      <p>You won't write bitmask operations directly. But knowing that lanes are bitmasks explains <em>why</em> React 18's scheduler is so performant — checking and updating priorities for hundreds of fibers on every tick costs virtually nothing. It also explains React source code you'll read when debugging: <code>pendingLanes</code>, <code>suspendedLanes</code>, <code>expiredLanes</code> are all bitmasks you can examine in DevTools.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ════════════════════ SECTION 6 — THE WORK LOOP ════════════════════ -->
+<section class="section fade-in" id="work-loop">
+  <div class="sec-label">Topic 06</div>
+  <h2>The Work Loop — Everything Together</h2>
+  <p class="sec-intro">The work loop is the heart of Fiber. It's where everything you've learned in this document comes together: the fiber linked list is traversed, units of work are processed, and the browser is yielded to at the right moments.</p>
+
+  <div class="subsec" id="wl-algo">
+    <h3><span class="num">6.1</span> The Algorithm</h3>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">pseudocode</span><span class="code-note">The work loop — simplified from React source</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// Entry point: React schedules this when there's work to do</span>
+<span class="kw">function</span> <span class="fn">performConcurrentWorkOnRoot</span>(<span class="var">root</span>) {
+  <span class="cm">// Determine which lanes have pending work</span>
+  <span class="kw">const</span> <span class="var">lanes</span> = <span class="fn">getNextLanes</span>(<span class="var">root</span>);
+
+  <span class="cm">// Run the render phase (builds WIP tree)</span>
+  <span class="kw">const</span> <span class="var">exitStatus</span> = <span class="fn">renderRootConcurrent</span>(<span class="var">root</span>, <span class="var">lanes</span>);
+
+  <span class="kw">if</span> (<span class="var">exitStatus</span> === <span class="var">RootCompleted</span>) {
+    <span class="cm">// Render phase finished — enter commit phase</span>
+    <span class="fn">commitRoot</span>(<span class="var">root</span>);
+  } <span class="kw">else if</span> (<span class="var">exitStatus</span> === <span class="var">RootDidNotComplete</span>) {
+    <span class="cm">// We yielded (time ran out) — reschedule</span>
+    <span class="fn">ensureRootIsScheduled</span>(<span class="var">root</span>);
+  }
+}
+
+<span class="cm">// The actual render loop</span>
+<span class="kw">function</span> <span class="fn">workLoopConcurrent</span>() {
+  <span class="cm">// Process one fiber at a time until we run out of time OR work</span>
+  <span class="kw">while</span> (<span class="var">workInProgress</span> !== <span class="kw">null</span> && !<span class="fn">shouldYield</span>()) {
+    <span class="fn">performUnitOfWork</span>(<span class="var">workInProgress</span>);
+    <span class="cm">// ↑ processes one fiber: calls component, diffs children, tags flags</span>
+    <span class="cm">// ↑ sets workInProgress to the NEXT fiber to process</span>
+  }
+  <span class="cm">// ← We're here because either:</span>
+  <span class="cm">//   a) workInProgress === null → ALL fibers processed → render complete!</span>
+  <span class="cm">//   b) shouldYield() === true  → time slice expired → yield to browser</span>
+}
+
+<span class="cm">// shouldYield checks the scheduler's deadline</span>
+<span class="kw">function</span> <span class="fn">shouldYield</span>() {
+  <span class="kw">const</span> <span class="var">currentTime</span> = <span class="fn">getCurrentTime</span>();
+  <span class="kw">return</span> <span class="var">currentTime</span> >= <span class="var">deadline</span>;
+  <span class="cm">// deadline ≈ frameStart + 5ms (React gives itself ~5ms per frame)</span>
+  <span class="cm">// If we've used up 5ms, yield. Browser gets remaining ~11ms to paint/input.</span>
+}</code></pre>
+    </div>
+  </div>
+
+  <div class="subsec" id="yielding">
+    <h3><span class="num">6.2</span> How Yielding Actually Works</h3>
+
+    <p>When <code>shouldYield()</code> returns true, the work loop simply returns. The current value of <code>workInProgress</code> (still pointing to the fiber we were about to process) is saved in a module-level variable. The scheduler re-queues the work and React resumes exactly where it stopped on the next available time slice.</p>
+
+    <div class="diagram">
+      <div class="diag-title">Time-Sliced Rendering — Across Multiple Frames</div>
+      <div style="font-family:var(--mono);font-size:11px;display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="background:var(--cyan-dim);border:1px solid rgba(0,229,255,.25);border-radius:4px;padding:6px 10px;color:var(--cyan);flex:2;">React work (App, Header, Nav fibers)</div>
+          <div style="background:var(--green-dim);border:1px solid rgba(0,230,118,.2);border-radius:4px;padding:6px 10px;color:var(--green);flex:1;">Paint / Input</div>
+          <div style="color:var(--text3);font-size:10px;">← frame 1 (16.67ms) →</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="background:var(--amber-dim);border:1px solid rgba(255,179,0,.25);border-radius:4px;padding:6px 10px;color:var(--amber);flex:1;">User keystroke (SyncLane)</div>
+          <div style="background:var(--cyan-dim);border:1px solid rgba(0,229,255,.25);border-radius:4px;padding:6px 10px;color:var(--cyan);flex:1.5;">React resumes (Main, Footer)</div>
+          <div style="background:var(--green-dim);border:1px solid rgba(0,230,118,.2);border-radius:4px;padding:6px 10px;color:var(--green);flex:.5;">Paint</div>
+          <div style="color:var(--text3);font-size:10px;">← frame 2 →</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="background:var(--cyan-dim);border:1px solid rgba(0,229,255,.25);border-radius:4px;padding:6px 10px;color:var(--cyan);flex:1;">React finishes + Commit</div>
+          <div style="background:var(--green-dim);border:1px solid rgba(0,230,118,.2);border-radius:4px;padding:6px 10px;color:var(--green);flex:2;">Browser paint + Idle</div>
+          <div style="color:var(--text3);font-size:10px;">← frame 3 →</div>
+        </div>
+        <div style="margin-top:10px;padding:10px;background:var(--cyan-glow);border:1px solid rgba(0,229,255,.12);border-radius:6px;color:var(--text2);font-size:10.5px;line-height:1.7;">
+          Note frame 2: a user keystroke (SyncLane) gets processed immediately, in the same frame. React's low-priority transition render was yielded, the sync work ran, and React resumed the transition. The user never felt lag on their keypress.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="subsec" id="concurrency">
+    <h3><span class="num">6.3</span> Concurrency in Action — A Complete Trace</h3>
+
+    <p>Let's trace what happens when a user types in a search box that has both urgent and non-urgent state updates:</p>
+
+    <ol class="steps">
+      <li class="step"><div class="step-n">1</div><div class="step-t"><strong>User presses 'r'</strong> — browser fires a keydown event. React schedules work in <em>SyncLane</em>. The scheduler immediately runs <code>workLoopSync</code> (no yielding for SyncLane).</div></li>
+      <li class="step"><div class="step-n">2</div><div class="step-t"><strong>setQuery('r') commits</strong> — input shows 'r'. This completes in microseconds because the input component is tiny. User sees their keystroke immediately.</div></li>
+      <li class="step"><div class="step-n">3</div><div class="step-t"><strong>startTransition fires</strong> — <code>setFiltered()</code> is in TransitionLane. React schedules a new render. This is the expensive one — filtering 10,000 items. React starts building the WIP tree.</div></li>
+      <li class="step"><div class="step-n">4</div><div class="step-t"><strong>5ms passes</strong> — <code>shouldYield()</code> returns true. Work loop exits. workInProgress points to the ResultsList fiber. React yields to the browser.</div></li>
+      <li class="step"><div class="step-n">5</div><div class="step-t"><strong>User presses 'e'</strong> before filter finishes — another keydown. SyncLane work. React processes 'e' immediately. Then it needs to redo the filter for 're'. The OLD transition WIP tree is <strong>discarded</strong> and a new one starts.</div></li>
+      <li class="step"><div class="step-n">6</div><div class="step-t"><strong>Filter for 're' finishes</strong> in a time-sliced manner across several frames. When complete, React commits the WIP tree. Results appear.</div></li>
+    </ol>
+
+    <div class="callout tip">
+      <div class="callout-title">✅ What This Gives You</div>
+      <p>Input latency: near zero (SyncLane always runs immediately). Filter rendering: never blocks the main thread for more than 5ms. The user experience: instant typing, results appear a few frames later. Without Fiber: typing would lag by the full filter computation time (could be 50-200ms on slow devices).</p>
+    </div>
+  </div>
+
+  <div class="video-wrap">
+    <iframe src="https://www.youtube.com/embed/nLF0n9SACd4" allowfullscreen loading="lazy" title="React Concurrent Mode"></iframe>
+    <div class="video-cap">Lydia Hallie — "React Visualized: Concurrent Mode" — 15 min. Animated walkthrough of everything in this section. Watch after reading.</div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ════════════════════ KNOWLEDGE CHECK ════════════════════ -->
+<section class="section" id="check">
+  <div class="kc-block">
+    <div class="kc-hdr">
+      <div class="kc-badge">Knowledge Check</div>
+      <div class="kc-title">Day 2 — All 10 Questions</div>
+    </div>
+    <p class="kc-sub">// Answer every question before moving to Day 3. Click to reveal answers. If you can't answer a question without looking, re-read that section.</p>
+
+    <ol class="q-list">
+      <details class="q">
+        <summary><span class="q-num">Q01</span>What is a React Fiber? Define it at two levels: (a) conceptually, what problem does it solve; (b) technically, what is it as a data structure.<span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p><strong>(a) Conceptually:</strong> A Fiber is React's solution to uninterruptible rendering. By representing each component as a fiber node in a linked list, React can traverse this list iteratively rather than recursively. This gives React control over when to pause, resume, or discard rendering work — something impossible with the old recursive stack reconciler.</p>
+          <p><strong>(b) Technically:</strong> A Fiber is a plain JavaScript object that represents one unit of work — one component. It contains pointers to its parent (<code>return</code>), first child (<code>child</code>), and next sibling (<code>sibling</code>) forming a linked list tree. It also holds the component's type, props (<code>pendingProps</code>, <code>memoizedProps</code>), state and hooks linked list (<code>memoizedState</code>), effect flags (<code>flags</code>), priority (<code>lanes</code>), and a pointer to its counterpart in the alternate tree (<code>alternate</code>).</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q02</span>Why couldn't the Stack Reconciler be interrupted? Explain the exact technical reason — not just "it was recursive."<span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p>The Stack Reconciler was recursive — it traversed the component tree by calling functions that called other functions, which built frames on the JavaScript call stack. The key technical reason it couldn't be interrupted is that <strong>the call stack is managed by the JavaScript runtime, not by application code</strong>. JavaScript has no API to pause mid-stack-frame, save the state, and resume later. The only way to exit the call stack is to either return from each function (complete the recursion) or throw an error.</p>
+          <p>Fiber replaced the implicit call stack with an explicit linked list that React manages in application code. Because React controls the data structure, it can stop traversal at any point, save the current position (<code>workInProgress</code> pointer), and resume by calling <code>workLoopConcurrent</code> again later.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q03</span>Explain the hooks linked list. Where does it live? What happens if you call useState conditionally?<span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p>The hooks linked list lives in <code>fiber.memoizedState</code> on the fiber node for that component. Each hook call creates one node in this list: <code>{ memoizedState: value, queue: updateQueue, next: nextHook }</code>. The head of the list is stored in <code>memoizedState</code>. Each node's <code>next</code> pointer connects to the next hook.</p>
+          <p>On every render, React traverses this list <strong>in order, by index</strong>. Hook call 1 → node 1. Hook call 2 → node 2. Etc. If you call <code>useState</code> conditionally, the hook may not execute on some renders. This shifts every subsequent hook to a different index position — React assigns the wrong state values to the wrong hooks. For example, what was hook node 2 (your name state) becomes hook node 1, and React mistakenly reads the count state's value into your name state. This is why hooks must be called at the top level on every render — it's a technical requirement of the linked list, not a style preference.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q04</span>React maintains two fiber trees. Name them, explain what each contains, and explain the "alternate" pointer.<span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p><strong>Current tree:</strong> the fiber tree representing what's currently rendered on screen. Never modified during an in-progress render. Stable.</p>
+          <p><strong>Work-in-progress (WIP) tree:</strong> the fiber tree React is building to represent the next render. Built incrementally during the render phase. Can be discarded at any time without affecting what's on screen.</p>
+          <p><strong>The alternate pointer:</strong> each fiber node has an <code>alternate</code> field pointing to its counterpart in the other tree. Current App fiber ↔ WIP App fiber. They point at each other. This enables fiber reuse: instead of creating new objects on every render, React reuses the old current fiber as the next WIP fiber (just resets its fields). This reduces GC pressure significantly.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q05</span>Explain double buffering in React. What is "committed" atomically and why does this prevent visual flicker?<span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p>Double buffering means React prepares the next UI state in the WIP tree (off-screen) while the current tree remains stable on screen. All DOM mutations are applied during the commit phase's mutation sub-phase. Then, in the layout sub-phase, React executes a single pointer swap: <code>root.current = workInProgressRoot</code>.</p>
+          <p>This prevents visual flicker because the DOM mutations have <em>already happened</em> before the pointer swap. The swap is just React's internal bookkeeping — it's instantaneous. From the user's perspective, the screen goes from one complete state to another complete state in a single browser paint frame. There is no intermediate state where part of the UI is updated and part isn't, because all mutations happen synchronously in the commit phase and the commit phase cannot be interrupted.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q06</span>What are the three sub-phases of the commit phase? What happens in each?<span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p><strong>① Before Mutation Phase:</strong> Reads the DOM before any changes. Runs <code>getSnapshotBeforeUpdate</code> for class components. Safe for DOM measurements because nothing has changed yet.</p>
+          <p><strong>② Mutation Phase:</strong> Applies ALL DOM mutations — insertions, updates, deletions of DOM nodes. Also runs <code>useLayoutEffect</code> cleanup functions from the previous render. After this phase, the DOM reflects the new render, but the browser hasn't painted yet.</p>
+          <p><strong>③ Layout Phase:</strong> Runs new <code>useLayoutEffect</code> callbacks synchronously (they fire here because the DOM is updated but not yet painted). The <code>root.current = WIP</code> swap happens here. After this phase, React releases control to the browser to paint. <code>useEffect</code> callbacks are then scheduled asynchronously after paint.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q07</span>Why does useLayoutEffect prevent visual flicker that useEffect cannot prevent? Give a concrete example.<span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p><code>useLayoutEffect</code> fires synchronously in the Layout Phase — after the DOM is mutated but <strong>before</strong> the browser has painted. This means if you read DOM measurements and immediately write back (e.g., reposition a tooltip), that second write happens before the user ever sees the first paint. No flicker possible.</p>
+          <p><code>useEffect</code> fires asynchronously <strong>after</strong> the browser has painted. If you reposition a tooltip in useEffect, the sequence is: browser paints tooltip at position A → user briefly sees position A → useEffect fires → tooltip moves to position B → browser repaints. The user sees a flash at the wrong position.</p>
+          <p><strong>Concrete example:</strong> A tooltip near the edge of the screen. Initial render: tooltip might render at position A (off-screen). With <code>useLayoutEffect</code>, you detect this and reposition to position B before the first paint — user sees it correctly from the start. With <code>useEffect</code>, user sees a flash at position A, then it jumps to B.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q08</span>Why does React Strict Mode double-invoke component functions? What category of bugs does this surface?<span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p>In Concurrent Mode, React may call a component function multiple times before committing its output — because it can restart an interrupted render from scratch. This means component functions <strong>must be pure</strong>: same inputs → same output, no side effects.</p>
+          <p>Strict Mode intentionally calls component functions twice in development to surface violations of this requirement. The category of bugs it catches: <strong>side effects in the render body</strong> — incrementing counters, writing to external variables, logging analytics events, directly mutating refs, making API calls without useEffect. These bugs would cause incorrect behavior in Concurrent Mode production because they'd execute multiple times per user action. Strict Mode makes them fail loudly in development so you fix them before production.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q09</span>Explain the 5 lane priorities. What determines which lane an update gets? How does startTransition relate to lanes?<span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p>The 5 lanes from highest to lowest: <strong>SyncLane</strong> (discrete input: clicks, keyboard), <strong>InputContinuousLane</strong> (scroll, drag, mousemove), <strong>DefaultLane</strong> (setTimeout, Promises, data fetching), <strong>TransitionLane</strong> (startTransition-wrapped updates), <strong>IdleLane</strong> (background/offscreen work).</p>
+          <p>What determines the lane: React checks the source of the event. User input events get SyncLane or InputContinuousLane. State updates from async contexts (setTimeout, Promise callbacks) get DefaultLane. State updates wrapped in <code>startTransition</code> get TransitionLane. React's own background work gets IdleLane.</p>
+          <p><code>startTransition</code> is the public API that marks a state update as TransitionLane instead of DefaultLane. The update becomes interruptible — if higher priority work (like another keystroke) arrives while the transition is processing, React discards the in-progress transition render and processes the urgent work first. The transition render starts fresh after the urgent work commits. <code>isPending</code> from <code>useTransition</code> is true while a transition is in-flight, letting you show a loading indicator without blocking the input.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q10</span>Walk through the complete sequence of events when a user types in a search box that uses startTransition for filtering. What does React do from keypress to commit?<span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p>1. <strong>Keypress event fires</strong> → browser queues it as a macrotask. React's event handler runs (SyncLane).</p>
+          <p>2. <strong>setQuery('r')</strong> → SyncLane update → React runs <code>workLoopSync</code> (no yielding) → input component rerenders with new value → commits immediately. User sees 'r' in the input. This takes microseconds.</p>
+          <p>3. <strong>startTransition(() => setFiltered(...))</strong> → TransitionLane update → React schedules this as low-priority work. The work loop starts processing the WIP tree for the filter results.</p>
+          <p>4. <strong>5ms passes</strong> → <code>shouldYield()</code> returns true → work loop yields. <code>workInProgress</code> is saved pointing to e.g. the ResultsList fiber. React returns control to the browser.</p>
+          <p>5. <strong>Browser paints</strong>, handles any other events (renders animations, etc.).</p>
+          <p>6. <strong>Scheduler reschedules React</strong> → work loop resumes from <code>workInProgress</code>. Processes more fibers. Yields again if time runs out. Repeats across frames until WIP tree is complete.</p>
+          <p>7. <strong>WIP tree complete</strong> → commit phase runs: mutation phase applies DOM changes (ResultsList updates), layout phase runs layout effects, root.current swaps. Browser paints the new results. <code>isPending</code> becomes false.</p>
+          <p><strong>If user types again during step 4-6:</strong> another SyncLane update fires. React processes it immediately, then marks the current transition WIP tree as stale, discards it, and starts a new transition render with the updated query.</p>
+        </div>
+      </details>
+    </ol>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- RESOURCES -->
+<section class="section" id="resources">
+  <div class="sec-label">References</div>
+  <h2>Read These</h2>
+  <p class="sec-intro">Every link is essential. The Lin Clark article especially — it's a visual, accessible deep-dive written by someone who read the actual React Fiber source code line by line.</p>
+
+  <div class="res-grid">
+    <a class="res-card" href="https://github.com/acdlite/react-fiber-architecture" target="_blank" rel="noopener">
+      <div class="res-type" style="color:var(--cyan)">📄 Design Doc</div>
+      <div class="res-name">React Fiber Architecture — Andrew Clark</div>
+      <div class="res-desc">The original design document by the React team member who built Fiber. Primary source.</div>
+    </a>
+    <a class="res-card" href="https://www.youtube.com/watch?v=ZCuYPiUIONs" target="_blank" rel="noopener">
+      <div class="res-type" style="color:var(--amber)">🎬 Video</div>
+      <div class="res-name">What is React Fiber? — Philip Fabianek</div>
+      <div class="res-desc">Visual 20-min explainer of fiber nodes and the two-tree architecture.</div>
+    </a>
+    <a class="res-card" href="https://www.youtube.com/watch?v=nLF0n9SACd4" target="_blank" rel="noopener">
+      <div class="res-type" style="color:var(--amber)">🎬 Video</div>
+      <div class="res-name">React Concurrent Mode — Lydia Hallie</div>
+      <div class="res-desc">Animated walkthrough of time-slicing, lanes, and the work loop. 15 min.</div>
+    </a>
+    <a class="res-card" href="https://react.dev/reference/react/useTransition" target="_blank" rel="noopener">
+      <div class="res-type" style="color:var(--green)">⚛️ React Docs</div>
+      <div class="res-name">useTransition — React.dev</div>
+      <div class="res-desc">Official docs for startTransition and useTransition with interactive examples.</div>
+    </a>
+    <a class="res-card" href="https://react.dev/reference/react/useLayoutEffect" target="_blank" rel="noopener">
+      <div class="res-type" style="color:var(--green)">⚛️ React Docs</div>
+      <div class="res-name">useLayoutEffect — React.dev</div>
+      <div class="res-desc">When and why to use it over useEffect. Includes pitfalls section.</div>
+    </a>
+    <a class="res-card" href="https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiber.js" target="_blank" rel="noopener">
+      <div class="res-type" style="color:var(--violet)">💻 Source Code</div>
+      <div class="res-name">ReactFiber.js — React Source</div>
+      <div class="res-desc">The actual fiber node structure in React's source. Read createFiber and createWorkInProgress.</div>
+    </a>
+    <a class="res-card" href="https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactFiberWorkLoop.js" target="_blank" rel="noopener">
+      <div class="res-type" style="color:var(--violet)">💻 Source Code</div>
+      <div class="res-name">ReactFiberWorkLoop.js — React Source</div>
+      <div class="res-desc">The actual work loop: workLoopConcurrent, performUnitOfWork, shouldYield. Advanced.</div>
+    </a>
+    <a class="res-card" href="https://overreacted.io/react-as-a-ui-runtime/" target="_blank" rel="noopener">
+      <div class="res-type" style="color:var(--red)">🔥 Must Read</div>
+      <div class="res-name">React as a UI Runtime — Dan Abramov</div>
+      <div class="res-desc">How React thinks about rendering — covers reconciliation, host tree, purity. Foundation for everything.</div>
+    </a>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- TODAY'S TASKS -->
+<section class="section" id="tasks">
+  <div class="sec-label">Action Plan</div>
+  <h2>Today's 8-Hour Schedule</h2>
+
+  <div class="sched">
+    <div class="sched-row">
+      <div class="sched-time">7:00 – 9:30am</div>
+      <div class="sched-task">
+        <strong>Theory Block — Read this document completely</strong>
+        Read all 6 sections in order. Draw the fiber node structure on paper. Draw the two-tree architecture showing alternate pointers. Draw the commit phase timeline showing when useLayoutEffect vs useEffect fires. Don't move on until you can draw these from memory.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">10:00am – 1:00pm</div>
+      <div class="sched-task">
+        <strong>Video Block — Watch the two embedded videos</strong>
+        Philip Fabianek "What is React Fiber" (20 min). Lydia Hallie "Concurrent Mode" (15 min). Take notes with timestamps on anything that clicks for the first time. Then read the Lin Clark article linked in Resources — it's the most important piece of writing about Fiber ever published.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">2:00 – 5:00pm</div>
+      <div class="sched-task">
+        <strong>Hands-On Block — Build and observe</strong>
+        (1) Install React DevTools. Open any React app. Use the Profiler tab to record a render. Look at the flame graph — every bar is one fiber. Click bars and see the fiber's props/state. (2) Build a Counter with a side effect in render — see what Strict Mode does. (3) Build the Search example from Section 5.2 with startTransition. Compare input responsiveness with and without startTransition on a large list. (4) Read ReactFiber.js source linked in Resources — find createFiber and spot every field you learned today.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">6:00 – 8:00pm</div>
+      <div class="sched-task">
+        <strong>Knowledge Check + Voice Explanation</strong>
+        Answer all 10 knowledge check questions without looking. Then record yourself (voice or video) explaining "How does React work internally?" as if you're answering in a senior interview. Aim for 3-4 minutes. If you can't explain it clearly, you don't own it yet. Listen back and note gaps. Re-read those sections.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout tip" style="margin-top:32px;">
+    <div class="callout-title">✅ Tomorrow — Day 3</div>
+    <p>Day 3 covers <strong>Reconciliation, the Diffing Algorithm, and the key prop</strong> in depth. You'll learn React's O(n) diffing assumptions, why component identity matters, why index keys are dangerous, and the exact mechanics behind "preserve state vs reset state." Everything you need to debug list rendering bugs cold and design correct component hierarchies. Today's Fiber understanding is the prerequisite — good work.</p>
+  </div>
+
+  <div style="margin-top:48px;padding:32px;background:linear-gradient(135deg,rgba(0,229,255,.06),rgba(179,136,255,.06));border:1px solid rgba(0,229,255,.18);border-radius:12px;text-align:center;">
+    <div style="font-family:var(--sans);font-size:26px;font-weight:800;color:#fff;margin-bottom:8px;">Day 02 of 60.</div>
+    <div style="font-size:16px;color:var(--text2);">You now know how React works internally. Most developers never reach this level. Keep going.</div>
+    <div style="margin-top:16px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">
+      <span class="chip c">Reconciliation →</span>
+      <span class="chip a">Diffing Algorithm →</span>
+      <span class="chip g">Key Prop Mechanics →</span>
+      <span class="chip v">58 days to beast mode</span>
+    </div>
+  </div>
+</section>
+
+</div>
+</main>
+
+<script>
+const prog = document.getElementById('prog');
+const topBtn = document.getElementById('top-btn');
+
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY;
+  const total = document.body.scrollHeight - window.innerHeight;
+  prog.style.width = (scrolled / total * 100) + '%';
+  topBtn.classList.toggle('show', scrolled > 400);
+  updateToc();
+});
+
+function updateToc() {
+  const links = document.querySelectorAll('.toc-link');
+  let current = '';
+  document.querySelectorAll('[id]').forEach(el => {
+    if (window.scrollY >= el.offsetTop - 100) current = el.id;
+  });
+  links.forEach(l => l.classList.toggle('on', l.getAttribute('href') === '#' + current));
+}
+
+function copyCode(btn) {
+  const text = btn.closest('.code-block').querySelector('pre').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'copied!';
+    btn.style.background = 'var(--green)';
+    btn.style.color = 'var(--ink)';
+    setTimeout(() => { btn.textContent = 'copy'; btn.style.background = ''; btn.style.color = ''; }, 2000);
+  });
+}
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.animation = 'fadeUp .5s ease forwards';
+      e.target.style.opacity = '1';
+      obs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.07 });
+
+document.querySelectorAll('.section:not(.fade-in)').forEach(el => {
+  el.style.opacity = '0';
+  obs.observe(el);
+});
+
+document.querySelectorAll('.fade-in').forEach((el, i) => {
+  el.style.animationDelay = (i * 0.08) + 's';
+});
+</script>
+</body>
+</html>
