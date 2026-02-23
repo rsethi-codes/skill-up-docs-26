@@ -1,0 +1,2155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 3 — Reconciliation, Diffing & The key Prop | Raghav's Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,700;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f0e8;
+  --bg2: #ede8de;
+  --bg3: #e4ddd0;
+  --ink: #1a1410;
+  --ink2: #2d2520;
+  --ink3: #453d35;
+  --muted: #7a6f62;
+  --muted2: #a89e92;
+  --border: rgba(26,20,16,0.12);
+  --border2: rgba(26,20,16,0.06);
+  --rust: #c0392b;
+  --rust2: #e74c3c;
+  --rust-bg: rgba(192,57,43,0.07);
+  --rust-border: rgba(192,57,43,0.2);
+  --teal: #0d7f7f;
+  --teal2: #0fb3b3;
+  --teal-bg: rgba(13,127,127,0.07);
+  --teal-border: rgba(13,127,127,0.2);
+  --gold: #b8860b;
+  --gold2: #d4a017;
+  --gold-bg: rgba(184,134,11,0.08);
+  --gold-border: rgba(184,134,11,0.22);
+  --plum: #5b2d8e;
+  --plum-bg: rgba(91,45,142,0.07);
+  --plum-border: rgba(91,45,142,0.2);
+  --green: #1a6b3c;
+  --green-bg: rgba(26,107,60,0.07);
+  --green-border: rgba(26,107,60,0.2);
+  --serif: 'Playfair Display', Georgia, serif;
+  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --sans: 'DM Sans', system-ui, sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.75;
+  font-size: 16px;
+  overflow-x: hidden;
+}
+
+/* Grain texture overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.6;
+}
+
+/* Progress bar */
+#prog {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0;
+  background: linear-gradient(90deg, var(--rust), var(--gold), var(--teal));
+  z-index: 1000; transition: width .1s linear;
+  box-shadow: 0 0 8px rgba(192,57,43,0.4);
+}
+
+/* Topbar */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; height: 54px;
+  background: rgba(245,240,232,0.94); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; z-index: 900;
+}
+.tb-brand { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--rust); letter-spacing: .06em; }
+.tb-day { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.tb-nav { display: flex; gap: 22px; list-style: none; }
+.tb-nav a { font-family: var(--sans); font-size: 12px; font-weight: 500; color: var(--muted); text-decoration: none; transition: color .2s; }
+.tb-nav a:hover { color: var(--rust); }
+
+/* Sidebar */
+.sidebar {
+  position: fixed; left: 0; top: 54px; width: 218px;
+  height: calc(100vh - 54px); overflow-y: auto;
+  padding: 24px 0; border-right: 1px solid var(--border);
+  background: rgba(245,240,232,0.8); backdrop-filter: blur(12px);
+  z-index: 800;
+}
+.sidebar::-webkit-scrollbar { width: 2px }
+.sidebar::-webkit-scrollbar-thumb { background: var(--muted2); }
+.toc-head {
+  padding: 0 18px 12px; font-family: var(--mono); font-size: 9px;
+  font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--muted2); border-bottom: 1px solid var(--border); margin-bottom: 10px;
+}
+.toc-link {
+  display: block; padding: 5px 18px; font-family: var(--sans); font-size: 12px;
+  font-weight: 400; color: var(--muted); text-decoration: none;
+  border-left: 2px solid transparent; transition: all .18s; line-height: 1.4;
+}
+.toc-link:hover, .toc-link.on { color: var(--rust); border-left-color: var(--rust); background: var(--rust-bg); }
+.toc-link.sub { padding-left: 28px; font-size: 11.5px; }
+.toc-link.sub:hover, .toc-link.sub.on { color: var(--teal); border-left-color: var(--teal); background: var(--teal-bg); }
+
+/* Main layout */
+.main { margin-left: 218px; padding-top: 54px; }
+.content { max-width: 860px; margin: 0 auto; padding: 60px 40px 120px; }
+
+/* Hero */
+.hero {
+  margin-bottom: 72px; padding-bottom: 56px;
+  border-bottom: 2px solid var(--border);
+}
+.day-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--rust); color: #fff;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  padding: 4px 14px; border-radius: 2px; margin-bottom: 20px;
+}
+.day-pill::before {
+  content: ''; width: 5px; height: 5px; background: #fff;
+  border-radius: 50%; animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.6)} }
+
+h1.hero-title {
+  font-family: var(--serif);
+  font-size: clamp(36px, 5.5vw, 62px);
+  font-weight: 900;
+  line-height: 1.0;
+  letter-spacing: -.02em;
+  color: var(--ink);
+  margin-bottom: 18px;
+}
+h1.hero-title span { color: var(--rust); font-style: italic; }
+.hero-lead {
+  font-family: var(--sans); font-size: 17px; font-weight: 300;
+  color: var(--ink3); max-width: 620px; line-height: 1.75; margin-bottom: 28px;
+}
+.hero-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+.tag {
+  font-family: var(--mono); font-size: 10px; padding: 3px 10px;
+  border-radius: 2px; border: 1px solid; letter-spacing: .04em;
+}
+.tag.r { color: var(--rust); border-color: var(--rust-border); background: var(--rust-bg); }
+.tag.t { color: var(--teal); border-color: var(--teal-border); background: var(--teal-bg); }
+.tag.g { color: var(--gold); border-color: var(--gold-border); background: var(--gold-bg); }
+.tag.p { color: var(--plum); border-color: var(--plum-border); background: var(--plum-bg); }
+.tag.gr { color: var(--green); border-color: var(--green-border); background: var(--green-bg); }
+
+/* Sections */
+.section { margin-bottom: 80px; scroll-margin-top: 74px; }
+.section-number {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--muted2); margin-bottom: 4px;
+  display: flex; align-items: center; gap: 12px;
+}
+.section-number::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+h2.sec-title {
+  font-family: var(--serif); font-size: clamp(24px, 3vw, 36px);
+  font-weight: 900; letter-spacing: -.01em; line-height: 1.1;
+  color: var(--ink); margin-bottom: 14px;
+}
+h2.sec-title span { color: var(--rust); font-style: italic; }
+.sec-lead { font-size: 15.5px; color: var(--ink3); max-width: 680px; margin-bottom: 40px; line-height: 1.78; }
+
+/* Subsections */
+.sub { margin-bottom: 52px; scroll-margin-top: 74px; }
+h3.sub-title {
+  font-family: var(--sans); font-size: 19px; font-weight: 600;
+  color: var(--ink); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+h3.sub-title .sub-num {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  color: #fff; background: var(--rust); padding: 2px 7px; border-radius: 2px;
+  flex-shrink: 0;
+}
+h3.sub-title .sub-num.t { background: var(--teal); }
+h3.sub-title .sub-num.g { background: var(--gold); }
+h3.sub-title .sub-num.p { background: var(--plum); }
+
+h4.mini-title {
+  font-family: var(--sans); font-size: 14px; font-weight: 600;
+  color: var(--ink); margin: 22px 0 8px; letter-spacing: -.01em;
+}
+
+p {
+  color: var(--ink3); line-height: 1.8; margin-bottom: 16px; font-size: 15.5px;
+}
+p strong { color: var(--ink); font-weight: 600; }
+p em { color: var(--rust); font-style: italic; }
+p code { font-family: var(--mono); font-size: 13px; background: var(--bg3); padding: 2px 6px; border-radius: 3px; color: var(--ink); border: 1px solid var(--border); }
+
+ul.prose-list, ol.prose-list {
+  margin: 14px 0 20px 22px; display: flex; flex-direction: column; gap: 7px;
+}
+ul.prose-list li, ol.prose-list li {
+  color: var(--ink3); font-size: 15px; line-height: 1.7;
+}
+ul.prose-list li strong, ol.prose-list li strong { color: var(--ink); }
+ul.prose-list li code, ol.prose-list li code {
+  font-family: var(--mono); font-size: 12.5px; background: var(--bg3);
+  padding: 1px 5px; border-radius: 3px; color: var(--ink); border: 1px solid var(--border);
+}
+
+/* Callouts */
+.callout {
+  border-radius: 6px; padding: 18px 22px; margin: 24px 0; border-left: 3px solid;
+}
+.callout-title {
+  font-family: var(--mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .18em; text-transform: uppercase; margin-bottom: 9px;
+  display: flex; align-items: center; gap: 7px;
+}
+.callout p { margin-bottom: 0; font-size: 14.5px; }
+.callout.danger { background: var(--rust-bg); border-color: var(--rust); }
+.callout.danger .callout-title { color: var(--rust); }
+.callout.insight { background: var(--plum-bg); border-color: var(--plum); }
+.callout.insight .callout-title { color: var(--plum); }
+.callout.tip { background: var(--green-bg); border-color: var(--green); }
+.callout.tip .callout-title { color: var(--green); }
+.callout.warn { background: var(--gold-bg); border-color: var(--gold); }
+.callout.warn .callout-title { color: var(--gold); }
+.callout.info { background: var(--teal-bg); border-color: var(--teal); }
+.callout.info .callout-title { color: var(--teal); }
+
+/* Code blocks */
+.code-block {
+  border-radius: 8px; overflow: hidden; margin: 22px 0;
+  border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,.05);
+}
+.code-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 16px; background: var(--ink2); border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.code-lang { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.4); }
+.code-label { font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,.3); font-style: italic; }
+.copy-btn {
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1);
+  color: rgba(255,255,255,.5); font-family: var(--mono); font-size: 10px;
+  padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all .2s;
+}
+.copy-btn:hover { background: var(--rust); color: #fff; border-color: var(--rust); }
+pre {
+  background: #1c1612; padding: 22px 24px; overflow-x: auto;
+  font-family: var(--mono); font-size: 13px; line-height: 1.85;
+}
+pre::-webkit-scrollbar { height: 3px }
+pre::-webkit-scrollbar-thumb { background: #3a3028; border-radius: 2px }
+pre code { background: none; padding: 0; font-size: inherit; color: inherit; border: none; }
+code { font-family: var(--mono); font-size: 13px; }
+
+/* Syntax highlighting — warm dark theme */
+.kw  { color: #e06c75 }  /* keywords */
+.fn  { color: #61afef }  /* functions */
+.str { color: #98c379 }  /* strings */
+.num { color: #d19a66 }  /* numbers */
+.cm  { color: #5c6370; font-style: italic }  /* comments */
+.cl  { color: #e5c07b }  /* classes */
+.var { color: #abb2bf }  /* variables */
+.op  { color: #e06c75 }  /* operators */
+.prop{ color: #61afef }  /* properties */
+.at  { color: #e5c07b }  /* attributes/JSX props */
+.jsx { color: #c678dd }  /* jsx tags */
+.type{ color: #e5c07b }  /* TS types */
+.dec { color: #c678dd }  /* decorators */
+
+/* Diagrams */
+.diagram {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 26px; margin: 22px 0; overflow-x: auto;
+}
+.diag-title {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--muted); text-align: center; margin-bottom: 22px;
+}
+
+/* Before/After split */
+.ba {
+  display: grid; grid-template-columns: 1fr 1fr; margin: 22px 0;
+  border-radius: 8px; overflow: hidden; border: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+.ba-head {
+  padding: 9px 16px; font-family: var(--mono); font-size: 10px;
+  font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 7px;
+}
+.ba-bad .ba-head { background: rgba(192,57,43,.1); color: var(--rust); border-bottom: 1px solid rgba(192,57,43,.15); }
+.ba-good .ba-head { background: rgba(26,107,60,.08); color: var(--green); border-bottom: 1px solid rgba(26,107,60,.15); }
+.ba-pane pre { border-radius: 0; }
+.ba-sep { background: var(--border); width: 1px; }
+
+/* Steps */
+.steps { display: flex; flex-direction: column; gap: 14px; margin: 18px 0; }
+.step { display: flex; gap: 14px; align-items: flex-start; }
+.step-n {
+  width: 28px; height: 28px; background: var(--rust); color: #fff;
+  border-radius: 4px; display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 12px; font-weight: 700;
+  flex-shrink: 0; margin-top: 1px;
+}
+.step-n.t { background: var(--teal); }
+.step-n.g { background: var(--gold); }
+.step-n.p { background: var(--plum); }
+.step-body { font-size: 14.5px; color: var(--ink3); line-height: 1.68; }
+.step-body strong { color: var(--ink); }
+.step-body code { font-family: var(--mono); font-size: 12.5px; background: var(--bg3); padding: 2px 5px; border-radius: 3px; color: var(--ink); border: 1px solid var(--border); }
+
+/* Table */
+.ctable { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13.5px; }
+.ctable th {
+  padding: 10px 14px; background: var(--bg3);
+  font-family: var(--mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  text-align: left; border-bottom: 1px solid var(--border);
+}
+.ctable td {
+  padding: 11px 14px; border-bottom: 1px solid var(--border2);
+  color: var(--ink3); vertical-align: top; line-height: 1.65;
+}
+.ctable tr:hover td { background: var(--bg2); }
+.ctable code { font-size: 12px; background: var(--bg3); padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); }
+
+/* Video embed */
+.video-wrap {
+  border-radius: 8px; overflow: hidden; margin: 24px 0;
+  border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+.video-wrap iframe { display: block; width: 100%; aspect-ratio: 16/9; border: none; }
+.video-cap {
+  padding: 11px 16px; background: var(--bg2); border-top: 1px solid var(--border);
+  font-family: var(--sans); font-size: 12px; color: var(--muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.video-cap::before { content: '▶'; color: var(--rust); font-size: 9px; }
+
+/* Inline resource link */
+.res-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--teal-bg); border: 1px solid var(--teal-border);
+  border-radius: 4px; padding: 3px 10px 3px 8px;
+  font-family: var(--mono); font-size: 11px; color: var(--teal);
+  text-decoration: none; transition: all .2s; margin: 2px 0;
+}
+.res-link:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
+.res-link::before { content: '→'; font-size: 10px; }
+
+/* Knowledge check */
+.kc-wrap {
+  background: var(--bg2); border: 2px solid var(--border);
+  border-radius: 10px; padding: 36px; margin: 52px 0;
+}
+.kc-hdr { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+.kc-badge {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  background: var(--ink); color: var(--bg); padding: 5px 14px; border-radius: 3px;
+}
+.kc-title { font-family: var(--serif); font-size: 22px; font-weight: 900; color: var(--ink); }
+.kc-sub { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 26px; }
+.q-list { display: flex; flex-direction: column; gap: 10px; }
+details.q {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; overflow: hidden; transition: border-color .2s;
+}
+details.q:hover { border-color: var(--rust); }
+details.q[open] { border-color: var(--teal); }
+details.q summary {
+  padding: 14px 18px; display: flex; align-items: flex-start;
+  gap: 12px; cursor: pointer; list-style: none; line-height: 1.5;
+}
+details.q summary::-webkit-details-marker { display: none; }
+.q-num { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--rust); padding-top: 1px; flex-shrink: 0; }
+.q-text { font-size: 14px; color: var(--ink); font-weight: 400; flex: 1; }
+.q-arr { color: var(--muted2); font-size: 10px; margin-left: auto; padding-top: 3px; flex-shrink: 0; transition: transform .25s; }
+details.q[open] .q-arr { transform: rotate(90deg); }
+.q-ans {
+  padding: 16px 18px 18px 42px; font-size: 13.5px; color: var(--ink3);
+  line-height: 1.75; border-top: 1px solid var(--border);
+  background: var(--teal-bg);
+}
+.q-ans p { margin-bottom: 10px; font-size: 13.5px; }
+.q-ans p:last-child { margin-bottom: 0; }
+.q-ans code { font-size: 12px; background: rgba(255,255,255,.6); padding: 1px 5px; border-radius: 3px; }
+.q-ans strong { color: var(--ink); }
+
+/* Schedule */
+.sched { display: flex; flex-direction: column; gap: 8px; margin: 20px 0; }
+.sched-row {
+  display: grid; grid-template-columns: 140px 1fr; gap: 16px;
+  padding: 16px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.sched-time { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--rust); padding-top: 2px; }
+.sched-desc { font-size: 14px; color: var(--ink3); line-height: 1.65; }
+.sched-desc strong { color: var(--ink); display: block; margin-bottom: 4px; font-size: 14.5px; }
+
+/* Resources */
+.res-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin: 20px 0; }
+.res-card {
+  border: 1px solid var(--border); border-radius: 6px; padding: 14px;
+  background: var(--bg2); text-decoration: none; transition: all .2s;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.res-card:hover { border-color: var(--rust); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(192,57,43,.1); }
+.res-card-type { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
+.res-card-name { font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+.res-card-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* Scroll to top */
+#top-btn {
+  position: fixed; bottom: 28px; right: 28px; width: 44px; height: 44px;
+  background: var(--rust); color: #fff; border: none; border-radius: 4px;
+  font-size: 18px; cursor: pointer; opacity: 0; transition: opacity .3s, transform .3s;
+  z-index: 999; display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); box-shadow: 0 4px 16px rgba(192,57,43,.3);
+}
+#top-btn.show { opacity: 1; }
+#top-btn:hover { transform: translateY(-3px); }
+
+hr.div { border: none; border-top: 1px solid var(--border); margin: 64px 0; }
+
+/* Inline callout for resource at point of learning */
+.inline-res {
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid var(--gold-border); background: var(--gold-bg);
+  border-radius: 6px; padding: 12px 16px; margin: 18px 0;
+  text-decoration: none; transition: all .2s;
+}
+.inline-res:hover { border-color: var(--gold); transform: translateX(3px); }
+.inline-res .ir-icon { font-size: 20px; flex-shrink: 0; }
+.inline-res .ir-content { display: flex; flex-direction: column; gap: 2px; }
+.inline-res .ir-label { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--gold); }
+.inline-res .ir-title { font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--ink); }
+.inline-res .ir-desc { font-size: 12px; color: var(--muted); }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.fade-up { animation: fadeUp .45s ease forwards; opacity: 0; }
+
+@media(max-width:768px) {
+  .sidebar { display: none }
+  .main { margin-left: 0 }
+  .content { padding: 36px 18px 80px }
+  .ba { grid-template-columns: 1fr }
+  .tb-nav { display: none }
+}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+<button id="top-btn" onclick="scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <div class="tb-brand">RAGHAV.DEV // ROADMAP</div>
+  <div class="tb-day">DAY 03 / 60</div>
+  <ul class="tb-nav">
+    <li><a href="#diffing">Diffing</a></li>
+    <li><a href="#element-type">Types</a></li>
+    <li><a href="#key-prop">key Prop</a></li>
+    <li><a href="#identity">Identity</a></li>
+    <li><a href="#edge-cases">Edge Cases</a></li>
+    <li><a href="#check">Check</a></li>
+  </ul>
+</nav>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="toc-head">Day 03 Contents</div>
+  <a class="toc-link" href="#hero">Overview</a>
+  <a class="toc-link" href="#diffing">1. Diffing Algorithm</a>
+  <a class="toc-link sub" href="#o-n">Why O(n) Not O(n³)</a>
+  <a class="toc-link sub" href="#two-assumptions">The Two Assumptions</a>
+  <a class="toc-link sub" href="#tree-level">Tree-Level Diffing</a>
+  <a class="toc-link" href="#element-type">2. Element Type Rules</a>
+  <a class="toc-link sub" href="#same-type">Same Type: Update</a>
+  <a class="toc-link sub" href="#diff-type">Different Type: Remount</a>
+  <a class="toc-link sub" href="#type-gotchas">Type Gotchas</a>
+  <a class="toc-link" href="#key-prop">3. The key Prop</a>
+  <a class="toc-link sub" href="#key-mechanics">How key Works</a>
+  <a class="toc-link sub" href="#list-no-key">Lists Without Keys</a>
+  <a class="toc-link sub" href="#list-with-key">Lists With Keys</a>
+  <a class="toc-link sub" href="#key-bugs">Index Keys Are Dangerous</a>
+  <a class="toc-link sub" href="#key-pattern">The Reset Pattern</a>
+  <a class="toc-link" href="#identity">4. Component Identity</a>
+  <a class="toc-link sub" href="#position-state">Position & State</a>
+  <a class="toc-link sub" href="#inline-comp">Inline Component Bug</a>
+  <a class="toc-link sub" href="#conditional-same">Conditional Preserve</a>
+  <a class="toc-link" href="#batching">4.5 Batching</a>
+  <a class="toc-link sub" href="#batching-what">React 18 Auto-Batching</a>
+  <a class="toc-link sub" href="#children-bailout">Children-as-Props Bailout</a>
+  <a class="toc-link" href="#edge-cases">5. Edge Cases</a>
+  <a class="toc-link sub" href="#fragments">Fragments & Keys</a>
+  <a class="toc-link sub" href="#null-bool">null / 0 / boolean Traps</a>
+  <a class="toc-link sub" href="#portals">Portals</a>
+  <a class="toc-link sub" href="#memo-reconcile">React.memo & Diffing</a>
+  <a class="toc-link sub" href="#context-diffing">Context & Diffing</a>
+  <a class="toc-link" href="#check">Knowledge Check</a>
+  <a class="toc-link" href="#resources">Resources</a>
+  <a class="toc-link" href="#tasks">Today's Tasks</a>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+<div class="content">
+
+<!-- ═══════════ HERO ═══════════ -->
+<div class="hero fade-up" id="hero">
+  <div class="day-pill">Day 03 — Month 1 — Week 1</div>
+  <h1 class="hero-title">Reconciliation,<br><span>Diffing</span> & The<br><span>key</span> Prop</h1>
+  <p class="hero-lead">React's reconciliation algorithm is what lets you write declarative UI and have React figure out the minimum DOM operations needed to sync it. Today you learn how it works at the mechanical level — including every edge case that bites developers in production, and why the <code>key</code> prop is one of the most consequential things you write in React.</p>
+  <div class="hero-tags">
+    <span class="tag r">O(n) Diffing</span>
+    <span class="tag t">Element Type Rules</span>
+    <span class="tag g">key Mechanics</span>
+    <span class="tag p">Component Identity</span>
+    <span class="tag gr">Edge Cases</span>
+    <span class="tag r">10 Knowledge Checks</span>
+  </div>
+</div>
+
+<!-- CONNECTION -->
+<div class="callout info fade-up">
+  <div class="callout-title">🔗 Building on Day 2</div>
+  <p>Yesterday you learned how Fiber nodes are structured and how the work loop traverses them. Today's topic — reconciliation — is what happens <em>during</em> that traversal. When React visits a fiber during the render phase, it compares the new JSX against the existing fiber to decide: should I update this node, replace it entirely, or delete it? That comparison process is the diffing algorithm. Without yesterday's Fiber knowledge, reconciliation would feel arbitrary. Now it's a logical next step.</p>
+</div>
+
+<div class="callout warn fade-up" style="margin-top:18px;">
+  <div class="callout-title">⚡ Why This Session Is Unusually High-Value</div>
+  <p>Most "senior React" questions in interviews aren't about APIs — any dev with two years of React knows the API. They're about <em>why</em> things behave the way they do. "Why did my input lose focus?" "Why did my form reset?" "Why is this component remounting instead of updating?" Every single one of these traces back to the mechanics in today's document. Master this and you'll debug faster than 90% of React developers you'll ever work with.</p>
+</div>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 1 — THE DIFFING ALGORITHM
+═══════════════════════════════════════════════════════ -->
+<section class="section fade-up" id="diffing">
+  <div class="section-number">Topic 01</div>
+  <h2 class="sec-title">The <span>Diffing</span> Algorithm</h2>
+  <p class="sec-lead">React can't update the DOM without knowing what changed. Finding what changed requires comparing the old virtual tree to the new one. This comparison problem is deceptively hard — and understanding the algorithm that makes it fast is essential.</p>
+
+  <div class="sub" id="o-n">
+    <h3 class="sub-title"><span class="sub-num">1.1</span> Why O(n) and Not O(n³)</h3>
+
+    <p>The general algorithm for diffing two arbitrary trees is <strong>O(n³)</strong> where n is the number of nodes. Think about what that means: a tree with 1,000 nodes requires a billion operations. A tree with 10,000 components? A trillion. This is completely unusable for a UI framework that re-renders on every interaction.</p>
+
+    <p>React's algorithm runs in <strong>O(n)</strong> — linear time. 10,000 nodes = 10,000 operations. But O(n) is only possible because React makes two heuristic assumptions about how developers use components. These aren't forced constraints — they're observations about real UI code that hold true ~99% of the time.</p>
+
+    <div class="callout insight">
+      <div class="callout-title">💡 What Makes This Possible</div>
+      <p>Traditional tree-diff algorithms find the <em>minimum edit distance</em> between two trees — they consider every possible mapping between nodes. React instead uses <strong>heuristics that are true for well-written UI code</strong>. The correctness tradeoff: React might not find the absolute minimum DOM operations for pathological cases, but it runs 10,000× faster for normal cases. In practice, the normal case is always what you have.</p>
+    </div>
+
+    <a class="inline-res" href="https://legacy.reactjs.org/docs/reconciliation.html#motivation" target="_blank" rel="noopener">
+      <div class="ir-icon">📄</div>
+      <div class="ir-content">
+        <div class="ir-label">React Docs — Read at this point</div>
+        <div class="ir-title">Reconciliation: Motivation — React Legacy Docs</div>
+        <div class="ir-desc">The original formal statement of why O(n³) is unusable and how the two heuristics make O(n) possible. 3 min read. Gives you the vocabulary to explain this in interviews precisely.</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="sub" id="two-assumptions">
+    <h3 class="sub-title"><span class="sub-num">1.2</span> The Two Heuristic Assumptions</h3>
+
+    <p><strong>Assumption 1: Elements of different types produce completely different trees.</strong></p>
+    <p>If a <code>&lt;div&gt;</code> becomes a <code>&lt;section&gt;</code>, React doesn't try to reuse the div. It destroys the entire subtree rooted at that div and builds a fresh subtree for the section — including remounting all child components from scratch. React does not compare the children of different-typed elements.</p>
+
+    <p>Why this is valid: In real UI code, if you change a container from <code>div</code> to <code>section</code>, your intent is a structural change. Attempting to preserve child state across a root-type change would produce unexpected behavior in virtually every real case. The assumption aligns with intent.</p>
+
+    <p><strong>Assumption 2: The developer can signal stable identity with the <code>key</code> prop.</strong></p>
+    <p>When React diffs a list of children, it uses position by default. But if elements have keys, React uses those keys instead of position to track which element is which across renders. This allows React to correctly handle insertions, deletions, and reorders in lists.</p>
+
+    <p>Why this is valid: Position-based matching fails for dynamic lists (any mutation of the list order causes mismatches). Key-based matching lets you declare "this specific component instance should be identified by this stable ID, not its current position." React can then correctly correlate old and new elements even after the list is shuffled.</p>
+  </div>
+
+  <div class="sub" id="tree-level">
+    <h3 class="sub-title"><span class="sub-num">1.3</span> Tree-Level Diffing: The Algorithm Step by Step</h3>
+
+    <p>React diffs trees level by level, left to right. It never compares elements at different levels of the tree — if a component moves from depth 3 to depth 2, React treats it as a deletion at depth 3 and an insertion at depth 2. It doesn't "recognize" that it's the same component in a new position.</p>
+
+    <div class="diagram">
+      <div class="diag-title">Level-by-Level Comparison — React Only Diffs at the Same Tree Level</div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:20px;font-family:var(--mono);font-size:11px;align-items:start;">
+        <div>
+          <div style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--muted);margin-bottom:12px;text-transform:uppercase;">Previous Render</div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 12px;color:var(--ink);text-align:center;">App</div>
+            <div style="display:flex;gap:4px;">
+              <div style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 12px;color:var(--ink);text-align:center;">Header</div>
+              <div style="flex:1;background:var(--bg);border:1px solid var(--rust);border-radius:5px;padding:7px 12px;color:var(--rust);text-align:center;">div.main</div>
+            </div>
+            <div style="display:flex;gap:4px;margin-left:50%;">
+              <div style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 12px;color:var(--ink);text-align:center;">Card</div>
+              <div style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 12px;color:var(--ink);text-align:center;">Card</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;padding-top:40px;font-size:22px;color:var(--muted2);">→</div>
+        <div>
+          <div style="text-align:center;font-size:10px;font-weight:700;letter-spacing:.12em;color:var(--muted);margin-bottom:12px;text-transform:uppercase;">New Render</div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 12px;color:var(--ink);text-align:center;">App</div>
+            <div style="display:flex;gap:4px;">
+              <div style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 12px;color:var(--ink);text-align:center;">Header</div>
+              <div style="flex:1;background:var(--rust-bg);border:2px solid var(--rust);border-radius:5px;padding:7px 12px;color:var(--rust);text-align:center;font-weight:700;">section.main ←CHANGED</div>
+            </div>
+            <div style="display:flex;gap:4px;margin-left:50%;">
+              <div style="flex:1;background:var(--rust-bg);border:1px dashed var(--rust);border-radius:5px;padding:7px 12px;color:var(--rust);text-align:center;">NEW Card</div>
+              <div style="flex:1;background:var(--rust-bg);border:1px dashed var(--rust);border-radius:5px;padding:7px 12px;color:var(--rust);text-align:center;">NEW Card</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding:12px 14px;background:var(--rust-bg);border:1px solid var(--rust-border);border-radius:5px;font-family:var(--mono);font-size:10.5px;color:var(--ink3);line-height:1.65;">
+        <strong style="color:var(--rust);">What happened:</strong> App → same (update). Header → same (update). div.main → changed to section.main → React unmounts div.main <em>and all its children</em>, mounts fresh section.main and fresh children. Card components are brand new instances — all their state is lost, even though structurally they're the same components.
+      </div>
+    </div>
+
+    <p>This is a critical implication: <strong>React never moves elements across tree levels</strong>. Moving a component up or down in the tree depth is equivalent to destroying and recreating it. This has real performance and state consequences you must design around.</p>
+
+    <div class="callout warn">
+      <div class="callout-title">⚡ Practical Implication</div>
+      <p>This is why you should <strong>never conditionally wrap a component in a different container type</strong>. If sometimes you render <code>&lt;div&gt;&lt;Form/&gt;&lt;/div&gt;</code> and sometimes <code>&lt;section&gt;&lt;Form/&gt;&lt;/section&gt;</code>, every switch destroys and remounts <code>&lt;Form/&gt;</code> — losing all form state. Use a stable container and conditionally change CSS classes instead.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 2 — ELEMENT TYPE RULES
+═══════════════════════════════════════════════════════ -->
+<section class="section fade-up" id="element-type">
+  <div class="section-number">Topic 02</div>
+  <h2 class="sec-title">Element <span>Type</span> Comparison Rules</h2>
+  <p class="sec-lead">The most consequential decision React makes during diffing is whether two elements at the same position are "the same" or "different." The answer to this question determines whether React updates the existing component instance or destroys it and builds a fresh one.</p>
+
+  <div class="sub" id="same-type">
+    <h3 class="sub-title"><span class="sub-num t">2.1</span> Same Type at Same Position: Update</h3>
+
+    <p>When React finds the same component type at the same position in the tree between renders, it keeps the existing DOM node or component instance and only updates what changed. For DOM elements: it diffs the props and applies only the changed attributes. For class components: it calls <code>componentDidUpdate</code>. For function components: it calls the function again with new props, but the <em>same fiber</em> is reused — hooks state is preserved.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Same type at same position — React updates, never remounts</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// Render 1:</span>
+<span class="op">&lt;</span><span class="jsx">div</span> <span class="at">className</span>=<span class="str">"card active"</span><span class="op">&gt;</span>
+  <span class="op">&lt;</span><span class="jsx">p</span><span class="op">&gt;</span>Hello<span class="op">&lt;/</span><span class="jsx">p</span><span class="op">&gt;</span>
+<span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+
+<span class="cm">// Render 2 (isActive becomes false):</span>
+<span class="op">&lt;</span><span class="jsx">div</span> <span class="at">className</span>=<span class="str">"card"</span><span class="op">&gt;</span>      <span class="cm">// ← same div, same position</span>
+  <span class="op">&lt;</span><span class="jsx">p</span><span class="op">&gt;</span>Hello<span class="op">&lt;/</span><span class="jsx">p</span><span class="op">&gt;</span>
+<span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+
+<span class="cm">// React does:</span>
+<span class="cm">// 1. Recognizes: same element type "div" at same position</span>
+<span class="cm">// 2. Keeps the existing DOM div element</span>
+<span class="cm">// 3. Updates only the className attribute: removes "active"</span>
+<span class="cm">// 4. Recurses into children: same "p" at same position, same text → no change</span>
+<span class="cm">// Total DOM operations: 1 attribute update</span>
+<span class="cm">// No remount. No state loss. No DOM node destruction.</span></code></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Same component type — state is PRESERVED across re-renders</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="kw">function</span> <span class="cl">Parent</span>({ <span class="var">showActive</span> }) {
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="cl">Counter</span> <span class="at">label</span>={<span class="var">showActive</span> ? <span class="str">"Active"</span> : <span class="str">"Inactive"</span>} <span class="op">/&gt;</span>
+    <span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+  );
+}
+
+<span class="kw">function</span> <span class="cl">Counter</span>({ <span class="var">label</span> }) {
+  <span class="kw">const</span> [<span class="var">count</span>, <span class="var">setCount</span>] = <span class="fn">useState</span>(<span class="num">0</span>);
+  <span class="kw">return</span> <span class="op">&lt;</span><span class="jsx">button</span> <span class="at">onClick</span>={() => <span class="fn">setCount</span>(<span class="var">c</span> => <span class="var">c</span> + <span class="num">1</span>)}<span class="op">&gt;</span>{<span class="var">label</span>}: {<span class="var">count</span>}<span class="op">&lt;/</span><span class="jsx">button</span><span class="op">&gt;</span>;
+}
+
+<span class="cm">// User clicks counter to count=5</span>
+<span class="cm">// Parent re-renders with showActive=false</span>
+<span class="cm">// Counter gets label="Inactive" but count stays 5</span>
+<span class="cm">// Why: same Counter component at same position → fiber reused → state preserved</span></code></pre>
+    </div>
+
+    <p>For DOM elements specifically, React diffs props and updates only what changed. It handles some special cases:</p>
+    <ul class="prose-list">
+      <li><strong><code>style</code> prop:</strong> React diffs the style object, updating only changed CSS properties, not replacing the whole <code>style</code> attribute</li>
+      <li><strong><code>className</code>:</strong> always sets the full class string — no partial diff</li>
+      <li><strong>Event listeners:</strong> React uses event delegation (a single listener at the root), so adding/removing event props doesn't touch native DOM listeners at all — React's synthetic event system handles routing</li>
+      <li><strong>Form elements:</strong> React treats <code>value</code>, <code>checked</code>, <code>selected</code> as controlled properties, updating them directly on the DOM node</li>
+    </ul>
+  </div>
+
+  <div class="sub" id="diff-type">
+    <h3 class="sub-title"><span class="sub-num t">2.2</span> Different Type at Same Position: Full Remount</h3>
+
+    <p>When React finds a different component type at the same position, the consequences are total and irreversible:</p>
+
+    <ol class="steps">
+      <li class="step"><div class="step-n t">1</div><div class="step-body">The old component's <strong>cleanup effects run</strong> — all <code>useEffect</code> cleanup functions, all event listeners, all subscriptions</div></li>
+      <li class="step"><div class="step-n t">2</div><div class="step-body">The <strong>entire subtree is unmounted</strong> — every child component is destroyed, their state is gone forever</div></li>
+      <li class="step"><div class="step-n t">3</div><div class="step-body">The <strong>DOM nodes are removed</strong> from the document</div></li>
+      <li class="step"><div class="step-n t">4</div><div class="step-body">A <strong>completely fresh component tree</strong> is mounted for the new type, starting with the initial state of every component inside</div></li>
+    </ol>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Different type = complete destruction and rebuild</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// When isLoggedIn changes from true to false:</span>
+<span class="kw">function</span> <span class="cl">App</span>({ <span class="var">isLoggedIn</span> }) {
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>
+      {<span class="var">isLoggedIn</span>
+        ? <span class="op">&lt;</span><span class="cl">Dashboard</span> <span class="op">/&gt;</span>   <span class="cm">// ← renders at position 1</span>
+        : <span class="op">&lt;</span><span class="cl">LoginForm</span>  <span class="op">/&gt;</span>   <span class="cm">// ← renders at position 1</span>
+      }
+    <span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+  );
+}
+
+<span class="cm">// When isLoggedIn flips: true → false</span>
+<span class="cm">// React sees: was Dashboard at pos 1, now LoginForm at pos 1</span>
+<span class="cm">// Different type → Dashboard is COMPLETELY unmounted:</span>
+<span class="cm">// - Dashboard's useEffect cleanups run</span>
+<span class="cm">// - All Dashboard children unmount recursively</span>
+<span class="cm">// - Dashboard's state is gone (it had selected tab, scroll position, etc.)</span>
+<span class="cm">// LoginForm is COMPLETELY mounted fresh:</span>
+<span class="cm">// - All state starts at initial values</span>
+<span class="cm">// - All useEffects run their setup</span>
+<span class="cm">// This is CORRECT behavior here — you want a fresh login form</span></code></pre>
+    </div>
+
+    <div class="callout danger">
+      <div class="callout-title">🚨 The Accidental Remount Bug — Happens ALL the Time</div>
+      <p>The most common manifestation of this bug: you have a form that resets when it shouldn't. You change a conditional rendering expression slightly, accidentally swapping component types at the same position, and now the form loses its state. Or you have an input that loses focus on every keystroke. Both symptoms point to an unintended remount from a type change.</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Real bug: input loses focus on every keystroke</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// ❌ BUGGY: TextInput is defined inside Parent</span>
+<span class="cm">// Every re-render of Parent creates a NEW function reference for TextInput</span>
+<span class="cm">// React sees: "new component type at same position" → remounts!</span>
+<span class="kw">function</span> <span class="cl">Parent</span>() {
+  <span class="kw">const</span> [<span class="var">value</span>, <span class="var">setValue</span>] = <span class="fn">useState</span>(<span class="str">''</span>);
+
+  <span class="cm">// 🔥 Component defined inside render — new reference every render</span>
+  <span class="kw">const</span> <span class="cl">TextInput</span> = () => (  <span class="cm">// ← THIS IS THE BUG</span>
+    <span class="op">&lt;</span><span class="jsx">input</span> <span class="at">value</span>={<span class="var">value</span>} <span class="at">onChange</span>={<span class="var">e</span> => <span class="fn">setValue</span>(<span class="var">e</span>.<span class="prop">target</span>.<span class="prop">value</span>)} <span class="op">/&gt;</span>
+  );
+
+  <span class="kw">return</span> <span class="op">&lt;</span><span class="cl">TextInput</span> <span class="op">/&gt;</span>;
+  <span class="cm">// Every render: new TextInput function → type changed → remount</span>
+  <span class="cm">// Input remounts → loses focus → user can't type!</span>
+}
+
+<span class="cm">// ✅ FIXED: Define component outside — stable reference across renders</span>
+<span class="cm">// TextInput function is the same reference on every Parent render</span>
+<span class="kw">const</span> <span class="cl">TextInput</span> = ({ <span class="var">value</span>, <span class="var">onChange</span> }) => (
+  <span class="op">&lt;</span><span class="jsx">input</span> <span class="at">value</span>={<span class="var">value</span>} <span class="at">onChange</span>={<span class="var">onChange</span>} <span class="op">/&gt;</span>
+);
+
+<span class="kw">function</span> <span class="cl">Parent</span>() {
+  <span class="kw">const</span> [<span class="var">value</span>, <span class="var">setValue</span>] = <span class="fn">useState</span>(<span class="str">''</span>);
+  <span class="kw">return</span> <span class="op">&lt;</span><span class="cl">TextInput</span> <span class="at">value</span>={<span class="var">value</span>} <span class="at">onChange</span>={<span class="var">e</span> => <span class="fn">setValue</span>(<span class="var">e</span>.<span class="prop">target</span>.<span class="prop">value</span>)} <span class="op">/&gt;</span>;
+  <span class="cm">// Same TextInput reference → React sees same type → updates props only</span>
+  <span class="cm">// Input keeps focus. State preserved. Works correctly.</span>
+}</code></pre>
+    </div>
+  </div>
+
+  <div class="sub" id="type-gotchas">
+    <h3 class="sub-title"><span class="sub-num t">2.3</span> Type Comparison Gotchas</h3>
+
+    <h4 class="mini-title">How React determines "same type"</h4>
+    <p>React compares element types using strict equality (<code>===</code>). For DOM elements, the type is a string: <code>"div" === "div"</code>. For components, the type is the function or class reference itself. This has a subtle but important consequence:</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Type identity is by reference, not by name or shape</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// These look the same but React treats them as DIFFERENT types:</span>
+<span class="kw">const</span> <span class="cl">A</span> = () => <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>Hello<span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>;
+<span class="kw">const</span> <span class="cl">B</span> = () => <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>Hello<span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>;
+<span class="cm">// A !== B (different function references, even with identical code)</span>
+<span class="cm">// Swapping &lt;A/&gt; for &lt;B/&gt; at the same position → full remount</span>
+
+<span class="cm">// Higher-order components create new types each call:</span>
+<span class="kw">function</span> <span class="fn">withLogger</span>(<span class="var">Component</span>) {
+  <span class="kw">return</span> <span class="kw">function</span> <span class="cl">Wrapped</span>(<span class="var">props</span>) {  <span class="cm">// ← new function every withLogger() call</span>
+    <span class="var">console</span>.<span class="fn">log</span>(<span class="str">'render'</span>);
+    <span class="kw">return</span> <span class="op">&lt;</span><span class="var">Component</span> {...<span class="var">props</span>} <span class="op">/&gt;</span>;
+  };
+}
+
+<span class="cm">// ❌ Called inside render → new Wrapped reference every render → remounts</span>
+<span class="kw">function</span> <span class="cl">App</span>() {
+  <span class="kw">const</span> <span class="cl">LoggedForm</span> = <span class="fn">withLogger</span>(<span class="cl">Form</span>); <span class="cm">// ← called here = new type each render</span>
+  <span class="kw">return</span> <span class="op">&lt;</span><span class="cl">LoggedForm</span> <span class="op">/&gt;</span>;             <span class="cm">// ← Form loses state on every App re-render</span>
+}
+
+<span class="cm">// ✅ Call HOC at module level — stable reference</span>
+<span class="kw">const</span> <span class="cl">LoggedForm</span> = <span class="fn">withLogger</span>(<span class="cl">Form</span>); <span class="cm">// ← called once at module level</span>
+<span class="kw">function</span> <span class="cl">App</span>() {
+  <span class="kw">return</span> <span class="op">&lt;</span><span class="cl">LoggedForm</span> <span class="op">/&gt;</span>;             <span class="cm">// ← same reference every render ✓</span>
+}</code></pre>
+    </div>
+
+    <h4 class="mini-title">The input vs textarea swap</h4>
+    <p>A classic form bug: switching between <code>&lt;input type="text"&gt;</code> and <code>&lt;textarea&gt;</code> based on some condition looks innocent but causes a full remount because they are different DOM element types ("input" vs "textarea"). The form state is lost every time the condition changes.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Form state lost on every toggle</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// ❌ User types text → switches to multiline → text is GONE</span>
+<span class="kw">function</span> <span class="cl">MessageField</span>({ <span class="var">multiline</span> }) {
+  <span class="kw">return</span> <span class="var">multiline</span>
+    ? <span class="op">&lt;</span><span class="jsx">textarea</span> <span class="op">/&gt;</span>    <span class="cm">// "textarea" type</span>
+    : <span class="op">&lt;</span><span class="jsx">input</span> <span class="at">type</span>=<span class="str">"text"</span> <span class="op">/&gt;</span>;  <span class="cm">// "input" type — different!</span>
+  <span class="cm">// Toggle multiline: full remount, typed text gone</span>
+}
+
+<span class="cm">// ✅ Use controlled state lifted to parent — value persists across remounts</span>
+<span class="kw">function</span> <span class="cl">MessageField</span>({ <span class="var">multiline</span>, <span class="var">value</span>, <span class="var">onChange</span> }) {
+  <span class="kw">return</span> <span class="var">multiline</span>
+    ? <span class="op">&lt;</span><span class="jsx">textarea</span> <span class="at">value</span>={<span class="var">value</span>} <span class="at">onChange</span>={<span class="var">onChange</span>} <span class="op">/&gt;</span>
+    : <span class="op">&lt;</span><span class="jsx">input</span> <span class="at">type</span>=<span class="str">"text"</span> <span class="at">value</span>={<span class="var">value</span>} <span class="at">onChange</span>={<span class="var">onChange</span>} <span class="op">/&gt;</span>;
+  <span class="cm">// Value is in parent's state → survives the remount of the input element</span>
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 3 — THE KEY PROP
+═══════════════════════════════════════════════════════ -->
+<section class="section fade-up" id="key-prop">
+  <div class="section-number">Topic 03</div>
+  <h2 class="sec-title">The <span>key</span> Prop — Deep Mechanics</h2>
+  <p class="sec-lead">The key prop is one of the most written yet least understood parts of React. Most developers think "key is for lists, to fix console warnings." The reality is far richer: key is a fundamental identity signal that changes what React considers "the same component" — and knowing how to leverage this deliberately makes you a significantly better React engineer.</p>
+
+  <div class="sub" id="key-mechanics">
+    <h3 class="sub-title"><span class="sub-num g">3.1</span> The Exact Mechanic: What key Does Internally</h3>
+
+    <p>When React diffs a set of children (in a list, or adjacent siblings), it builds a map of existing fiber nodes keyed by their identifier. Without <code>key</code>, the identifier is the position index (0, 1, 2...). With <code>key</code>, the identifier is the key string.</p>
+
+    <p>For each new child element React wants to render, it looks up: "do I have an existing fiber with this identifier AND the same type?" If yes: reuse the fiber (update). If no: create fresh (mount). Any existing fibers with identifiers not present in the new list: unmount.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">pseudocode</span><span class="code-label">React's child reconciliation algorithm</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="kw">function</span> <span class="fn">reconcileChildrenArray</span>(<span class="var">existingFibers</span>, <span class="var">newElements</span>) {
+  <span class="cm">// Phase 1: Build a map of existing fibers by their key/index</span>
+  <span class="kw">const</span> <span class="var">existingMap</span> = <span class="kw">new</span> <span class="cl">Map</span>();
+  <span class="var">existingFibers</span>.<span class="fn">forEach</span>((<span class="var">fiber</span>, <span class="var">index</span>) => {
+    <span class="kw">const</span> <span class="var">mapKey</span> = <span class="var">fiber</span>.<span class="prop">key</span> !== <span class="kw">null</span>
+      ? <span class="var">fiber</span>.<span class="prop">key</span>       <span class="cm">// Use key if provided</span>
+      : <span class="var">index</span>;           <span class="cm">// Otherwise fall back to position</span>
+    <span class="var">existingMap</span>.<span class="fn">set</span>(<span class="var">mapKey</span>, <span class="var">fiber</span>);
+  });
+
+  <span class="cm">// Phase 2: For each new element, find a matching existing fiber</span>
+  <span class="var">newElements</span>.<span class="fn">forEach</span>((<span class="var">element</span>, <span class="var">newIndex</span>) => {
+    <span class="kw">const</span> <span class="var">mapKey</span> = <span class="var">element</span>.<span class="prop">key</span> !== <span class="kw">null</span>
+      ? <span class="var">element</span>.<span class="prop">key</span>
+      : <span class="var">newIndex</span>;
+
+    <span class="kw">const</span> <span class="var">existingFiber</span> = <span class="var">existingMap</span>.<span class="fn">get</span>(<span class="var">mapKey</span>);
+
+    <span class="kw">if</span> (<span class="var">existingFiber</span> && <span class="var">existingFiber</span>.<span class="prop">type</span> === <span class="var">element</span>.<span class="prop">type</span>) {
+      <span class="cm">// ✅ Match found! Update existing fiber with new props</span>
+      <span class="fn">updateFiber</span>(<span class="var">existingFiber</span>, <span class="var">element</span>.<span class="prop">props</span>);
+      <span class="var">existingMap</span>.<span class="fn">delete</span>(<span class="var">mapKey</span>); <span class="cm">// Remove from map (it's been used)</span>
+    } <span class="kw">else</span> {
+      <span class="cm">// ❌ No match. Create fresh fiber. Previous state is gone.</span>
+      <span class="fn">createFiber</span>(<span class="var">element</span>);
+    }
+  });
+
+  <span class="cm">// Phase 3: Any remaining fibers in existingMap were not matched → unmount</span>
+  <span class="var">existingMap</span>.<span class="fn">forEach</span>(<span class="var">fiber</span> => <span class="fn">unmountFiber</span>(<span class="var">fiber</span>));
+}</code></pre>
+    </div>
+
+    <div class="callout insight">
+      <div class="callout-title">💡 The Key Insight (Literally)</div>
+      <p>A <code>key</code> does not make a component unique across the whole app. It only matters within its siblings — the children of the same parent. Keys must be unique among siblings, not globally. Two different lists can both use the key <code>"1"</code> — React looks at keys within each parent's children context separately.</p>
+    </div>
+  </div>
+
+  <div class="sub" id="list-no-key">
+    <h3 class="sub-title"><span class="sub-num g">3.2</span> Lists Without Keys — The Exact Problem</h3>
+
+    <p>When you render a list without keys, React tracks elements by position. This works perfectly for append-only lists (adding to the end). It breaks for prepend, insert, and reorder operations.</p>
+
+    <div class="diagram">
+      <div class="diag-title">Prepend Without Key — React Sees Wrong Items as "Same"</div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:20px;font-family:var(--mono);font-size:11px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;text-transform:uppercase;">Old list (no keys)</div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;"><span style="color:var(--teal);font-weight:700;">pos 0</span><span style="color:var(--ink);">&lt;li&gt; Alice</span></div>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;"><span style="color:var(--teal);font-weight:700;">pos 1</span><span style="color:var(--ink);">&lt;li&gt; Bob</span></div>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;"><span style="color:var(--teal);font-weight:700;">pos 2</span><span style="color:var(--ink);">&lt;li&gt; Carol</span></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:22px;color:var(--muted2);">→</div>
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;text-transform:uppercase;">New list (Zara prepended)</div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="background:var(--rust-bg);border:1px solid var(--rust-border);border-radius:5px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;"><span style="color:var(--teal);font-weight:700;">pos 0</span><span style="color:var(--rust);">&lt;li&gt; Zara ← matched to Alice's fiber!</span></div>
+            <div style="background:var(--rust-bg);border:1px solid var(--rust-border);border-radius:5px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;"><span style="color:var(--teal);font-weight:700;">pos 1</span><span style="color:var(--rust);">&lt;li&gt; Alice ← matched to Bob's fiber!</span></div>
+            <div style="background:var(--rust-bg);border:1px solid var(--rust-border);border-radius:5px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;"><span style="color:var(--teal);font-weight:700;">pos 2</span><span style="color:var(--rust);">&lt;li&gt; Bob ← matched to Carol's fiber!</span></div>
+            <div style="background:var(--bg);border:1px dashed var(--border);border-radius:5px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;"><span style="color:var(--teal);font-weight:700;">pos 3</span><span style="color:var(--ink);">&lt;li&gt; Carol ← new! (fresh mount)</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding:12px 14px;background:var(--rust-bg);border:1px solid var(--rust-border);border-radius:5px;font-size:11px;color:var(--ink3);line-height:1.65;">
+        <strong style="color:var(--rust);">Result:</strong> React updates ALL 3 existing list items with new text content (3 DOM mutations), then inserts one new item. 4 DOM operations to add 1 item. But far worse: if &lt;li&gt; is a complex component with state, Zara's fiber gets Alice's state. Alice's fiber gets Bob's state. Everything is wrong.
+      </div>
+    </div>
+
+    <div class="diagram" style="margin-top:20px;">
+      <div class="diag-title">Append Without Key — Actually Fine</div>
+      <div style="font-family:var(--mono);font-size:11px;display:grid;grid-template-columns:1fr auto 1fr;gap:20px;">
+        <div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 12px;display:flex;gap:10px;"><span style="color:var(--teal);">pos 0</span><span>Alice</span></div>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 12px;display:flex;gap:10px;"><span style="color:var(--teal);">pos 1</span><span>Bob</span></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:22px;color:var(--muted2);">→</div>
+        <div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:5px;padding:7px 12px;display:flex;gap:10px;justify-content:space-between;"><div style="display:flex;gap:10px;"><span style="color:var(--teal);">pos 0</span><span>Alice</span></div><span style="color:var(--green);font-size:10px;">✓ match</span></div>
+            <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:5px;padding:7px 12px;display:flex;gap:10px;justify-content:space-between;"><div style="display:flex;gap:10px;"><span style="color:var(--teal);">pos 1</span><span>Bob</span></div><span style="color:var(--green);font-size:10px;">✓ match</span></div>
+            <div style="background:var(--bg);border:1px dashed var(--border);border-radius:5px;padding:7px 12px;display:flex;gap:10px;"><span style="color:var(--teal);">pos 2</span><span style="color:var(--ink);">Carol (new)</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:11px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);border-radius:5px;padding:10px 12px;">
+        ✓ Append works fine without keys. Position 0 = Alice in both old and new. Position 1 = Bob in both. Only 1 DOM insertion needed.
+      </div>
+    </div>
+  </div>
+
+  <div class="sub" id="list-with-key">
+    <h3 class="sub-title"><span class="sub-num g">3.3</span> Lists With Keys — What React Can Do</h3>
+
+    <p>With stable keys, React can correctly identify which element is which regardless of position changes. The same prepend operation now works correctly:</p>
+
+    <div class="diagram">
+      <div class="diag-title">Prepend WITH Stable Keys — React Correctly Tracks Identity</div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:20px;font-family:var(--mono);font-size:11px;">
+        <div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 12px;display:flex;gap:10px;"><span style="color:var(--gold);font-weight:700;">key=alice</span><span>Alice</span></div>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 12px;display:flex;gap:10px;"><span style="color:var(--gold);font-weight:700;">key=bob</span><span>Bob</span></div>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:7px 12px;display:flex;gap:10px;"><span style="color:var(--gold);font-weight:700;">key=carol</span><span>Carol</span></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;font-size:22px;color:var(--muted2);">→</div>
+        <div>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <div style="background:var(--bg);border:1px dashed var(--border);border-radius:5px;padding:7px 12px;display:flex;justify-content:space-between;"><div style="display:flex;gap:10px;"><span style="color:var(--gold);font-weight:700;">key=zara</span><span>Zara</span></div><span style="color:var(--teal);font-size:10px;">new mount</span></div>
+            <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:5px;padding:7px 12px;display:flex;justify-content:space-between;"><div style="display:flex;gap:10px;"><span style="color:var(--gold);font-weight:700;">key=alice</span><span>Alice</span></div><span style="color:var(--green);font-size:10px;">✓ same fiber → reuse</span></div>
+            <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:5px;padding:7px 12px;display:flex;justify-content:space-between;"><div style="display:flex;gap:10px;"><span style="color:var(--gold);font-weight:700;">key=bob</span><span>Bob</span></div><span style="color:var(--green);font-size:10px;">✓ same fiber → reuse</span></div>
+            <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:5px;padding:7px 12px;display:flex;justify-content:space-between;"><div style="display:flex;gap:10px;"><span style="color:var(--gold);font-weight:700;">key=carol</span><span>Carol</span></div><span style="color:var(--green);font-size:10px;">✓ same fiber → reuse</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:12px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:5px;font-size:11px;color:var(--ink3);line-height:1.65;">
+        <strong style="color:var(--green);">Result:</strong> React identifies Zara (new key) → mounts fresh. Alice, Bob, Carol have matching keys → reuse existing fibers, just move their DOM position. State, focus, animations preserved. 1 insertion instead of 3 updates + 1 insertion.
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-title">✅ What Makes a Good Key</div>
+      <p><strong>Stable:</strong> same key for the same logical item across renders. <strong>Unique:</strong> unique among siblings, not globally. <strong>Tied to data:</strong> typically a database ID (<code>user.id</code>, <code>message.id</code>). Never derived from render-time information like random numbers or timestamps. Never the array index for dynamic lists.</p>
+    </div>
+
+    <a class="inline-res" href="https://www.developerway.com/posts/react-key-attribute" target="_blank" rel="noopener">
+      <div class="ir-icon">📝</div>
+      <div class="ir-content">
+        <div class="ir-label">Article — Read at this point</div>
+        <div class="ir-title">"React key attribute: best practices" — developerway.com</div>
+        <div class="ir-desc">Nadia Makarevich's deep dive on key. Covers scenarios beyond lists — keys on non-list siblings, keys to force re-mount of specific elements, key performance implications. Highly practical.</div>
+      </div>
+    </a>
+
+    <h4 class="mini-title">Key Uniqueness Edge Cases</h4>
+    <p>Keys only need to be unique <em>among siblings at the same level</em>. But there are two edge cases that trip developers up:</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Key uniqueness edge cases</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// EDGE CASE 1: Duplicate keys — silent bug, not an error</span>
+{[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>].<span class="fn">map</span>(<span class="var">n</span> => <span class="op">&lt;</span><span class="jsx">li</span> <span class="at">key</span>=<span class="str">"same-key"</span><span class="op">&gt;</span>{<span class="var">n</span>}<span class="op">&lt;/</span><span class="jsx">li</span><span class="op">&gt;</span>)}
+<span class="cm">// React sees three elements with key="same-key"</span>
+<span class="cm">// It will MATCH all three to the FIRST fiber with that key</span>
+<span class="cm">// Other fibers are unmounted. Only one item effectively exists.</span>
+<span class="cm">// React warns in development. In production: silent data loss.</span>
+
+<span class="cm">// EDGE CASE 2: Keys generated with Math.random() — anti-pattern</span>
+{<span class="var">items</span>.<span class="fn">map</span>(<span class="var">item</span> => (
+  <span class="op">&lt;</span><span class="cl">Item</span> <span class="at">key</span>={<span class="cl">Math</span>.<span class="fn">random</span>()} <span class="at">item</span>={<span class="var">item</span>} <span class="op">/&gt;</span>
+))}
+<span class="cm">// Every render: new random key for every item</span>
+<span class="cm">// React never matches old fiber to new element (keys never match)</span>
+<span class="cm">// EVERY item remounts on EVERY render — catastrophic performance</span>
+<span class="cm">// Also causes focus loss, animation resets, form state loss</span>
+
+<span class="cm">// EDGE CASE 3: Keys from Date.now() in same-tick renders</span>
+{<span class="var">items</span>.<span class="fn">map</span>(<span class="var">item</span>, <span class="var">i</span>) => (
+  <span class="op">&lt;</span><span class="cl">Item</span> <span class="at">key</span>={<span class="cl">Date</span>.<span class="fn">now</span>() + <span class="var">i</span>} <span class="at">item</span>={<span class="var">item</span>} <span class="op">/&gt;</span>
+))}
+<span class="cm">// Better than random but still problematic: keys change on every render</span>
+<span class="cm">// (Date.now() returns a different value each render cycle)</span>
+<span class="cm">// Same problem as Math.random() — all items remount each render</span>
+
+<span class="cm">// CORRECT: stable ID from data</span>
+{<span class="var">items</span>.<span class="fn">map</span>(<span class="var">item</span> => (
+  <span class="op">&lt;</span><span class="cl">Item</span> <span class="at">key</span>={<span class="var">item</span>.<span class="prop">id</span>} <span class="at">item</span>={<span class="var">item</span>} <span class="op">/&gt;</span>  <span class="cm">// ← stable across renders</span>
+))}</code></pre>
+    </div>
+  </div>
+
+  <div class="sub" id="key-bugs">
+    <h3 class="sub-title"><span class="sub-num g">3.4</span> Index Keys — Why They're Dangerous (Not Just "Avoid Them")</h3>
+
+    <p>You've heard "don't use index as key." But do you know exactly what goes wrong? Let's trace through every failure mode.</p>
+
+    <h4 class="mini-title">Failure Mode 1: Reorder loses state</h4>
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Index key + state = wrong state after reorder</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// Items: [{id:1, name:'Alice'}, {id:2, name:'Bob'}]</span>
+<span class="cm">// Each TodoItem has an internal isChecked state</span>
+<span class="cm">// User checks Alice (index 0 gets isChecked=true)</span>
+<span class="cm">// Now we sort the list: Bob now at index 0, Alice at index 1</span>
+
+<span class="cm">// With index keys:</span>
+{<span class="var">items</span>.<span class="fn">map</span>((<span class="var">item</span>, <span class="var">index</span>) => (
+  <span class="op">&lt;</span><span class="cl">TodoItem</span> <span class="at">key</span>={<span class="var">index</span>} <span class="at">name</span>={<span class="var">item</span>.<span class="prop">name</span>} <span class="op">/&gt;</span>
+))}
+<span class="cm">// After sort: key=0 fiber had isChecked=true (Alice was checked)</span>
+<span class="cm">// Now Bob is at index 0 → Bob's component gets Alice's fiber!</span>
+<span class="cm">// Bob shows as CHECKED even though user never checked Bob</span>
+<span class="cm">// Alice shows as UNCHECKED even though user checked her</span>
+<span class="cm">// State is assigned to the wrong items</span>
+
+<span class="cm">// With stable keys:</span>
+{<span class="var">items</span>.<span class="fn">map</span>(<span class="var">item</span> => (
+  <span class="op">&lt;</span><span class="cl">TodoItem</span> <span class="at">key</span>={<span class="var">item</span>.<span class="prop">id</span>} <span class="at">name</span>={<span class="var">item</span>.<span class="prop">name</span>} <span class="op">/&gt;</span>
+))}
+<span class="cm">// After sort: key=1 (Alice) still has isChecked=true</span>
+<span class="cm">// Even at index 1, Alice's fiber is correctly used → Alice stays checked</span>
+<span class="cm">// Bob's fiber (key=2) had isChecked=false → Bob stays unchecked</span></code></pre>
+    </div>
+
+    <h4 class="mini-title">Failure Mode 2: Delete loses state for unrelated items</h4>
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Deleting from middle reassigns states of remaining items</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// List: [Alice(0, checked), Bob(1, unchecked), Carol(2, checked)]</span>
+<span class="cm">// User deletes Bob</span>
+
+<span class="cm">// New list: [Alice(0), Carol(1)]</span>
+<span class="cm">// With index keys:</span>
+<span class="cm">// key=0: Alice → Alice's fiber (isChecked=true) → ✓ correct</span>
+<span class="cm">// key=1: Carol → Bob's fiber! (isChecked=false) → ✗ Carol shows unchecked!</span>
+<span class="cm">// key=2: no longer exists → Carol's fiber (isChecked=true) is unmounted</span>
+<span class="cm">// Result: Carol appears unchecked after Bob is deleted. Bug.</span>
+
+<span class="cm">// With stable IDs: key=carol always maps to Carol's fiber</span>
+<span class="cm">// Carol's checked state is preserved correctly after Bob's deletion</span></code></pre>
+    </div>
+
+    <h4 class="mini-title">Failure Mode 3: Input focus and text loss</h4>
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Index keys + uncontrolled inputs = text disappears</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// User is typing in input at index 1 (has "hello" typed)</span>
+<span class="cm">// An item at index 0 is deleted</span>
+<span class="cm">// With index keys: what was index 1 is now index 0</span>
+<span class="cm">// React thinks "index 0 fiber" is still the same component</span>
+<span class="cm">// But the DOM input at index 0 is now a DIFFERENT physical element</span>
+<span class="cm">// (the old index 0 DOM element, which has no typed text)</span>
+<span class="cm">// React applies the old index 0 fiber's state to the new DOM element</span>
+<span class="cm">// Result: user's "hello" disappears. Input focus may shift.</span></code></pre>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-title">📖 When Index Keys ARE Acceptable</div>
+      <p>Index keys are safe when ALL of the following are true: (1) the list is static — never reordered, filtered, or had items deleted from the middle; (2) list items have no state (pure display); (3) you have truly no stable IDs. A common example: rendering a static navigation list from a config array. If any of these conditions fail, use a stable ID.</p>
+    </div>
+  </div>
+
+  <div class="sub" id="key-pattern">
+    <h3 class="sub-title"><span class="sub-num g">3.5</span> The Deliberate Reset Pattern — key as a Reset Trigger</h3>
+
+    <p>Here's the power move that most developers never learn: you can use <code>key</code> to intentionally force a component to remount and reset its state. This pattern solves a whole category of bugs elegantly.</p>
+
+    <p><strong>The pattern:</strong> when you want a component to start fresh with new data, change its key. React sees a different key → treats it as a different component → unmounts old, mounts fresh with initial state. No <code>useEffect</code> to reset state, no careful cleanup — just change the key.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">The key reset pattern — clean and deliberate</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// ❌ WITHOUT KEY RESET: Editing different users is tricky</span>
+<span class="cm">// When userId changes, the form has the previous user's state</span>
+<span class="cm">// You need useEffect to reset every piece of state manually</span>
+<span class="kw">function</span> <span class="cl">UserEditForm</span>({ <span class="var">userId</span> }) {
+  <span class="kw">const</span> [<span class="var">name</span>, <span class="var">setName</span>] = <span class="fn">useState</span>(<span class="str">''</span>);
+  <span class="kw">const</span> [<span class="var">email</span>, <span class="var">setEmail</span>] = <span class="fn">useState</span>(<span class="str">''</span>);
+  <span class="kw">const</span> [<span class="var">bio</span>, <span class="var">setBio</span>] = <span class="fn">useState</span>(<span class="str">''</span>);
+  <span class="cm">// Error-prone: must reset every field</span>
+  <span class="fn">useEffect</span>(() => {
+    <span class="fn">setName</span>(<span class="str">''</span>); <span class="fn">setEmail</span>(<span class="str">''</span>); <span class="fn">setBio</span>(<span class="str">''</span>);
+  }, [<span class="var">userId</span>]); <span class="cm">// Must remember to add every state here</span>
+  <span class="cm">// Even this fires AFTER the first render with stale state visible</span>
+}
+
+<span class="cm">// ✅ WITH KEY RESET: userId changes → component remounts completely</span>
+<span class="cm">// No useEffect needed. State starts fresh automatically.</span>
+<span class="kw">function</span> <span class="cl">UserProfile</span>({ <span class="var">userId</span> }) {
+  <span class="kw">return</span> <span class="op">&lt;</span><span class="cl">UserEditForm</span> <span class="at">key</span>={<span class="var">userId</span>} <span class="at">userId</span>={<span class="var">userId</span>} <span class="op">/&gt;</span>;
+}
+
+<span class="kw">function</span> <span class="cl">UserEditForm</span>({ <span class="var">userId</span> }) {
+  <span class="cm">// No useEffect needed! When userId changes, this component</span>
+  <span class="cm">// is unmounted and a fresh one is mounted with initial state</span>
+  <span class="kw">const</span> [<span class="var">name</span>, <span class="var">setName</span>] = <span class="fn">useState</span>(<span class="str">''</span>);
+  <span class="kw">const</span> [<span class="var">email</span>, <span class="var">setEmail</span>] = <span class="fn">useState</span>(<span class="str">''</span>);
+  <span class="kw">const</span> [<span class="var">bio</span>, <span class="var">setBio</span>] = <span class="fn">useState</span>(<span class="str">''</span>);
+  <span class="cm">// These always start at '' for a new user. Clean.</span>
+}</code></pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">More reset pattern applications</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// 1. Reset a chart when its data source changes</span>
+<span class="op">&lt;</span><span class="cl">Chart</span> <span class="at">key</span>={<span class="var">dataSource</span>} <span class="at">data</span>={<span class="var">chartData</span>} <span class="op">/&gt;</span>
+
+<span class="cm">// 2. Reset a wizard form when user navigates to different section</span>
+<span class="op">&lt;</span><span class="cl">MultiStepForm</span> <span class="at">key</span>={<span class="var">section</span>.<span class="prop">id</span>} <span class="op">/&gt;</span>
+
+<span class="cm">// 3. Reset an autocomplete when the context changes</span>
+<span class="op">&lt;</span><span class="cl">Autocomplete</span> <span class="at">key</span>={`${<span class="var">countryId</span>}-${<span class="var">categoryId</span>}`} <span class="at">options</span>={<span class="var">options</span>} <span class="op">/&gt;</span>
+
+<span class="cm">// 4. Reset animation state when a new item comes into view</span>
+<span class="op">&lt;</span><span class="cl">AnimatedCard</span> <span class="at">key</span>={<span class="var">item</span>.<span class="prop">id</span>} <span class="at">item</span>={<span class="var">item</span>} <span class="op">/&gt;</span>
+<span class="cm">// Each item.id triggers a fresh mount = fresh animation</span>
+
+<span class="cm">// 5. React docs' own recommendation for forms editing different records</span>
+<span class="cm">// https://react.dev/learn/preserving-and-resetting-state#option-2-resetting-state-with-a-key</span></code></pre>
+    </div>
+
+    <a class="inline-res" href="https://react.dev/learn/preserving-and-resetting-state#option-2-resetting-state-with-a-key" target="_blank" rel="noopener">
+      <div class="ir-icon">📘</div>
+      <div class="ir-content">
+        <div class="ir-label">React Docs — Read Now</div>
+        <div class="ir-title">Preserving and Resetting State — react.dev</div>
+        <div class="ir-desc">Official interactive examples of the key reset pattern. Work through every interactive demo on this page — each one illustrates a nuance you need to own.</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 4 — COMPONENT IDENTITY
+═══════════════════════════════════════════════════════ -->
+<section class="section fade-up" id="identity">
+  <div class="section-number">Topic 04</div>
+  <h2 class="sec-title">Component <span>Identity</span> & State Preservation</h2>
+  <p class="sec-lead">State doesn't belong to a component function — it belongs to a position in the tree. This one sentence, truly understood, explains a whole category of React behavior that mystifies developers for years.</p>
+
+  <div class="sub" id="position-state">
+    <h3 class="sub-title"><span class="sub-num p">4.1</span> State is Tied to Position, Not to the Function</h3>
+
+    <p>When you call <code>useState</code>, the state is stored in the fiber node at that position in the tree — not attached to the function reference. The component function is just the instruction for how to render a fiber. The fiber holds the state.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Proving that state lives in the position, not the component function</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="kw">function</span> <span class="cl">Counter</span>() {
+  <span class="kw">const</span> [<span class="var">count</span>, <span class="var">setCount</span>] = <span class="fn">useState</span>(<span class="num">0</span>);
+  <span class="kw">return</span> <span class="op">&lt;</span><span class="jsx">button</span> <span class="at">onClick</span>={() => <span class="fn">setCount</span>(<span class="var">c</span> => <span class="var">c</span> + <span class="num">1</span>)}<span class="op">&gt;</span>Count: {<span class="var">count</span>}<span class="op">&lt;/</span><span class="jsx">button</span><span class="op">&gt;</span>;
+}
+
+<span class="kw">function</span> <span class="cl">App</span>({ <span class="var">showFirst</span> }) {
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>
+      {<span class="var">showFirst</span> && <span class="op">&lt;</span><span class="cl">Counter</span> <span class="op">/&gt;</span>}  <span class="cm">// position 0 (conditional)</span>
+      <span class="op">&lt;</span><span class="cl">Counter</span> <span class="op">/&gt;</span>                <span class="cm">// position 1 (always)</span>
+    <span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+  );
+}
+
+<span class="cm">// Scenario: showFirst=true</span>
+<span class="cm">// Tree: [Counter@pos0, Counter@pos1]</span>
+<span class="cm">// User clicks Counter@pos1 5 times → pos1 fiber has count=5</span>
+
+<span class="cm">// showFirst becomes false</span>
+<span class="cm">// Tree: [null@pos0, Counter@pos1]</span>
+<span class="cm">// Counter@pos0's fiber unmounts (count resets)</span>
+<span class="cm">// Counter@pos1's fiber STAYS — count is still 5</span>
+
+<span class="cm">// showFirst becomes true again</span>
+<span class="cm">// Tree: [Counter@pos0, Counter@pos1]</span>
+<span class="cm">// Counter@pos0: fresh mount, count=0</span>
+<span class="cm">// Counter@pos1: same fiber, count still 5</span>
+
+<span class="cm">// The position-1 Counter's state survived the entire showFirst toggle</span>
+<span class="cm">// because it was at a stable position throughout.</span></code></pre>
+    </div>
+
+    <div class="callout insight">
+      <div class="callout-title">💡 Deep Implication: Two Instances = Two States</div>
+      <p>Even though both Counters use the exact same <code>Counter</code> function, they are at different positions in the tree → different fiber nodes → completely independent state. You can render the same component 100 times and get 100 independent state contexts. The function is a template; the position is what makes each instance unique. This is the foundation of React's model.</p>
+    </div>
+  </div>
+
+  <div class="sub" id="inline-comp">
+    <h3 class="sub-title"><span class="sub-num p">4.2</span> The Inline Component Definition Bug — Deeply Explained</h3>
+
+    <p>This is one of the most insidious bugs in React, and it happens because developers don't connect "defining a component inside another component" to "creating a new function reference on every render" to "React sees a type change" to "remount".</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">The complete trace of the inline component bug</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// The bug: state loss on every parent re-render</span>
+<span class="kw">function</span> <span class="cl">TodoList</span>() {
+  <span class="kw">const</span> [<span class="var">filter</span>, <span class="var">setFilter</span>] = <span class="fn">useState</span>(<span class="str">'all'</span>);
+  <span class="kw">const</span> [<span class="var">todos</span>, <span class="var">setTodos</span>] = <span class="fn">useState</span>([]);
+
+  <span class="cm">// 🔥 BUG: TodoItem created anew on every TodoList render</span>
+  <span class="cm">// Each render → new function object → new === old is FALSE</span>
+  <span class="cm">// → React treats it as a type change → remounts every time</span>
+  <span class="kw">function</span> <span class="cl">TodoItem</span>({ <span class="var">todo</span> }) {  <span class="cm">// ← DEFINED INSIDE render</span>
+    <span class="kw">const</span> [<span class="var">isExpanded</span>, <span class="var">setIsExpanded</span>] = <span class="fn">useState</span>(<span class="kw">false</span>);
+    <span class="kw">return</span> <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>...<span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>;
+  }
+
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="jsx">select</span> <span class="at">onChange</span>={<span class="var">e</span> => <span class="fn">setFilter</span>(<span class="var">e</span>.<span class="prop">target</span>.<span class="prop">value</span>)}<span class="op">&gt;</span>...<span class="op">&lt;/</span><span class="jsx">select</span><span class="op">&gt;</span>
+      {<span class="var">todos</span>.<span class="fn">map</span>(<span class="var">todo</span> => (
+        <span class="op">&lt;</span><span class="cl">TodoItem</span> <span class="at">key</span>={<span class="var">todo</span>.<span class="prop">id</span>} <span class="at">todo</span>={<span class="var">todo</span>} <span class="op">/&gt;</span>
+      ))}
+    <span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+  );
+}
+
+<span class="cm">// User expands TodoItem 0 (isExpanded = true)</span>
+<span class="cm">// User changes filter → setFilter triggers TodoList re-render</span>
+<span class="cm">// TodoList re-renders → new TodoItem function created</span>
+<span class="cm">// old TodoItem !== new TodoItem (different references)</span>
+<span class="cm">// React: "different type at same position" → REMOUNTS ALL TodoItems</span>
+<span class="cm">// isExpanded resets to false for all items</span>
+<span class="cm">// Even though key is the same (todo.id), type changed → remount wins!</span>
+<span class="cm">// Key cannot save you from a type change. Type beats key.</span>
+
+<span class="cm">// ✅ FIX: Define TodoItem outside of TodoList</span>
+<span class="kw">function</span> <span class="cl">TodoItem</span>({ <span class="var">todo</span> }) {  <span class="cm">// ← DEFINED AT MODULE LEVEL</span>
+  <span class="kw">const</span> [<span class="var">isExpanded</span>, <span class="var">setIsExpanded</span>] = <span class="fn">useState</span>(<span class="kw">false</span>);
+  <span class="kw">return</span> <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>...<span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>;
+}
+<span class="cm">// TodoItem reference is stable across all TodoList renders</span>
+<span class="cm">// Filter change → TodoList re-renders → same TodoItem type → update, no remount</span>
+<span class="cm">// isExpanded preserved. No bugs.</span></code></pre>
+    </div>
+
+    <div class="callout danger">
+      <div class="callout-title">🚨 Critical Rule: Never Define Components Inside Components</div>
+      <p>This is one of the few absolute rules in React — not a performance suggestion, not a style preference. Defining a component inside another component's render function (or body) causes the inner component to remount on every parent render. This is guaranteed behavior, not a coincidence. Always define components at module level or outside the parent component entirely.</p>
+    </div>
+  </div>
+
+  <div class="sub" id="conditional-same">
+    <h3 class="sub-title"><span class="sub-num p">4.3</span> Preserving State Across Conditional Renders</h3>
+
+    <p>Sometimes you want the same component to maintain its state even when it's not visible. The naive approach (conditional rendering) unmounts and remounts. There are two clean alternatives:</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">3 approaches to conditional rendering and their state implications</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// Approach 1: Conditional render — simplest, but LOSES STATE when hidden</span>
+<span class="kw">function</span> <span class="cl">App</span>({ <span class="var">showEditor</span> }) {
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>
+      {<span class="var">showEditor</span> && <span class="op">&lt;</span><span class="cl">Editor</span> <span class="op">/&gt;</span>}
+    <span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+  );
+}
+<span class="cm">// When showEditor=false: Editor unmounts → typed content gone</span>
+<span class="cm">// When showEditor=true: Editor mounts fresh → empty editor</span>
+
+<span class="cm">// Approach 2: CSS visibility — keeps DOM mounted, STATE PRESERVED</span>
+<span class="cm">// Component stays in tree but is hidden with CSS</span>
+<span class="kw">function</span> <span class="cl">App</span>({ <span class="var">showEditor</span> }) {
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="jsx">div</span> <span class="at">style</span>={{ <span class="prop">display</span>: <span class="var">showEditor</span> ? <span class="str">'block'</span> : <span class="str">'none'</span> }}<span class="op">&gt;</span>
+        <span class="op">&lt;</span><span class="cl">Editor</span> <span class="op">/&gt;</span>
+      <span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+    <span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+  );
+}
+<span class="cm">// Editor is always in the tree → fiber never unmounts → state preserved</span>
+<span class="cm">// Downside: Editor's useEffects still run when hidden. May cause work.</span>
+
+<span class="cm">// Approach 3: Lift state up — Editor can remount but state lives in parent</span>
+<span class="kw">function</span> <span class="cl">App</span>({ <span class="var">showEditor</span> }) {
+  <span class="kw">const</span> [<span class="var">content</span>, <span class="var">setContent</span>] = <span class="fn">useState</span>(<span class="str">''</span>); <span class="cm">// ← state in parent</span>
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>
+      {<span class="var">showEditor</span> && (
+        <span class="op">&lt;</span><span class="cl">Editor</span> <span class="at">value</span>={<span class="var">content</span>} <span class="at">onChange</span>={<span class="var">setContent</span>} <span class="op">/&gt;</span>
+      )}
+    <span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+  );
+}
+<span class="cm">// Editor can remount freely; content is in parent's state (survives unmount)</span>
+<span class="cm">// When Editor remounts: gets content from parent prop → shows previous text</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 4.5 — BATCHING & RECONCILIATION TIMING
+═══════════════════════════════════════════════════════ -->
+<section class="section fade-up" id="batching">
+  <div class="section-number">Topic 04.5 — Interlude</div>
+  <h2 class="sec-title">Batching <span>&</span> When Reconciliation Runs</h2>
+  <p class="sec-lead">Understanding <em>when</em> React actually runs reconciliation is just as important as understanding <em>how</em> it works. React doesn't reconcile after every single state update — it batches them. React 18 changed the batching behavior in a way every senior dev must know cold.</p>
+
+  <div class="sub" id="batching-what">
+    <h3 class="sub-title"><span class="sub-num">4.5.1</span> What Is Batching and Why Does It Exist?</h3>
+
+    <p><strong>Batching</strong> means React collects multiple state update calls and processes them all in a single reconciliation + commit cycle, rather than doing one cycle per update call. Without batching, three consecutive <code>setState</code> calls would trigger three full render/diff/commit passes. With batching, the same three calls trigger exactly one.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Batching — multiple state updates, one re-render</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="kw">function</span> <span class="cl">Form</span>() {
+  <span class="kw">const</span> [<span class="var">name</span>, <span class="var">setName</span>]   = <span class="fn">useState</span>(<span class="str">''</span>);
+  <span class="kw">const</span> [<span class="var">email</span>, <span class="var">setEmail</span>] = <span class="fn">useState</span>(<span class="str">''</span>);
+  <span class="kw">const</span> [<span class="var">error</span>, <span class="var">setError</span>] = <span class="fn">useState</span>(<span class="kw">null</span>);
+
+  <span class="kw">function</span> <span class="fn">handleSubmit</span>() {
+    <span class="cm">// In React 18: ALL of these are batched → ONE re-render at the end</span>
+    <span class="fn">setName</span>(<span class="str">''</span>);       <span class="cm">// queued, not processed yet</span>
+    <span class="fn">setEmail</span>(<span class="str">''</span>);      <span class="cm">// queued, not processed yet</span>
+    <span class="fn">setError</span>(<span class="kw">null</span>);    <span class="cm">// queued, not processed yet</span>
+    <span class="cm">// → React flushes all three at once: ONE reconciliation pass</span>
+    <span class="cm">// → Component renders once with name='', email='', error=null</span>
+    <span class="cm">// → ONE commit phase, ONE browser paint</span>
+  }
+
+  <span class="cm">// Without batching (React 17 in some async contexts):</span>
+  <span class="cm">// setName → re-render 1 (name='', email=old, error=old)</span>
+  <span class="cm">// setEmail → re-render 2 (name='', email='', error=old)</span>
+  <span class="cm">// setError → re-render 3 (name='', email='', error=null)</span>
+  <span class="cm">// 3x the work. 3x the DOM mutations. Possibly 3 browser paints.</span>
+}</code></pre>
+    </div>
+
+    <h4 class="mini-title">React 17 vs React 18 Batching Scope</h4>
+    <p>This is the critical difference between React 17 and React 18 that most developers don't know:</p>
+
+    <div class="ba">
+      <div class="ba-pane ba-bad">
+        <div class="ba-head">⚠️ React 17 — Only batched in event handlers</div>
+        <pre><code><span class="cm">// React 17: batched (inside synthetic event handler)</span>
+<span class="jsx">button</span>.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, () => {
+  <span class="fn">setCount</span>(<span class="var">c</span> => <span class="var">c</span>+<span class="num">1</span>); <span class="cm">// ← batched</span>
+  <span class="fn">setFlag</span>(<span class="kw">true</span>);     <span class="cm">// ← batched</span>
+  <span class="cm">// ONE re-render ✓</span>
+});
+
+<span class="cm">// React 17: NOT batched (inside setTimeout)</span>
+<span class="fn">setTimeout</span>(() => {
+  <span class="fn">setCount</span>(<span class="var">c</span> => <span class="var">c</span>+<span class="num">1</span>); <span class="cm">// ← triggers re-render immediately</span>
+  <span class="fn">setFlag</span>(<span class="kw">true</span>);     <span class="cm">// ← triggers ANOTHER re-render</span>
+  <span class="cm">// TWO re-renders ✗ — inconsistent behavior</span>
+}, <span class="num">1000</span>);
+
+<span class="cm">// Also NOT batched in React 17:</span>
+<span class="cm">// - Promise.then() callbacks</span>
+<span class="cm">// - async/await continuations</span>
+<span class="cm">// - Native event listeners</span></code></pre>
+      </div>
+      <div class="ba-pane ba-good">
+        <div class="ba-head">✅ React 18 — Automatic batching EVERYWHERE</div>
+        <pre><code><span class="cm">// React 18: batched everywhere automatically</span>
+<span class="fn">setTimeout</span>(() => {
+  <span class="fn">setCount</span>(<span class="var">c</span> => <span class="var">c</span>+<span class="num">1</span>); <span class="cm">// ← batched</span>
+  <span class="fn">setFlag</span>(<span class="kw">true</span>);     <span class="cm">// ← batched</span>
+  <span class="cm">// ONE re-render ✓</span>
+}, <span class="num">1000</span>);
+
+<span class="kw">async function</span> <span class="fn">fetchData</span>() {
+  <span class="kw">const</span> <span class="var">data</span> = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/user'</span>);
+  <span class="fn">setUser</span>(<span class="var">data</span>);    <span class="cm">// ← batched</span>
+  <span class="fn">setLoading</span>(<span class="kw">false</span>); <span class="cm">// ← batched</span>
+  <span class="cm">// ONE re-render ✓</span>
+}
+
+<span class="cm">// Even Promise.then():</span>
+<span class="fn">fetch</span>(<span class="str">'/api'</span>).<span class="fn">then</span>(<span class="var">data</span> => {
+  <span class="fn">setData</span>(<span class="var">data</span>);    <span class="cm">// ← batched in React 18</span>
+  <span class="fn">setLoaded</span>(<span class="kw">true</span>);  <span class="cm">// ← batched in React 18</span>
+  <span class="cm">// ONE re-render ✓</span>
+});</code></pre>
+      </div>
+    </div>
+
+    <div class="callout insight">
+      <div class="callout-title">💡 How React 18 Achieves This</div>
+      <p>React 18 uses a new root API (<code>createRoot</code> instead of the legacy <code>ReactDOM.render</code>) which enables automatic batching. Under the hood, React 18 wraps all state setter calls in a batching context regardless of where they're called from. The scheduler collects updates across the current synchronous execution and processes them together. If you use the legacy <code>ReactDOM.render</code>, you get React 17 behavior even with React 18 installed — you must migrate to <code>createRoot</code> to get automatic batching.</p>
+    </div>
+
+    <h4 class="mini-title">Opting Out of Batching — flushSync</h4>
+    <p>Sometimes you genuinely need intermediate renders — for example, you want to read a DOM measurement after one update but before another. <code>flushSync</code> forces React to commit synchronously before continuing:</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">flushSync — forcing synchronous commits between updates</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="kw">import</span> { <span class="fn">flushSync</span> } <span class="kw">from</span> <span class="str">'react-dom'</span>;
+
+<span class="kw">function</span> <span class="fn">handleAddTodo</span>() {
+  <span class="cm">// Force React to commit this update immediately, before continuing</span>
+  <span class="fn">flushSync</span>(() => {
+    <span class="fn">setTodos</span>([...<span class="var">todos</span>, <span class="var">newTodo</span>]);
+  });
+  <span class="cm">// At this point, the DOM is updated with the new todo</span>
+  <span class="cm">// We can now read the list's new scroll height</span>
+  <span class="var">listRef</span>.<span class="prop">current</span>.<span class="fn">scrollTo</span>({
+    <span class="prop">top</span>: <span class="var">listRef</span>.<span class="prop">current</span>.<span class="prop">scrollHeight</span>,
+    <span class="prop">behavior</span>: <span class="str">'smooth'</span>
+  });
+  <span class="cm">// Without flushSync: todos state would be batched with the scroll,</span>
+  <span class="cm">// DOM not updated yet, scrollHeight would be the OLD height</span>
+  <span class="cm">// scroll target would be wrong</span>
+}
+
+<span class="cm">// ⚠️ Don't overuse flushSync — it defeats concurrent features</span>
+<span class="cm">// Only use when you genuinely need to read DOM after a specific update</span>
+<span class="cm">// and before the next set of updates runs</span></code></pre>
+    </div>
+
+    <a class="inline-res" href="https://react.dev/blog/2022/03/29/react-v18#new-feature-automatic-batching" target="_blank" rel="noopener">
+      <div class="ir-icon">📘</div>
+      <div class="ir-content">
+        <div class="ir-label">React Blog — Read Now</div>
+        <div class="ir-title">React v18 — Automatic Batching Explained</div>
+        <div class="ir-desc">The official announcement with interactive CodeSandboxes showing before/after. Read the "What is Batching?" section specifically.</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="sub" id="children-bailout">
+    <h3 class="sub-title"><span class="sub-num">4.5.2</span> The Children-as-Props Bailout — A Powerful Pattern Most Devs Don't Know</h3>
+
+    <p>This is one of the most useful performance patterns in React, and most developers never learn it. When a component receives <code>children</code> as a prop (rather than creating the children itself), those children can bypass the parent's re-render.</p>
+
+    <p>The reason: if a parent component's state changes and it re-renders, React normally calls the parent's function → gets new JSX → reconciles children. But if the children were passed in as a prop from a grandparent, and that grandparent didn't re-render, the children prop is the same reference as before → React can skip re-rendering them.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Children-as-props bailout — the pattern and why it works</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// ❌ SLOW: CounterWrapper owns its own children</span>
+<span class="cm">// Every count change → CounterWrapper re-renders → ExpensiveChild re-renders</span>
+<span class="kw">function</span> <span class="cl">CounterWrapper</span>() {
+  <span class="kw">const</span> [<span class="var">count</span>, <span class="var">setCount</span>] = <span class="fn">useState</span>(<span class="num">0</span>);
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="jsx">button</span> <span class="at">onClick</span>={() => <span class="fn">setCount</span>(<span class="var">c</span> => <span class="var">c</span>+<span class="num">1</span>)}<span class="op">&gt;</span>{<span class="var">count</span>}<span class="op">&lt;/</span><span class="jsx">button</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="cl">ExpensiveChild</span> <span class="op">/&gt;</span>  <span class="cm">// ← re-renders every time count changes!</span>
+    <span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+  );
+}
+
+<span class="cm">// ✅ FAST: CounterWrapper receives children as prop</span>
+<span class="cm">// count changes → CounterWrapper re-renders → children prop is same reference</span>
+<span class="cm">// React skips re-rendering whatever was passed as children!</span>
+<span class="kw">function</span> <span class="cl">CounterWrapper</span>({ <span class="var">children</span> }) {  <span class="cm">// ← receives children as prop</span>
+  <span class="kw">const</span> [<span class="var">count</span>, <span class="var">setCount</span>] = <span class="fn">useState</span>(<span class="num">0</span>);
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="jsx">button</span> <span class="at">onClick</span>={() => <span class="fn">setCount</span>(<span class="var">c</span> => <span class="var">c</span>+<span class="num">1</span>)}<span class="op">&gt;</span>{<span class="var">count</span>}<span class="op">&lt;/</span><span class="jsx">button</span><span class="op">&gt;</span>
+      {<span class="var">children</span>}   <span class="cm">// ← same reference from App → React skips re-render</span>
+    <span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+  );
+}
+
+<span class="cm">// The caller (App) passes children — their reference is stable:</span>
+<span class="kw">function</span> <span class="cl">App</span>() {
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="cl">CounterWrapper</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="cl">ExpensiveChild</span> <span class="op">/&gt;</span>  <span class="cm">// App didn't re-render → same JSX element</span>
+    <span class="op">&lt;/</span><span class="cl">CounterWrapper</span><span class="op">&gt;</span>
+  );
+}
+
+<span class="cm">// Why this works mechanically:</span>
+<span class="cm">// 1. App renders once, creates JSX for ExpensiveChild</span>
+<span class="cm">// 2. This JSX element object is passed as children to CounterWrapper</span>
+<span class="cm">// 3. count changes → CounterWrapper re-renders</span>
+<span class="cm">// 4. CounterWrapper calls its function, gets {children} from props</span>
+<span class="cm">// 5. children is the SAME OBJECT as before (App didn't re-render)</span>
+<span class="cm">// 6. React compares old children prop === new children prop → same!</span>
+<span class="cm">// 7. React skips re-rendering ExpensiveChild entirely</span>
+<span class="cm">// No React.memo needed. No useMemo. Just composition.</span></code></pre>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-title">✅ Real-World Use: Context Provider Optimization</div>
+      <p>This pattern is the correct way to prevent unnecessary re-renders when a Context Provider's value changes. Instead of wrapping children in <code>React.memo</code>, structure the Provider to receive its children as a prop from a parent that doesn't hold the changing state. This is how high-performance React apps are architectured without reaching for <code>useMemo</code> everywhere.</p>
+    </div>
+
+    <a class="inline-res" href="https://overreacted.io/before-you-memo/" target="_blank" rel="noopener">
+      <div class="ir-icon">🔥</div>
+      <div class="ir-content">
+        <div class="ir-label">Dan Abramov — Read Before the Memo Section</div>
+        <div class="ir-title">"Before You memo()" — overreacted.io</div>
+        <div class="ir-desc">Short, punchy article demonstrating exactly this children-as-props bailout pattern. Dan shows how to eliminate unnecessary re-renders without any memoization. One of the most practically useful React articles ever written. Read it now.</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 5 — EDGE CASES & CAVEATS
+═══════════════════════════════════════════════════════ -->
+<section class="section fade-up" id="edge-cases">
+  <div class="section-number">Topic 05</div>
+  <h2 class="sec-title">Edge Cases <span>&</span> Caveats</h2>
+  <p class="sec-lead">These are the corners of reconciliation that catch experienced developers. Each one has a real-world production scenario behind it.</p>
+
+  <div class="sub" id="fragments">
+    <h3 class="sub-title"><span class="sub-num">5.1</span> Fragments, Keys, and Implicit Wrappers</h3>
+
+    <p>Fragments (<code>&lt;&gt;...&lt;/&gt;</code> or <code>&lt;React.Fragment&gt;</code>) are invisible wrappers that don't render DOM elements. But they are real positions in the React tree — they have fiber nodes, and they participate in reconciliation.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Fragment keys — you need the long syntax to use them</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// Sometimes you need to render multiple elements per list item</span>
+<span class="cm">// without an extra DOM wrapper, but you still need a key</span>
+<span class="cm">// Short syntax &lt;&gt;&lt;/&gt; doesn't support key prop</span>
+
+<span class="cm">// ❌ Can't do this:</span>
+{<span class="var">items</span>.<span class="fn">map</span>(<span class="var">item</span> => (
+  <span class="op">&lt;&gt;</span>           <span class="cm">// ← short fragment syntax, no key prop support</span>
+    <span class="op">&lt;</span><span class="jsx">dt</span><span class="op">&gt;</span>{<span class="var">item</span>.<span class="prop">term</span>}<span class="op">&lt;/</span><span class="jsx">dt</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="jsx">dd</span><span class="op">&gt;</span>{<span class="var">item</span>.<span class="prop">def</span>}<span class="op">&lt;/</span><span class="jsx">dd</span><span class="op">&gt;</span>
+  <span class="op">&lt;/&gt;</span>
+))}
+
+<span class="cm">// ✅ Use React.Fragment with explicit key:</span>
+{<span class="var">items</span>.<span class="fn">map</span>(<span class="var">item</span> => (
+  <span class="op">&lt;</span><span class="cl">React</span>.<span class="cl">Fragment</span> <span class="at">key</span>={<span class="var">item</span>.<span class="prop">id</span>}<span class="op">&gt;</span>  <span class="cm">// ← long syntax, supports key</span>
+    <span class="op">&lt;</span><span class="jsx">dt</span><span class="op">&gt;</span>{<span class="var">item</span>.<span class="prop">term</span>}<span class="op">&lt;/</span><span class="jsx">dt</span><span class="op">&gt;</span>
+    <span class="op">&lt;</span><span class="jsx">dd</span><span class="op">&gt;</span>{<span class="var">item</span>.<span class="prop">def</span>}<span class="op">&lt;/</span><span class="jsx">dd</span><span class="op">&gt;</span>
+  <span class="op">&lt;/</span><span class="cl">React</span>.<span class="cl">Fragment</span><span class="op">&gt;</span>
+))}
+<span class="cm">// Both dt and dd are grouped logically, no extra DOM node,</span>
+<span class="cm">// AND React correctly identifies each pair by item.id</span>
+
+<span class="cm">// Fragment as position: swapping fragment for div changes the type</span>
+<span class="cm">// &lt;&gt;&lt;A/&gt;&lt;B/&gt;&lt;/&gt; vs &lt;div&gt;&lt;A/&gt;&lt;B/&gt;&lt;/div&gt;</span>
+<span class="cm">// ↑ type "Symbol(react.fragment)" vs ↑ type "div"</span>
+<span class="cm">// Switching: full remount of A and B. State loss.</span></code></pre>
+    </div>
+  </div>
+
+    <a class="inline-res" href="https://react.dev/reference/react/Fragment" target="_blank" rel="noopener">
+      <div class="ir-icon">📘</div>
+      <div class="ir-content">
+        <div class="ir-label">React Docs — Fragment Reference</div>
+        <div class="ir-title">React.Fragment — react.dev</div>
+        <div class="ir-desc">The Caveats section explains exactly which fragment behaviors differ from DOM elements in reconciliation. Pay attention to the key prop requirement and rendering restrictions.</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="sub" id="null-bool">
+    <h3 class="sub-title"><span class="sub-num">5.2</span> null, undefined, boolean, and 0 in JSX — Reconciliation Traps</h3>
+
+    <p>What React renders (or doesn't render) for non-element values is one of the most common sources of confusing UI bugs. The rules are precise and you need to know all of them.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">What renders and what doesn't — the complete rules</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="cm">// These render NOTHING to the DOM (React skips them):</span>
+{<span class="kw">null</span>}           <span class="cm">// renders nothing — safe conditional sentinel</span>
+{<span class="kw">undefined</span>}     <span class="cm">// renders nothing</span>
+{<span class="kw">true</span>}          <span class="cm">// renders nothing</span>
+{<span class="kw">false</span>}         <span class="cm">// renders nothing — THIS IS THE IMPORTANT ONE</span>
+
+<span class="cm">// This renders "0" to the DOM (NUMBER ZERO IS NOT FALSY FOR JSX):</span>
+{<span class="num">0</span>}             <span class="cm">// ← RENDERS THE STRING "0"! Common bug!</span>
+
+<span class="cm">// THE CLASSIC BUG:</span>
+<span class="kw">function</span> <span class="cl">List</span>({ <span class="var">items</span> }) {
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>
+      {<span class="cm">/* ❌ WRONG: when items.length is 0, renders "0" in the DOM */</span>}
+      {<span class="var">items</span>.<span class="prop">length</span> && <span class="op">&lt;</span><span class="cl">ItemList</span> <span class="at">items</span>={<span class="var">items</span>} <span class="op">/&gt;</span>}
+      {<span class="cm">/*
+        When items=[], items.length = 0
+        0 && &lt;ItemList/&gt; → evaluates to 0 (short-circuits)
+        JSX renders 0 → user sees "0" text on screen!
+      */</span>}
+    <span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+  );
+}
+
+<span class="cm">// ✅ CORRECT: convert to boolean first</span>
+{<span class="var">items</span>.<span class="prop">length</span> <span class="op">&gt;</span> <span class="num">0</span> && <span class="op">&lt;</span><span class="cl">ItemList</span> <span class="op">/&gt;</span>}     <span class="cm">// explicit comparison → boolean</span>
+{!!<span class="var">items</span>.<span class="prop">length</span> && <span class="op">&lt;</span><span class="cl">ItemList</span> <span class="op">/&gt;</span>}       <span class="cm">// double-not coerces to boolean</span>
+{<span class="var">items</span>.<span class="prop">length</span> ? <span class="op">&lt;</span><span class="cl">ItemList</span> <span class="op">/&gt;</span> : <span class="kw">null</span>}   <span class="cm">// ternary — clearest intent</span>
+
+<span class="cm">// More subtle: optional chaining + JSX</span>
+{<span class="var">user</span>?.<span class="prop">name</span> && <span class="op">&lt;</span><span class="jsx">span</span><span class="op">&gt;</span>{<span class="var">user</span>.<span class="prop">name</span>}<span class="op">&lt;/</span><span class="jsx">span</span><span class="op">&gt;</span>}
+<span class="cm">// user is null → null && ... → null → renders nothing ✓</span>
+<span class="cm">// user is {} with no name → undefined && ... → undefined → renders nothing ✓</span>
+<span class="cm">// user is {name: ''} → '' && ... → '' → renders empty string (no visible output)</span>
+<span class="cm">// user is {name: 'Alice'} → 'Alice' && ... → JSX → renders ✓</span>
+
+<span class="cm">// Reconciliation implication of null/undefined/boolean:</span>
+<span class="cm">// When a position switches from null to a component → fresh mount (no reuse)</span>
+<span class="cm">// When a position switches from a component to null → unmount</span>
+<span class="cm">// null → null: no reconciliation work at all (same "empty" slot)</span>
+<span class="cm">// This is exactly how conditional rendering works at the fiber level</span></code></pre>
+    </div>
+
+    <div class="callout danger">
+      <div class="callout-title">🚨 The 0 Bug Is Everywhere in Production</div>
+      <p>The <code>{count && &lt;Component/&gt;}</code> pattern where <code>count</code> starts at 0 renders a literal "0" on the screen. This has shipped to production in large companies' products. The fix is always a boolean coercion: <code>{count &gt; 0 &amp;&amp; &lt;Component/&gt;}</code> or <code>{count ? &lt;Component/&gt; : null}</code>. Lint rules (eslint-plugin-react rule: <code>no-conditional-assignment</code>) can catch some cases but not all. Develop the habit of always using explicit comparisons in JSX conditionals.</p>
+    </div>
+  </div>
+    <h3 class="sub-title"><span class="sub-num">5.4</span> Portals and Reconciliation</h3>
+
+    <p>Portals render children into a different DOM node than their parent, but they remain in the React tree at the position where they were declared. This distinction matters for reconciliation and event bubbling.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Portal: DOM position ≠ React tree position</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="kw">import</span> { <span class="fn">createPortal</span> } <span class="kw">from</span> <span class="str">'react-dom'</span>;
+
+<span class="kw">function</span> <span class="cl">Modal</span>({ <span class="var">isOpen</span>, <span class="var">children</span> }) {
+  <span class="kw">if</span> (!<span class="var">isOpen</span>) <span class="kw">return</span> <span class="kw">null</span>;
+
+  <span class="cm">// DOM: Modal renders inside document.body, not inside its parent</span>
+  <span class="cm">// React tree: Modal fiber lives as a child of whoever renders Modal</span>
+  <span class="kw">return</span> <span class="fn">createPortal</span>(
+    <span class="op">&lt;</span><span class="jsx">div</span> <span class="at">className</span>=<span class="str">"modal-overlay"</span><span class="op">&gt;</span>{<span class="var">children</span>}<span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>,
+    <span class="var">document</span>.<span class="prop">body</span>
+  );
+}
+
+<span class="cm">// Reconciliation implication:</span>
+<span class="cm">// Modal IS reconciled as a child of its React parent</span>
+<span class="cm">// State in Modal children is managed by React normally</span>
+<span class="cm">// Events from Modal children bubble through the React tree (not DOM tree)</span>
+<span class="cm">// So onClick on Modal content bubbles to the React parent's onClick</span>
+<span class="cm">// Even though in the DOM, Modal is under body, not under parent element</span>
+
+<span class="cm">// Key implication for reconciliation:</span>
+<span class="cm">// {isOpen && &lt;Modal&gt;} → open/close causes mount/unmount</span>
+<span class="cm">// Modal's children lose state when closed. Use CSS if state must persist.</span></code></pre>
+    </div>
+  </div>
+
+  <div class="sub" id="memo-reconcile">
+    <h3 class="sub-title"><span class="sub-num">5.5</span> React.memo and Reconciliation — What memo Does and Doesn't Do</h3>
+
+    <p><code>React.memo</code> is a wrapper that adds a bail-out condition to the reconciliation of a component. It does <em>not</em> skip reconciliation of the component's children if the component itself renders. And it <em>cannot</em> skip reconciliation when the component's own state changes.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">What React.memo actually does during reconciliation</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="kw">const</span> <span class="cl">ExpensiveList</span> = <span class="cl">React</span>.<span class="fn">memo</span>(<span class="kw">function</span> <span class="cl">ExpensiveList</span>({ <span class="var">items</span>, <span class="var">onSelect</span> }) {
+  <span class="kw">return</span> <span class="op">&lt;</span><span class="jsx">ul</span><span class="op">&gt;</span>{<span class="var">items</span>.<span class="fn">map</span>(<span class="var">i</span> => <span class="op">&lt;</span><span class="jsx">li</span> <span class="at">key</span>={<span class="var">i</span>.<span class="prop">id</span>}<span class="op">&gt;</span>{<span class="var">i</span>.<span class="prop">name</span>}<span class="op">&lt;/</span><span class="jsx">li</span><span class="op">&gt;</span>)}<span class="op">&lt;/</span><span class="jsx">ul</span><span class="op">&gt;</span>;
+});
+
+<span class="kw">function</span> <span class="cl">Parent</span>() {
+  <span class="kw">const</span> [<span class="var">count</span>, <span class="var">setCount</span>] = <span class="fn">useState</span>(<span class="num">0</span>);
+  <span class="kw">const</span> <span class="var">items</span> = [{ <span class="prop">id</span>: <span class="num">1</span>, <span class="prop">name</span>: <span class="str">'A'</span> }]; <span class="cm">// ← new array every render!</span>
+  <span class="kw">const</span> <span class="var">handleSelect</span> = () => {};       <span class="cm">// ← new function every render!</span>
+
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="jsx">button</span> <span class="at">onClick</span>={() => <span class="fn">setCount</span>(<span class="var">c</span> => <span class="var">c</span>+<span class="num">1</span>)}<span class="op">&gt;</span>Count: {<span class="var">count</span>}<span class="op">&lt;/</span><span class="jsx">button</span><span class="op">&gt;</span>
+      <span class="cm">// memo does a SHALLOW comparison of props</span>
+      <span class="cm">// items: old !== new (new array each render) → re-renders despite memo!</span>
+      <span class="cm">// handleSelect: old !== new → re-renders despite memo!</span>
+      <span class="op">&lt;</span><span class="cl">ExpensiveList</span> <span class="at">items</span>={<span class="var">items</span>} <span class="at">onSelect</span>={<span class="var">handleSelect</span>} <span class="op">/&gt;</span>
+    <span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+  );
+}
+
+<span class="cm">// For memo to actually skip re-render:</span>
+<span class="kw">function</span> <span class="cl">Parent</span>() {
+  <span class="kw">const</span> [<span class="var">count</span>, <span class="var">setCount</span>] = <span class="fn">useState</span>(<span class="num">0</span>);
+  <span class="cm">// Memoize array → same reference across renders</span>
+  <span class="kw">const</span> <span class="var">items</span> = <span class="fn">useMemo</span>(() => [{ <span class="prop">id</span>: <span class="num">1</span>, <span class="prop">name</span>: <span class="str">'A'</span> }], []);
+  <span class="cm">// Memoize function → same reference across renders</span>
+  <span class="kw">const</span> <span class="var">handleSelect</span> = <span class="fn">useCallback</span>(() => {}, []);
+
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="jsx">div</span><span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="jsx">button</span> <span class="at">onClick</span>={() => <span class="fn">setCount</span>(<span class="var">c</span> => <span class="var">c</span>+<span class="num">1</span>)}<span class="op">&gt;</span>Count: {<span class="var">count</span>}<span class="op">&lt;/</span><span class="jsx">button</span><span class="op">&gt;</span>
+      <span class="cm">// Now: items same reference, handleSelect same reference</span>
+      <span class="cm">// memo comparison: all props unchanged → SKIP re-render ✓</span>
+      <span class="op">&lt;</span><span class="cl">ExpensiveList</span> <span class="at">items</span>={<span class="var">items</span>} <span class="at">onSelect</span>={<span class="var">handleSelect</span>} <span class="op">/&gt;</span>
+    <span class="op">&lt;/</span><span class="jsx">div</span><span class="op">&gt;</span>
+  );
+}</code></pre>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-title">⚡ memo Does NOT Help With Context Changes</div>
+      <p>If <code>ExpensiveList</code> calls <code>useContext(SomeContext)</code> and the context value changes, React.memo cannot prevent the re-render. Memo only short-circuits based on prop comparison. Context subscriptions bypass memo entirely — the component will re-render whenever the context value it's subscribed to changes, regardless of memo. This is a common source of "why isn't memo working?" bugs.</p>
+    </div>
+  </div>
+
+  <div class="sub" id="context-diffing">
+    <h3 class="sub-title"><span class="sub-num">5.6</span> Context and Reconciliation — The Propagation Model</h3>
+
+    <p>When a Context value changes, React needs to re-render all consumers. But it doesn't just re-render every component in the entire subtree — it specifically finds the consumers of that context and re-renders them. However, this re-render then triggers normal reconciliation down from each consumer, which may cause children to re-render too.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span class="code-lang">jsx</span><span class="code-label">Context update propagation through the tree</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><code><span class="kw">const</span> <span class="cl">UserContext</span> = <span class="fn">createContext</span>(<span class="kw">null</span>);
+
+<span class="kw">function</span> <span class="cl">App</span>() {
+  <span class="kw">const</span> [<span class="var">user</span>, <span class="var">setUser</span>] = <span class="fn">useState</span>({ <span class="prop">name</span>: <span class="str">'Alice'</span>, <span class="prop">role</span>: <span class="str">'admin'</span> });
+  <span class="cm">// 🔥 Common mistake: passing object literal as context value</span>
+  <span class="cm">// Every App render creates { user, setUser } as a NEW object</span>
+  <span class="cm">// React's context comparison: old !== new → ALL consumers re-render</span>
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="cl">UserContext</span>.<span class="cl">Provider</span> <span class="at">value</span>={{ <span class="var">user</span>, <span class="var">setUser</span> }}<span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="cl">Sidebar</span> <span class="op">/&gt;</span>   <span class="cm">// consumes UserContext</span>
+      <span class="op">&lt;</span><span class="cl">MainContent</span> <span class="op">/&gt;</span>  <span class="cm">// does NOT consume UserContext</span>
+    <span class="op">&lt;/</span><span class="cl">UserContext</span>.<span class="cl">Provider</span><span class="op">&gt;</span>
+  );
+}
+
+<span class="cm">// When ANY state in App changes, App re-renders,</span>
+<span class="cm">// new context value object created, ALL consumers re-render</span>
+<span class="cm">// Even Sidebar re-renders even if user didn't change!</span>
+
+<span class="cm">// ✅ Fix: memoize the context value</span>
+<span class="kw">function</span> <span class="cl">App</span>() {
+  <span class="kw">const</span> [<span class="var">user</span>, <span class="var">setUser</span>] = <span class="fn">useState</span>({ <span class="prop">name</span>: <span class="str">'Alice'</span>, <span class="prop">role</span>: <span class="str">'admin'</span> });
+  <span class="cm">// Only creates new object when user or setUser actually changes</span>
+  <span class="kw">const</span> <span class="var">contextValue</span> = <span class="fn">useMemo</span>(() => ({ <span class="var">user</span>, <span class="var">setUser</span> }), [<span class="var">user</span>]);
+  <span class="kw">return</span> (
+    <span class="op">&lt;</span><span class="cl">UserContext</span>.<span class="cl">Provider</span> <span class="at">value</span>={<span class="var">contextValue</span>}<span class="op">&gt;</span>
+      <span class="op">&lt;</span><span class="cl">Sidebar</span> <span class="op">/&gt;</span>
+      <span class="op">&lt;</span><span class="cl">MainContent</span> <span class="op">/&gt;</span>
+    <span class="op">&lt;/</span><span class="cl">UserContext</span>.<span class="cl">Provider</span><span class="op">&gt;</span>
+  );
+}
+<span class="cm">// Now: Sidebar only re-renders when user data actually changes</span>
+<span class="cm">// Other App state changes don't cause unnecessary Sidebar re-renders</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- Video resource -->
+<div class="video-wrap fade-up">
+  <iframe src="https://www.youtube.com/embed/i793Qm6kv3U" allowfullscreen loading="lazy" title="React reconciliation deep dive"></iframe>
+  <div class="video-cap">Theo (t3.gg) — "React reconciliation explained" — 22 min. Covers element type rules and key mechanics with real bugs demonstrated. Watch after reading Sections 2 and 3.</div>
+</div>
+
+<a class="inline-res" href="https://react.dev/learn/preserving-and-resetting-state" target="_blank" rel="noopener" style="margin-top:18px;">
+  <div class="ir-icon">📘</div>
+  <div class="ir-content">
+    <div class="ir-label">React Docs — Essential</div>
+    <div class="ir-title">Preserving and Resetting State — react.dev</div>
+    <div class="ir-desc">The most important single page in the React docs for today's topic. Work through every interactive example — they're designed exactly for the mental models in Sections 4 and 5.</div>
+  </div>
+</a>
+
+<!-- Video resource -->
+<div class="video-wrap fade-up">
+  <iframe src="https://www.youtube.com/embed/i793Qm6kv3U" allowfullscreen loading="lazy" title="React reconciliation deep dive"></iframe>
+  <div class="video-cap">Theo (t3.gg) — "React reconciliation explained" — 22 min. Covers element type rules and key mechanics with real bugs demonstrated. Watch after reading Sections 2 and 3.</div>
+</div>
+
+<div class="video-wrap fade-up" style="margin-top:18px;">
+  <iframe src="https://www.youtube.com/embed/wIyHSOugGGw" allowfullscreen loading="lazy" title="React re-renders guide"></iframe>
+  <div class="video-cap">Nadia Makarevich — "Why React Re-Renders" — 35 min. The most thorough video walkthrough of React's re-render triggers, memo, context, and reconciliation patterns. Watch this after the entire document.</div>
+</div>
+
+<a class="inline-res" href="https://react.dev/learn/preserving-and-resetting-state" target="_blank" rel="noopener" style="margin-top:18px;">
+  <div class="ir-icon">📘</div>
+  <div class="ir-content">
+    <div class="ir-label">React Docs — Essential</div>
+    <div class="ir-title">Preserving and Resetting State — react.dev</div>
+    <div class="ir-desc">The most important single page in the React docs for today's topic. Work through every interactive example — they're designed exactly for the mental models in Sections 4 and 5.</div>
+  </div>
+</a>
+
+<a class="inline-res" href="https://www.developerway.com/posts/react-re-renders-guide" target="_blank" rel="noopener" style="margin-top:10px;">
+  <div class="ir-icon">📝</div>
+  <div class="ir-content">
+    <div class="ir-label">Article — Read Before the Knowledge Check</div>
+    <div class="ir-title">"React re-renders guide: everything, all at once" — developerway.com</div>
+    <div class="ir-desc">Nadia Makarevich's comprehensive guide covering every re-render trigger, every prevention pattern, and every edge case. Includes visual diagrams. One of the most complete React performance resources available.</div>
+  </div>
+</a>
+
+<hr class="div">
+<section class="section" id="check">
+  <div class="kc-wrap">
+    <div class="kc-hdr">
+      <div class="kc-badge">Knowledge Check</div>
+      <div class="kc-title">Day 3 — All 10 Questions</div>
+    </div>
+    <p class="kc-sub">// Answer every question without looking. Click to reveal the answer. If you can't nail a question, go back and re-read that section — don't move to Day 4 with gaps here.</p>
+
+    <div class="q-list">
+      <details class="q">
+        <summary><span class="q-num">Q01</span><span class="q-text">React's diffing algorithm is O(n) while the general tree-diff problem is O(n³). What exactly makes this possible? What does React trade away to get this speedup?</span><span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p>React achieves O(n) by making two heuristic assumptions that allow it to avoid the general minimum-edit-distance calculation: (1) elements of different types always produce different trees — when a type changes at a position, React tears down the entire subtree and rebuilds fresh, rather than trying to map old children to new children across the type boundary; (2) developers can express identity with the <code>key</code> prop — React uses keys as stable identifiers instead of doing expensive cross-position comparisons.</p>
+          <p>The tradeoff: React may not find the globally optimal minimum set of DOM operations. For example, if a component moves from depth 3 to depth 2 in the tree, React unmounts and remounts it rather than recognizing the move. The general algorithm would detect the move and reuse the node. React's algorithm is 10,000× faster but misses this case. In practice, well-structured UI code rarely moves components across depth levels, so the tradeoff is almost always worth it.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q02</span><span class="q-text">You have a form component inside a div. The div is conditionally replaced with a section. What happens to the form and all its state? Explain mechanically.</span><span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p>When <code>div</code> changes to <code>section</code> at the same position, React's first heuristic kicks in: different element types → different trees. React applies this rule to the <code>div</code>/<code>section</code> fiber at that position.</p>
+          <p>Mechanically: React marks the <code>div</code> fiber with a Deletion flag and the new <code>section</code> fiber with a Placement flag. During the commit phase's mutation sub-phase, the <code>div</code> DOM node and all its children are removed from the DOM. All component fibers in that subtree — including the form component — have their <code>useEffect</code> cleanup functions run, then their fibers are garbage collected. All state in the form (field values, validation state, current step if multi-step, etc.) is permanently gone.</p>
+          <p>Then React creates fresh DOM nodes for <code>section</code> and all its children. The form component is mounted fresh with initial state values. From the user's perspective: every field in the form is cleared, and any unsaved progress is lost.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q03</span><span class="q-text">Explain exactly why defining a component inside another component causes an "input loses focus" bug. Trace through every step.</span><span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p>Step by step: (1) <code>Parent</code> renders. Inside its body, JavaScript executes <code>const Input = () => &lt;input/&gt;</code>, creating a new function object. Call it <code>Input_v1</code>. React renders <code>&lt;Input/&gt;</code> → mounts an input DOM element at position 0, creates a fiber with type = <code>Input_v1</code>.</p>
+          <p>(2) User types a character in the input. Parent's state changes. Parent re-renders. JavaScript again executes <code>const Input = () => &lt;input/&gt;</code>, creating a new function object. Call it <code>Input_v2</code>. <code>Input_v1 !== Input_v2</code> — they are different objects in memory, even though they contain identical code.</p>
+          <p>(3) React visits position 0 during reconciliation. It compares the type of the current fiber (<code>Input_v1</code>) with the type of the new element (<code>Input_v2</code>). They are not strictly equal. React's rule: different type at same position → full remount.</p>
+          <p>(4) React unmounts the <code>Input_v1</code> fiber: removes the input DOM element from the document. The browser, as part of removing a focused element, fires the blur event. Focus moves to the document body.</p>
+          <p>(5) React mounts a fresh input DOM element for <code>Input_v2</code>. This is a new DOM node. It has no focus, no typed text, no cursor position.</p>
+          <p>(6) The user observes: the character they typed appears briefly then disappears (or the input appears to "reset"). The cursor is no longer in the input. They cannot type until they click the input again. This cycle repeats on every keystroke.</p>
+          <p><strong>Fix:</strong> Define <code>Input</code> at module level (outside of <code>Parent</code>). The function is created once when the module loads. Every render of <code>Parent</code> references the same <code>Input</code> object. React sees the same type → updates, no remount. Input keeps focus and value.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q04</span><span class="q-text">What is the exact algorithm React uses to reconcile a list of children? Walk through what happens when you prepend an item to a keyed list vs an unkeyed list.</span><span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p><strong>The algorithm:</strong> React builds a map of existing fibers keyed by their identifier (key if provided, index if not). For each new element in the updated list, it looks up the identifier in this map. If found with matching type: reuse the fiber, update its props. If not found or different type: create fresh fiber. Any existing fibers not looked up: unmount them.</p>
+          <p><strong>Prepend to unkeyed list</strong> (e.g., [A, B, C] → [NEW, A, B, C]):</p>
+          <p>Existing map: {0: fiberA, 1: fiberB, 2: fiberC}. Processing new[0]=NEW: looks up index 0 → finds fiberA. Same type (assume yes) → updates fiberA with NEW's props. Processing new[1]=A: looks up index 1 → finds fiberB → updates fiberB with A's props. Continuing: fiberC gets B's props. new[3]=C: index 3 not in map → fresh mount. Result: all 4 are processed (3 updates + 1 mount). If A/B/C had state, it's now assigned to NEW/A/B respectively — completely wrong.</p>
+          <p><strong>Prepend to keyed list</strong> (keys: A=id1, B=id2, C=id3):</p>
+          <p>Existing map: {id1: fiberA, id2: fiberB, id3: fiberC}. Processing new[0]=NEW (key=id4): looks up id4 → not in map → fresh mount. Processing new[1]=A (key=id1): looks up id1 → finds fiberA → update (same type). B and C similarly reuse their fibers. Result: 1 mount, 3 updates. State correctly preserved for A, B, C.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q05</span><span class="q-text">Describe three specific failure modes of using array index as a key. What goes wrong in each?</span><span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p><strong>Failure 1 — Reorder loses state:</strong> Items have internal state (e.g., expanded/collapsed). User expands item at index 0. List is sorted → item moves from index 0 to index 2. React maps index 0 to the old index-0 fiber, which has "expanded" state. The item now at position 0 is the sort of a different item, but it gets the "expanded" fiber. Wrong item appears expanded. The originally expanded item appears collapsed because its new position (index 2) gets a fiber with "collapsed" state.</p>
+          <p><strong>Failure 2 — Delete from middle shifts state:</strong> List [A, B, C]. User checks B (index 1 has checked=true). User deletes A. New list: [B, C]. B is now at index 0. React maps index 0 to old index-0 fiber (checked=false). B appears unchecked even though user checked it. C inherits B's checked=true fiber and appears checked. State is assigned to the wrong items.</p>
+          <p><strong>Failure 3 — Uncontrolled inputs lose text:</strong> Each list item has an uncontrolled <code>&lt;input&gt;</code>. User types "hello" in item at index 2. Items are filtered (item at index 0 is removed). "hello" input is now at index 1. React maps index 1 to the old index-1 fiber, which had an empty input. The physical DOM element at index 1 was previously the old index-1's input (with no text). React thinks this is the same input (same fiber) but the DOM element it corresponds to is different. The "hello" typed text disappears from the user's perspective.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q06</span><span class="q-text">Explain the key reset pattern. When should you use it? Give two real-world examples where it's the cleanest solution.</span><span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p><strong>The pattern:</strong> Give a component a <code>key</code> derived from an entity identifier. When you want the component to start completely fresh (initial state), change the key. React sees a new key → treats it as a different component instance → unmounts old, mounts fresh. No <code>useEffect</code> to manually reset state, no careful tracking of "what needs resetting."</p>
+          <p><strong>When to use:</strong> When a component has significant internal state and you need it to reset cleanly in response to an external change, without exposing imperative reset methods or lifting all state up. Particularly useful when the component's internal state is complex, when the component is from a library you can't modify, or when using <code>useEffect</code> to reset would cause the user to briefly see stale state before the reset runs.</p>
+          <p><strong>Example 1 — Chat conversation window:</strong> You have a <code>ChatWindow</code> component with scroll position, draft message text, reply-to selection, and possibly other state. When the user switches to a different conversation, you want all of this reset. Give it <code>key={conversation.id}</code>. Switching conversations changes the key → fresh ChatWindow for every conversation. Clean, no bugs, no useEffect chains.</p>
+          <p><strong>Example 2 — Editing different records in an admin panel:</strong> An admin panel shows a form for editing different products. <code>&lt;ProductForm key={selectedProduct.id} productId={selectedProduct.id}/&gt;</code>. Selecting a different product changes the key → fresh form instance with cleared state → no risk of accidentally submitting the previous product's draft changes to the new product.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q07</span><span class="q-text">State is tied to position in the tree, not to the component function. Prove this with an example showing two instances of the same function component having completely independent state.</span><span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p>The statement means: when React processes your JSX and creates fiber nodes, state is stored in the fiber node at a specific tree position — not in the function reference itself. The function is just a recipe. The fiber is the actual storage.</p>
+          <p>Proof by example:</p>
+          <pre style="background:#1c1612;padding:14px;border-radius:5px;font-size:12px;color:#abb2bf;overflow-x:auto;">
+function Counter() {
+  const [count, setCount] = useState(0);
+  return &lt;button onClick={() => setCount(c => c+1)}&gt;{count}&lt;/button&gt;;
+}
+
+function App() {
+  return (
+    &lt;div&gt;
+      &lt;Counter /&gt;   {/* position A */}
+      &lt;Counter /&gt;   {/* position B */}
+      &lt;Counter /&gt;   {/* position C */}
+    &lt;/div&gt;
+  );
+}</pre>
+          <p>All three use the exact same <code>Counter</code> function (same reference). But they exist at different positions (A, B, C) in the tree → three different fiber nodes → three independent <code>count</code> states. Clicking position A's button only increments position A's count. Position B and C are unaffected. The function is the same; the fibers (and thus the state storage) are separate.</p>
+          <p>Additional proof: if the same component function is rendered at position A, unmounted (showA = false), then remounted (showA = true), the new fiber at position A starts with count=0 — the previous state is gone. The function reference didn't change. The fiber did. State lives in the fiber.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q08</span><span class="q-text">Why does React.memo fail to prevent re-renders in certain common scenarios? List three specific cases where memo doesn't work as expected.</span><span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p><strong>Case 1 — Unstable prop references:</strong> Parent passes an object literal or arrow function as a prop. On every parent render, these create new object/function references. <code>React.memo</code> does shallow comparison: <code>prevProps.config !== nextProps.config</code> (even if contents are identical) → comparison fails → re-render despite memo. Fix: memoize props with <code>useMemo</code> and <code>useCallback</code>.</p>
+          <p><strong>Case 2 — Context consumption:</strong> If the memoized component calls <code>useContext(SomeContext)</code> and that context value changes, the component re-renders regardless of memo. Memo only intercepts before checking props. Context subscription bypasses memo's prop comparison entirely. Fix: split context to separate the frequently-changing parts from the stable parts.</p>
+          <p><strong>Case 3 — Internal state changes:</strong> <code>React.memo</code> cannot prevent a re-render triggered by the component's own state. If the memoized component calls <code>setCount(c => c+1)</code>, it re-renders — memo is irrelevant here. Memo only prevents re-renders from parent re-renders with unchanged props.</p>
+          <p><strong>Bonus Case 4 — Custom comparator bugs:</strong> If you provide a custom comparator <code>React.memo(Component, (prev, next) => isEqual(prev, next))</code> using a deep equality function, you may prevent re-renders that should happen (when you mutate data rather than creating new objects, the deep comparison still passes). The comparator is also called on every render, so if it's expensive, it may cost more than the re-render it prevents.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q09</span><span class="q-text">A developer switches between rendering &lt;LoginForm/&gt; and &lt;Dashboard/&gt; at the same position. What could they do to preserve Dashboard's state (like scroll position and selected tab) across this toggle, without using a global state manager?</span><span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p><strong>Option 1 — CSS visibility:</strong> Keep both components rendered at all times but toggle visibility with CSS. The fiber nodes stay mounted, state is preserved.</p>
+          <pre style="background:#1c1612;padding:12px;border-radius:5px;font-size:12px;color:#abb2bf;overflow-x:auto;">
+&lt;div style={{display: isLoggedIn ? 'none' : 'block'}}&gt;
+  &lt;LoginForm /&gt;
+&lt;/div&gt;
+&lt;div style={{display: isLoggedIn ? 'block' : 'none'}}&gt;
+  &lt;Dashboard /&gt;   {/* always mounted, state preserved */}
+&lt;/div&gt;</pre>
+          <p>Downside: Dashboard runs useEffects even when hidden. May make unnecessary API calls or set up subscriptions unnecessarily. Use only if Dashboard is cheap to keep alive.</p>
+          <p><strong>Option 2 — Lift state up:</strong> Move the state you want to preserve (selectedTab, scrollPosition) up to a parent component above the toggle. Pass it down as props. The components can remount freely; the parent's state persists.</p>
+          <pre style="background:#1c1612;padding:12px;border-radius:5px;font-size:12px;color:#abb2bf;overflow-x:auto;">
+function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [dashboardTab, setDashboardTab] = useState('overview');
+  return isLoggedIn
+    ? &lt;Dashboard tab={dashboardTab} onTabChange={setDashboardTab} /&gt;
+    : &lt;LoginForm onLogin={() => setIsLoggedIn(true)} /&gt;;
+}</pre>
+          <p><strong>Option 3 — URL state:</strong> Store Dashboard's tab and scroll position in the URL (via query params or hash). Even if Dashboard remounts, it reads the URL to restore its position. This also makes the state bookmarkable and shareable.</p>
+        </div>
+      </details>
+
+      <details class="q">
+        <summary><span class="q-num">Q10</span><span class="q-text">A React.memo'd component is receiving a context value as well as props. Both the context and a prop change simultaneously. Walk through exactly what React does during reconciliation for this component.</span><span class="q-arr">▶</span></summary>
+        <div class="q-ans">
+          <p>During the render phase, React visits this component's fiber. Since it has <code>React.memo</code>, React runs the prop comparison function (shallow by default) against the previous props. Since a prop changed, the comparison returns false (props are different) → bail-out condition not met → React calls the component function regardless.</p>
+          <p>Even if the prop hadn't changed, the context change alone would cause React to re-render. React's context subscription mechanism bypasses the memo check — when a context value changes, all subscribers are marked for re-render before memo comparison even happens. So in this scenario, both the prop change and the context change would have independently caused a re-render; the memo optimization would have helped with neither.</p>
+          <p>Inside the component function: <code>useContext(SomeContext)</code> returns the new context value. The prop is accessed from the new props object. The component renders with both the new context value and the new prop. React diffs the output with the previous fiber's output, marks necessary DOM updates, and continues.</p>
+          <p>The key lesson: <code>React.memo</code> is strictly about parent-triggered re-renders via prop changes. Context changes and internal state changes are completely outside memo's jurisdiction. Many developers incorrectly believe memo makes a component "immune to re-renders" — it only adds one specific bail-out condition for one specific trigger.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- RESOURCES -->
+<section class="section" id="resources">
+  <div class="section-number">References</div>
+  <h2 class="sec-title">Read & Watch <span>These</span></h2>
+
+  <div class="res-grid">
+    <a class="res-card" href="https://react.dev/learn/preserving-and-resetting-state" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--rust);">📘 React Docs — Must Read</div>
+      <div class="res-card-name">Preserving and Resetting State</div>
+      <div class="res-card-desc">The canonical reference for today's topic. Every section has an interactive demo. Do not skip the demos — they build the exact mental models you need.</div>
+    </a>
+    <a class="res-card" href="https://legacy.reactjs.org/docs/reconciliation.html" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--teal);">📄 Legacy Docs</div>
+      <div class="res-card-name">Reconciliation — React Legacy Docs</div>
+      <div class="res-card-desc">Still the most concise formal description of React's O(n) diffing algorithm. Read the "Motivation" and "Diffing Algorithm" sections.</div>
+    </a>
+    <a class="res-card" href="https://www.youtube.com/watch?v=i793Qm6kv3U" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--gold);">🎬 Video</div>
+      <div class="res-card-name">React Reconciliation — Theo (t3.gg)</div>
+      <div class="res-card-desc">22 min. Real bugs demonstrated and traced. Particularly good on element type rules and the inline component bug.</div>
+    </a>
+    <a class="res-card" href="https://react.dev/learn/understanding-your-ui-as-a-tree" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--rust);">📘 React Docs</div>
+      <div class="res-card-name">Understanding Your UI as a Tree</div>
+      <div class="res-card-desc">React's model of your component tree. How React thinks about the structure. Foundation for everything in this document.</div>
+    </a>
+    <a class="res-card" href="https://react.dev/reference/react/memo" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--rust);">📘 React Docs</div>
+      <div class="res-card-name">React.memo — Caveats section</div>
+      <div class="res-card-desc">Read the "Caveats" and "Troubleshooting" sections specifically. Describes exactly the edge cases covered in Section 5.3.</div>
+    </a>
+    <a class="res-card" href="https://codesandbox.io/s/react-key-reset-pattern-demo" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--plum);">🔬 Interactive</div>
+      <div class="res-card-name">Key Reset Pattern — CodeSandbox</div>
+      <div class="res-card-desc">Build this yourself: a user profile switcher using the key reset pattern. If CodeSandbox link is dead, build it fresh from the Section 3.5 example.</div>
+    </a>
+    <a class="res-card" href="https://github.com/facebook/react/blob/main/packages/react-reconciler/src/ReactChildFiber.js" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--plum);">💻 React Source</div>
+      <div class="res-card-name">ReactChildFiber.js — reconcileChildrenArray</div>
+      <div class="res-card-desc">The actual implementation of child reconciliation. Search for reconcileChildrenArray and mapRemainingChildren. Advanced — read after understanding the concepts.</div>
+    </a>
+    <a class="res-card" href="https://kentcdodds.com/blog/dont-use-index-as-the-key-with-dynamic-lists" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--teal);">📝 Article</div>
+      <div class="res-card-name">Don't use index as the key — Kent C. Dodds</div>
+      <div class="res-card-desc">More scenarios where index keys break things. Has a great visual demo of the state bug.</div>
+    </a>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- TASKS -->
+<section class="section" id="tasks">
+  <div class="section-number">Action Plan</div>
+  <h2 class="sec-title">Today's <span>8-Hour</span> Schedule</h2>
+
+  <div class="sched">
+    <div class="sched-row">
+      <div class="sched-time">7:00 – 9:30am</div>
+      <div class="sched-desc">
+        <strong>Theory Block</strong>
+        Read this document top to bottom. For each code example, trace through manually — don't just skim. Draw the tree diagrams from Sections 1 and 3 on paper. Identify the pattern: "what does React look at to decide update vs remount?" Write your own 3-sentence answer to that before moving to the coding block.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">9:30 – 10:00am</div>
+      <div class="sched-desc">
+        <strong>React Docs Interactive — Preserving and Resetting State</strong>
+        Work through every single interactive demo on this page: react.dev/learn/preserving-and-resetting-state. Don't just read it — click things, observe results, predict outcomes before you click. This one page is worth an hour of theory.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">10:00am – 1:00pm</div>
+      <div class="sched-desc">
+        <strong>Build Block — Reproduce every bug from today's doc</strong>
+        (1) Build the "inline component focus loss" bug. See it. Fix it. (2) Build a sortable todo list with index keys. Add checked state to each item. Sort the list. Observe the state bug. Fix with stable IDs. (3) Build the key reset pattern: a "User Profile" that switches between 3 users — the form must start fresh for each user. (4) Build two Counter instances at different positions. Verify state is truly independent. (5) Build the React 18 batching demo: multiple setStates inside a setTimeout — add console.log to the render function and count how many times it fires. Verify it's once. (6) Build the children-as-props bailout: an expensive child that does NOT re-render when parent count changes. No React.memo allowed — use composition only.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">2:00 – 4:00pm</div>
+      <div class="sched-desc">
+        <strong>Deep Dive — React Source Code</strong>
+        Open ReactChildFiber.js (linked in Resources). Find <code>reconcileChildrenArray</code>. Find <code>mapRemainingChildren</code>. Confirm that the pseudocode in Section 3.1 matches the real implementation. You don't need to understand every line — just confirm the key→fiber map pattern.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">4:00 – 6:00pm</div>
+      <div class="sched-desc">
+        <strong>Apply to PharmaSync — Find Real Reconciliation Issues</strong>
+        Open the PharmaSync codebase. Find: (a) any components defined inside another component's render (the inline component bug). (b) any lists rendered with index keys. (c) any conditional renders that switch between different component types. Document what you find — these are real bugs or performance issues you can fix and quantify.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">6:00 – 8:00pm</div>
+      <div class="sched-desc">
+        <strong>Knowledge Check + Voice Explanation</strong>
+        Answer all 10 questions without looking at answers. Then record yourself answering: "A junior dev asks why their input loses focus when they type. How do you diagnose and fix it?" Aim for under 2 minutes with full technical precision. Write 3 insights in Notion. Read the Theo video (22 min) to close any gaps.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout tip" style="margin-top:36px;">
+    <div class="callout-title">✅ Tomorrow — Day 4</div>
+    <p>Day 4 is <strong>useState & useReducer Internals + Hook Rules</strong>. You'll go deep on how <code>useState</code> is implemented as <code>useReducer</code> under the hood, why functional updates prevent stale closures, the update queue processing model, and when to reach for <code>useReducer</code> over <code>useState</code>. Everything ties back to Day 2's hooks linked list. The foundations you've built over Days 1-3 mean Day 4 will click immediately rather than feeling like magic.</p>
+  </div>
+
+  <div style="margin-top:52px;padding:36px;background:var(--bg2);border:2px solid var(--border);border-radius:10px;text-align:center;">
+    <div style="font-family:var(--serif);font-size:28px;font-weight:900;color:var(--ink);margin-bottom:8px;">Day 03 of 60.</div>
+    <div style="font-size:16px;color:var(--muted);margin-bottom:20px;">You now understand the mechanism that decides what appears on screen. Three days in — the foundation is almost complete.</div>
+    <div class="hero-tags" style="justify-content:center;">
+      <span class="tag r">useState Internals →</span>
+      <span class="tag t">useReducer →</span>
+      <span class="tag g">Hook Rules Explained →</span>
+      <span class="tag p">57 days to go</span>
+    </div>
+  </div>
+</section>
+
+</div>
+</main>
+
+<script>
+const prog = document.getElementById('prog');
+const topBtn = document.getElementById('top-btn');
+
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY;
+  const total = document.body.scrollHeight - window.innerHeight;
+  prog.style.width = (scrolled / total * 100) + '%';
+  topBtn.classList.toggle('show', scrolled > 400);
+  updateToc();
+});
+
+function updateToc() {
+  const links = document.querySelectorAll('.toc-link');
+  let current = '';
+  document.querySelectorAll('[id]').forEach(el => {
+    if (window.scrollY >= el.offsetTop - 100) current = el.id;
+  });
+  links.forEach(l => {
+    l.classList.toggle('on', l.getAttribute('href') === '#' + current);
+  });
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'copied!';
+    btn.style.background = 'var(--green)';
+    btn.style.color = '#fff';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(() => {
+      btn.textContent = 'copy';
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2200);
+  });
+}
+
+// Fade-in on scroll
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'none';
+      e.target.style.transition = 'opacity .5s ease, transform .5s ease';
+      obs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.05 });
+
+document.querySelectorAll('.section, .sub, .callout, .video-wrap').forEach(el => {
+  if (!el.classList.contains('fade-up')) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(14px)';
+    obs.observe(el);
+  }
+});
+
+document.querySelectorAll('.fade-up').forEach((el, i) => {
+  el.style.animationDelay = (i * 0.07) + 's';
+});
+</script>
+</body>
+</html>
