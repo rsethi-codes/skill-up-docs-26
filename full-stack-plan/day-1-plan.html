@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 1 — TypeScript: The Real Foundation | Raghav's Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,700;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f0e8;
+  --bg2: #ede8de;
+  --bg3: #e4ddd0;
+  --ink: #1a1410;
+  --ink2: #2d2520;
+  --ink3: #453d35;
+  --muted: #7a6f62;
+  --muted2: #a89e92;
+  --border: rgba(26,20,16,0.12);
+  --border2: rgba(26,20,16,0.06);
+  --rust: #c0392b;
+  --rust2: #e74c3c;
+  --rust-bg: rgba(192,57,43,0.07);
+  --rust-border: rgba(192,57,43,0.2);
+  --teal: #0d7f7f;
+  --teal2: #0fb3b3;
+  --teal-bg: rgba(13,127,127,0.07);
+  --teal-border: rgba(13,127,127,0.2);
+  --gold: #b8860b;
+  --gold2: #d4a017;
+  --gold-bg: rgba(184,134,11,0.08);
+  --gold-border: rgba(184,134,11,0.22);
+  --plum: #5b2d8e;
+  --plum-bg: rgba(91,45,142,0.07);
+  --plum-border: rgba(91,45,142,0.2);
+  --green: #1a6b3c;
+  --green-bg: rgba(26,107,60,0.07);
+  --green-border: rgba(26,107,60,0.2);
+  --serif: 'Playfair Display', Georgia, serif;
+  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --sans: 'DM Sans', system-ui, sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.75;
+  font-size: 16px;
+  overflow-x: hidden;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.6;
+}
+
+#prog {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0;
+  background: linear-gradient(90deg, var(--rust), var(--gold), var(--teal));
+  z-index: 1000; transition: width .1s linear;
+  box-shadow: 0 0 8px rgba(192,57,43,0.4);
+}
+
+#top-btn {
+  position: fixed; bottom: 28px; right: 28px; width: 40px; height: 40px;
+  background: var(--ink); color: #fff; border: none; border-radius: 6px;
+  font-size: 18px; cursor: pointer; z-index: 900; opacity: 0; transition: opacity .3s;
+  display: flex; align-items: center; justify-content: center;
+}
+#top-btn.show { opacity: 1; }
+
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; height: 54px;
+  background: rgba(245,240,232,0.94); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; z-index: 900;
+}
+.tb-brand { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--rust); letter-spacing: .06em; }
+.tb-day { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.tb-nav { display: flex; gap: 22px; list-style: none; }
+.tb-nav a { font-family: var(--sans); font-size: 12px; font-weight: 500; color: var(--muted); text-decoration: none; transition: color .2s; }
+.tb-nav a:hover { color: var(--rust); }
+
+.sidebar {
+  position: fixed; left: 0; top: 54px; width: 218px;
+  height: calc(100vh - 54px); overflow-y: auto;
+  padding: 24px 0; border-right: 1px solid var(--border);
+  background: rgba(245,240,232,0.8); backdrop-filter: blur(12px);
+  z-index: 800;
+}
+.sidebar::-webkit-scrollbar { width: 2px }
+.sidebar::-webkit-scrollbar-thumb { background: var(--muted2); }
+.toc-head {
+  padding: 0 18px 12px; font-family: var(--mono); font-size: 9px;
+  font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--muted2); border-bottom: 1px solid var(--border); margin-bottom: 10px;
+}
+.toc-link {
+  display: block; padding: 5px 18px; font-family: var(--sans); font-size: 12px;
+  font-weight: 400; color: var(--muted); text-decoration: none;
+  border-left: 2px solid transparent; transition: all .18s; line-height: 1.4;
+}
+.toc-link:hover, .toc-link.on { color: var(--rust); border-left-color: var(--rust); background: var(--rust-bg); }
+.toc-link.sub { padding-left: 28px; font-size: 11.5px; }
+.toc-link.sub:hover, .toc-link.sub.on { color: var(--teal); border-left-color: var(--teal); background: var(--teal-bg); }
+
+.main { margin-left: 218px; padding-top: 54px; }
+.content { max-width: 860px; margin: 0 auto; padding: 60px 40px 120px; }
+
+.hero {
+  margin-bottom: 72px; padding-bottom: 56px;
+  border-bottom: 2px solid var(--border);
+}
+.day-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--rust); color: #fff;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  padding: 4px 14px; border-radius: 2px; margin-bottom: 20px;
+}
+.day-pill::before {
+  content: ''; width: 5px; height: 5px; background: #fff;
+  border-radius: 50%; animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.6)} }
+
+h1.hero-title {
+  font-family: var(--serif);
+  font-size: clamp(36px, 5.5vw, 62px);
+  font-weight: 900;
+  line-height: 1.0;
+  letter-spacing: -.02em;
+  color: var(--ink);
+  margin-bottom: 18px;
+}
+h1.hero-title span { color: var(--rust); font-style: italic; }
+.hero-lead {
+  font-family: var(--sans); font-size: 17px; font-weight: 300;
+  color: var(--ink3); max-width: 620px; line-height: 1.75; margin-bottom: 28px;
+}
+.hero-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+.tag {
+  font-family: var(--mono); font-size: 10px; padding: 3px 10px;
+  border-radius: 2px; border: 1px solid; letter-spacing: .04em;
+}
+.tag.r { color: var(--rust); border-color: var(--rust-border); background: var(--rust-bg); }
+.tag.t { color: var(--teal); border-color: var(--teal-border); background: var(--teal-bg); }
+.tag.g { color: var(--gold); border-color: var(--gold-border); background: var(--gold-bg); }
+.tag.p { color: var(--plum); border-color: var(--plum-border); background: var(--plum-bg); }
+.tag.gr { color: var(--green); border-color: var(--green-border); background: var(--green-bg); }
+
+.section { margin-bottom: 80px; scroll-margin-top: 74px; }
+.section-number {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--muted2); margin-bottom: 4px;
+  display: flex; align-items: center; gap: 12px;
+}
+.section-number::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+h2.sec-title {
+  font-family: var(--serif); font-size: clamp(24px, 3vw, 36px);
+  font-weight: 900; letter-spacing: -.01em; line-height: 1.1;
+  color: var(--ink); margin-bottom: 14px;
+}
+h2.sec-title span { color: var(--rust); font-style: italic; }
+.sec-lead { font-size: 15.5px; color: var(--ink3); max-width: 680px; margin-bottom: 40px; line-height: 1.78; }
+
+.sub { margin-bottom: 52px; scroll-margin-top: 74px; }
+h3.sub-title {
+  font-family: var(--sans); font-size: 19px; font-weight: 600;
+  color: var(--ink); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+h3.sub-title .sub-num {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  color: #fff; background: var(--rust); padding: 2px 7px; border-radius: 2px;
+  flex-shrink: 0;
+}
+h3.sub-title .sub-num.t { background: var(--teal); }
+h3.sub-title .sub-num.g { background: var(--gold); }
+h3.sub-title .sub-num.p { background: var(--plum); }
+
+h4.mini-title {
+  font-family: var(--sans); font-size: 14px; font-weight: 600;
+  color: var(--ink); margin: 22px 0 8px; letter-spacing: -.01em;
+}
+
+p {
+  color: var(--ink3); line-height: 1.8; margin-bottom: 16px; font-size: 15.5px;
+}
+p strong { color: var(--ink); font-weight: 600; }
+p em { color: var(--rust); font-style: italic; }
+p code { font-family: var(--mono); font-size: 13px; background: var(--bg3); padding: 2px 6px; border-radius: 3px; color: var(--ink); border: 1px solid var(--border); }
+
+ul.prose-list, ol.prose-list {
+  margin: 14px 0 20px 22px; display: flex; flex-direction: column; gap: 7px;
+}
+ul.prose-list li, ol.prose-list li {
+  color: var(--ink3); font-size: 15px; line-height: 1.7;
+}
+ul.prose-list li strong, ol.prose-list li strong { color: var(--ink); }
+ul.prose-list li code, ol.prose-list li code {
+  font-family: var(--mono); font-size: 12.5px; background: var(--bg3);
+  padding: 1px 5px; border-radius: 3px; color: var(--ink); border: 1px solid var(--border);
+}
+
+.callout {
+  border-radius: 6px; padding: 18px 22px; margin: 24px 0; border-left: 3px solid;
+}
+.callout-title {
+  font-family: var(--mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .18em; text-transform: uppercase; margin-bottom: 9px;
+  display: flex; align-items: center; gap: 7px;
+}
+.callout p { margin-bottom: 0; font-size: 14.5px; }
+.callout.danger { background: var(--rust-bg); border-color: var(--rust); }
+.callout.danger .callout-title { color: var(--rust); }
+.callout.insight { background: var(--plum-bg); border-color: var(--plum); }
+.callout.insight .callout-title { color: var(--plum); }
+.callout.tip { background: var(--green-bg); border-color: var(--green); }
+.callout.tip .callout-title { color: var(--green); }
+.callout.warn { background: var(--gold-bg); border-color: var(--gold); }
+.callout.warn .callout-title { color: var(--gold); }
+.callout.info { background: var(--teal-bg); border-color: var(--teal); }
+.callout.info .callout-title { color: var(--teal); }
+
+.code-block {
+  border-radius: 8px; overflow: hidden; margin: 22px 0;
+  border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,.05);
+}
+.code-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 16px; background: var(--ink2); border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.code-lang { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.4); }
+.code-label { font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,.3); font-style: italic; }
+.copy-btn {
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1);
+  color: rgba(255,255,255,.5); font-family: var(--mono); font-size: 10px;
+  padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all .2s;
+}
+.copy-btn:hover { background: var(--rust); color: #fff; border-color: var(--rust); }
+pre {
+  background: #1c1612; padding: 22px 24px; overflow-x: auto;
+  font-family: var(--mono); font-size: 13px; line-height: 1.85;
+}
+pre::-webkit-scrollbar { height: 3px }
+pre::-webkit-scrollbar-thumb { background: #3a3028; border-radius: 2px }
+pre code { background: none; padding: 0; font-size: inherit; color: inherit; border: none; }
+code { font-family: var(--mono); font-size: 13px; }
+
+.kw  { color: #e06c75 }
+.fn  { color: #61afef }
+.str { color: #98c379 }
+.num { color: #d19a66 }
+.cm  { color: #5c6370; font-style: italic }
+.cl  { color: #e5c07b }
+.var { color: #abb2bf }
+.op  { color: #e06c75 }
+.prop{ color: #61afef }
+.at  { color: #e5c07b }
+.jsx { color: #c678dd }
+.type{ color: #e5c07b }
+.dec { color: #c678dd }
+.ts-kw { color: #c678dd }
+
+.diagram {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 26px; margin: 22px 0; overflow-x: auto;
+}
+.diag-title {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--muted); text-align: center; margin-bottom: 22px;
+}
+
+.ba {
+  display: grid; grid-template-columns: 1fr 1fr; margin: 22px 0;
+  border-radius: 8px; overflow: hidden; border: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+.ba-head {
+  padding: 9px 16px; font-family: var(--mono); font-size: 10px;
+  font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 7px;
+}
+.ba-bad .ba-head { background: rgba(192,57,43,.1); color: var(--rust); border-bottom: 1px solid rgba(192,57,43,.15); }
+.ba-good .ba-head { background: rgba(26,107,60,.08); color: var(--green); border-bottom: 1px solid rgba(26,107,60,.15); }
+.ba-pane pre { border-radius: 0; }
+
+.video-wrap {
+  margin: 28px 0; border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+.video-label {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; background: var(--ink2);
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.5);
+}
+.video-label span { color: var(--rust2); }
+.video-wrap iframe { display: block; width: 100%; aspect-ratio: 16/9; border: none; }
+
+.inline-res {
+  display: flex; gap: 14px; padding: 14px 18px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 6px; margin: 18px 0; text-decoration: none;
+  transition: all .2s; align-items: flex-start;
+}
+.inline-res:hover { border-color: var(--rust); background: var(--rust-bg); }
+.ir-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.ir-label { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted2); margin-bottom: 3px; }
+.ir-title { font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+.ir-desc { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+
+.check-grid {
+  display: flex; flex-direction: column; gap: 16px; margin-top: 28px;
+}
+.check-item {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 18px 22px;
+  transition: border-color .2s;
+}
+.check-item:hover { border-color: var(--rust); }
+.check-q {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--rust);
+  margin-bottom: 7px;
+}
+.check-text { font-size: 14.5px; color: var(--ink); font-weight: 500; line-height: 1.6; }
+.check-reveal {
+  margin-top: 12px; padding: 14px;
+  background: var(--bg3); border-radius: 5px;
+  font-size: 13.5px; color: var(--ink3); line-height: 1.7;
+  display: none;
+}
+.check-reveal code {
+  font-family: var(--mono); font-size: 12px; background: var(--bg2);
+  padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border);
+}
+.check-btn {
+  margin-top: 10px; padding: 4px 12px;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 3px; font-family: var(--mono); font-size: 10px;
+  cursor: pointer; color: var(--muted); transition: all .2s;
+}
+.check-btn:hover { background: var(--rust); color: #fff; border-color: var(--rust); }
+
+.res-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr));
+  gap: 14px; margin-top: 28px;
+}
+.res-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 7px; padding: 18px; text-decoration: none;
+  transition: all .2s; display: block;
+}
+.res-card:hover { border-color: var(--teal); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+.res-card-type { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 7px; }
+.res-card-name { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.res-card-desc { font-size: 12px; color: var(--muted); line-height: 1.55; }
+
+.sched { display: flex; flex-direction: column; gap: 3px; margin-top: 20px; }
+.sched-row {
+  display: grid; grid-template-columns: 160px 1fr;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 5px; overflow: hidden; gap: 0;
+}
+.sched-time {
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  color: var(--rust); padding: 14px 16px;
+  border-right: 1px solid var(--border); background: var(--rust-bg);
+  display: flex; align-items: center;
+}
+.sched-desc { padding: 14px 18px; font-size: 14px; color: var(--ink3); line-height: 1.65; }
+.sched-desc strong { color: var(--ink); }
+.sched-desc code { font-family: var(--mono); font-size: 12px; background: var(--bg3); padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); }
+
+.div { border: none; border-top: 1px solid var(--border); margin: 56px 0; }
+
+/* type anatomy visual */
+.type-anatomy {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 28px; margin: 22px 0;
+  font-family: var(--mono); font-size: 13.5px;
+}
+.anatomy-row {
+  display: flex; align-items: flex-start; gap: 18px; margin-bottom: 16px;
+  padding-bottom: 16px; border-bottom: 1px solid var(--border);
+}
+.anatomy-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.anatomy-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted2); min-width: 90px; padding-top: 3px;
+}
+.anatomy-code { color: var(--ink); }
+.anatomy-note { font-family: var(--sans); font-size: 13px; color: var(--muted); margin-top: 4px; font-style: italic; }
+
+/* comparison table */
+.comp-table {
+  width: 100%; border-collapse: collapse; margin: 22px 0;
+  border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  font-size: 14px;
+}
+.comp-table th {
+  background: var(--ink2); color: rgba(255,255,255,.7);
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  padding: 10px 16px; text-align: left;
+}
+.comp-table td {
+  padding: 11px 16px; border-top: 1px solid var(--border);
+  vertical-align: top; color: var(--ink3); line-height: 1.6;
+}
+.comp-table td code {
+  font-family: var(--mono); font-size: 12px; background: var(--bg3);
+  padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border);
+}
+.comp-table tr:nth-child(even) td { background: var(--bg2); }
+.comp-table td.yes { color: var(--green); font-weight: 600; }
+.comp-table td.no { color: var(--rust); font-weight: 600; }
+
+/* mental model box */
+.mental-model {
+  background: linear-gradient(135deg, var(--plum-bg), var(--teal-bg));
+  border: 2px solid var(--plum-border); border-radius: 10px;
+  padding: 28px 30px; margin: 28px 0;
+}
+.mental-model h4 {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--plum);
+  margin-bottom: 14px;
+}
+.mental-model p { font-size: 16px; color: var(--ink); margin-bottom: 0; line-height: 1.75; }
+.mental-model p strong { color: var(--plum); }
+
+.fade-up { animation: fadeUp .5s ease both; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+
+@media (max-width: 860px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .content { padding: 40px 20px 80px; }
+  .ba { grid-template-columns: 1fr; }
+  .sched-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+<button id="top-btn" onclick="scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <div class="tb-brand">RAGHAV.DEV // ROADMAP</div>
+  <div class="tb-day">DAY 01 / 56</div>
+  <ul class="tb-nav">
+    <li><a href="#type-system">Type System</a></li>
+    <li><a href="#advanced-types">Advanced</a></li>
+    <li><a href="#react-ts">React+TS</a></li>
+    <li><a href="#check">Check</a></li>
+    <li><a href="#resources">Resources</a></li>
+    <li><a href="#tasks">Tasks</a></li>
+  </ul>
+</nav>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="toc-head">Day 01 Contents</div>
+  <a class="toc-link" href="#hero">Overview</a>
+  <a class="toc-link" href="#type-system">1. Type System Fundamentals</a>
+  <a class="toc-link sub" href="#primitives">Primitive Types</a>
+  <a class="toc-link sub" href="#type-vs-interface">Type vs Interface</a>
+  <a class="toc-link sub" href="#unions-intersections">Union & Intersection</a>
+  <a class="toc-link sub" href="#literal-types">Literal Types</a>
+  <a class="toc-link sub" href="#narrowing">Type Narrowing</a>
+  <a class="toc-link sub" href="#never-type">The never Type</a>
+  <a class="toc-link sub" href="#unknown-any">unknown vs any</a>
+  <a class="toc-link" href="#advanced-types">2. Advanced Types</a>
+  <a class="toc-link sub" href="#generics">Generics Deep Dive</a>
+  <a class="toc-link sub" href="#utility-types">Utility Types</a>
+  <a class="toc-link sub" href="#mapped-types">Mapped Types</a>
+  <a class="toc-link sub" href="#conditional-types">Conditional Types</a>
+  <a class="toc-link sub" href="#infer">The infer Keyword</a>
+  <a class="toc-link sub" href="#template-literals">Template Literal Types</a>
+  <a class="toc-link" href="#react-ts">3. TypeScript with React</a>
+  <a class="toc-link sub" href="#component-typing">Component Typing</a>
+  <a class="toc-link sub" href="#hooks-typing">Hooks Typing</a>
+  <a class="toc-link sub" href="#event-typing">Event Typing</a>
+  <a class="toc-link sub" href="#context-typing">Context Typing</a>
+  <a class="toc-link" href="#check">Knowledge Check</a>
+  <a class="toc-link" href="#resources">Resources</a>
+  <a class="toc-link" href="#tasks">Today's Schedule</a>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+<div class="content">
+
+<!-- ═══════════ HERO ═══════════ -->
+<div class="hero fade-up" id="hero">
+  <div class="day-pill">Day 01 — Phase 1 — Week 1</div>
+  <h1 class="hero-title">TypeScript:<br>The <span>Real</span><br>Foundation</h1>
+  <p class="hero-lead">You listed TypeScript on your resume. That means every interviewer will probe it. Today you build the foundation that makes TypeScript <em>yours</em> — not a tool you cargo-culted from tutorials. By the end of today, you'll understand the type system deeply enough to answer any question thrown at you and write React code that's actually safe.</p>
+  <div class="hero-tags">
+    <span class="tag r">Type System</span>
+    <span class="tag t">Generics</span>
+    <span class="tag g">Utility Types</span>
+    <span class="tag p">Mapped Types</span>
+    <span class="tag gr">React Integration</span>
+    <span class="tag r">10 Knowledge Checks</span>
+  </div>
+</div>
+
+<div class="callout danger fade-up">
+  <div class="callout-title">⚡ The Resume Problem You're Fixing Today</div>
+  <p>Your resume says TypeScript. Any mid-to-senior engineer will ask: <em>"What's the difference between type and interface?"</em> or <em>"How do you type a function that gets a value by a key?"</em> or <em>"What does infer do?"</em> If you stammer, they know. Today you eliminate that stammer permanently.</p>
+</div>
+
+<div class="callout info fade-up" style="margin-top:18px;">
+  <div class="callout-title">🔗 Why TypeScript First (Before Next.js)</div>
+  <p>You're building Next.js in strict TypeScript. If you don't understand the type system, you'll write <code>any</code> everywhere — which is literally worse than JavaScript. Every topic from Day 2 onwards assumes you can read and write TypeScript fluently. This day is the foundation. Don't rush it.</p>
+</div>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 1 — TYPE SYSTEM FUNDAMENTALS
+═══════════════════════════════════════════════════════ -->
+<section class="section fade-up" id="type-system">
+  <div class="section-number">Topic 01</div>
+  <h2 class="sec-title">Type System <span>Fundamentals</span></h2>
+  <p class="sec-lead">TypeScript's type system is a tool for encoding your understanding of data at compile time. But it works completely differently from languages like Java or C# — it uses structural typing, not nominal typing. This single fact explains 80% of "confusing" TypeScript behavior.</p>
+
+  <!-- VIDEO: TypeScript in 100 seconds -->
+  <div class="video-wrap fade-up">
+    <div class="video-label">🎬 <span>START HERE</span> — TypeScript in 100 Seconds (Fireship) — Watch Before Reading</div>
+    <iframe src="https://www.youtube.com/embed/zQnBQ4tB3ZA" allowfullscreen loading="lazy"></iframe>
+  </div>
+
+  <!-- 1.1 STRUCTURAL TYPING -->
+  <div class="sub" id="primitives">
+    <h3 class="sub-title"><span class="sub-num">1.1</span> Structural Typing — The Big Mental Model Shift</h3>
+
+    <div class="mental-model">
+      <h4>🧠 The Core Mental Model</h4>
+      <p>TypeScript asks: <strong>"Does this value have the right shape?"</strong> — not <strong>"Is this value declared as the right type?"</strong> If an object has all the properties a type requires, TypeScript accepts it. Period. This is called <strong>structural typing</strong> (also called duck typing at the type level).</p>
+    </div>
+
+    <p>In Java, if you declare <code>class Dog</code> and a function expects <code>Animal</code>, Dog must explicitly say <code>extends Animal</code>. That's nominal typing — the name matters. In TypeScript, if your function expects <code>{ name: string }</code> and you pass <code>{ name: "Rex", breed: "Lab" }</code>, TypeScript accepts it — because it has the required shape.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">structural typing — the foundation</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// TypeScript uses structural typing — shape matters, not name</span>
+
+<span class="kw">type</span> <span class="type">Animal</span> = { <span class="prop">name</span>: <span class="type">string</span> };
+<span class="kw">type</span> <span class="type">Dog</span> = { <span class="prop">name</span>: <span class="type">string</span>; <span class="prop">breed</span>: <span class="type">string</span> };
+
+<span class="kw">function</span> <span class="fn">greet</span>(animal: <span class="type">Animal</span>) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">`Hello </span>${animal.<span class="prop">name</span>}<span class="str">`</span>);
+}
+
+<span class="kw">const</span> dog: <span class="type">Dog</span> = { <span class="prop">name</span>: <span class="str">"Rex"</span>, <span class="prop">breed</span>: <span class="str">"Lab"</span> };
+<span class="fn">greet</span>(dog); <span class="cm">// ✅ Works! Dog has everything Animal needs + more</span>
+
+<span class="cm">// Dog is "assignable to" Animal because it satisfies the shape
+// In Java, this would fail without explicit "implements Animal"</span>
+
+<span class="cm">// Where it SURPRISES you: excess property checking on literals</span>
+<span class="fn">greet</span>({ <span class="prop">name</span>: <span class="str">"Rex"</span>, <span class="prop">breed</span>: <span class="str">"Lab"</span> }); <span class="cm">// ❌ ERROR on object literals!</span>
+<span class="cm">// TypeScript adds a special rule for FRESH object literals to catch typos
+// Workaround: assign to variable first (like dog above) or use "as Animal"</span></code></pre>
+    </div>
+
+    <div class="callout insight">
+      <div class="callout-title">💡 Why Fresh Object Literals Are Special</div>
+      <p>TypeScript applies "excess property checking" only when you directly pass an object literal. This catches typos like <code>{ naem: "Rex" }</code>. Once the object is in a variable, TypeScript only checks structural compatibility. This is intentional — and it trips up everyone when they first encounter it.</p>
+    </div>
+
+    <h4 class="mini-title">Primitive Types — the 7 Primitives</h4>
+    <p>These are the leaf nodes of TypeScript's type hierarchy. Everything else is built from these.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">all 7 primitives</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// The 7 primitives — know each one cold</span>
+
+<span class="kw">const</span> a: <span class="type">string</span> = <span class="str">"hello"</span>;
+<span class="kw">const</span> b: <span class="type">number</span> = <span class="num">42</span>;        <span class="cm">// includes floats: 42.5 is also number</span>
+<span class="kw">const</span> c: <span class="type">boolean</span> = <span class="kw">true</span>;
+<span class="kw">const</span> d: <span class="type">null</span> = <span class="kw">null</span>;         <span class="cm">// intentional absence of a value</span>
+<span class="kw">const</span> e: <span class="type">undefined</span> = <span class="kw">undefined</span>; <span class="cm">// variable not yet assigned</span>
+<span class="kw">const</span> f: <span class="type">symbol</span> = <span class="fn">Symbol</span>(<span class="str">"id"</span>); <span class="cm">// unique identity token</span>
+<span class="kw">const</span> g: <span class="type">bigint</span> = <span class="num">9007199254740991n</span>; <span class="cm">// ints beyond Number.MAX_SAFE_INTEGER</span>
+
+<span class="cm">// IMPORTANT: null and undefined are separate types
+// Without strictNullChecks: string includes null. This is WRONG.
+// With strictNullChecks (always use this!): string is only string
+// string | null explicitly allows null
+const name: string | null = null; // must acknowledge the possibility</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 1.2 TYPE VS INTERFACE -->
+  <div class="sub" id="type-vs-interface">
+    <h3 class="sub-title"><span class="sub-num">1.2</span> type vs interface — The Definitive Answer</h3>
+
+    <p>This is the #1 most asked TypeScript question in interviews. The honest answer: <strong>they overlap 90%</strong>. But the 10% differences matter deeply. Know them cold.</p>
+
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>type alias</th>
+          <th>interface</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Describes object shape</td>
+          <td class="yes">✅ Yes</td>
+          <td class="yes">✅ Yes</td>
+        </tr>
+        <tr>
+          <td>Can extend/merge</td>
+          <td>Via intersection (<code>&amp;</code>)</td>
+          <td class="yes">✅ Yes, via <code>extends</code></td>
+        </tr>
+        <tr>
+          <td>Declaration merging</td>
+          <td class="no">❌ No</td>
+          <td class="yes">✅ Yes — opens interface to add fields</td>
+        </tr>
+        <tr>
+          <td>Union types</td>
+          <td class="yes">✅ Yes — <code>type X = A | B</code></td>
+          <td class="no">❌ Cannot represent unions</td>
+        </tr>
+        <tr>
+          <td>Primitive aliases</td>
+          <td class="yes">✅ <code>type ID = string</code></td>
+          <td class="no">❌ No</td>
+        </tr>
+        <tr>
+          <td>Computed properties</td>
+          <td class="yes">✅ Yes</td>
+          <td class="no">❌ Limited</td>
+        </tr>
+        <tr>
+          <td>Conditional types</td>
+          <td class="yes">✅ Yes</td>
+          <td class="no">❌ No</td>
+        </tr>
+        <tr>
+          <td>Shown in error messages</td>
+          <td>Expanded (less readable)</td>
+          <td>By name (more readable)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">the KEY difference: declaration merging</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── DECLARATION MERGING — only interfaces can do this ───────────</span>
+<span class="kw">interface</span> <span class="type">User</span> {
+  <span class="prop">name</span>: <span class="type">string</span>;
+}
+<span class="kw">interface</span> <span class="type">User</span> {         <span class="cm">// ← TypeScript MERGES these declarations</span>
+  <span class="prop">age</span>: <span class="type">number</span>;
+}
+<span class="cm">// User is now { name: string; age: number }
+// This is how @types packages augment third-party types (e.g. Express Request)</span>
+
+<span class="kw">type</span> <span class="type">Admin</span> = { <span class="prop">name</span>: <span class="type">string</span> }
+<span class="kw">type</span> <span class="type">Admin</span> = { <span class="prop">age</span>: <span class="type">number</span> } <span class="cm">// ❌ ERROR: Duplicate identifier 'Admin'</span>
+
+<span class="cm">// ─── TYPE-ONLY FEATURES ───────────────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">StringOrNumber</span> = <span class="type">string</span> | <span class="type">number</span>;   <span class="cm">// Unions — type only</span>
+<span class="kw">type</span> <span class="type">ID</span> = <span class="type">string</span>;                           <span class="cm">// Primitive alias — type only</span>
+<span class="kw">type</span> <span class="type">Callback</span> = () => <span class="type">void</span>;               <span class="cm">// Function type — works with both but type is cleaner</span>
+<span class="kw">type</span> <span class="type">Theme</span> = <span class="str">"light"</span> | <span class="str">"dark"</span> | <span class="str">"system"</span>; <span class="cm">// Union literal — type only</span>
+
+<span class="cm">// ─── THE RULE YOU SHOULD FOLLOW ──────────────────────────────────
+// Use interface for: object shapes that others might extend (React component props, API responses)
+// Use type for: unions, primitives, utility types, function types, anything complex</span></code></pre>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-title">✅ The Rule That Works in Practice</div>
+      <p>Many style guides say "always use interface for objects." The better rule: <strong>use <code>interface</code> when you expect consumers to extend or merge it</strong> (e.g., component prop types in a design system). Use <code>type</code> for everything else. The TypeScript team itself uses both — there's no single correct answer, just tradeoffs to understand.</p>
+    </div>
+  </div>
+
+  <!-- 1.3 UNION + INTERSECTION -->
+  <div class="sub" id="unions-intersections">
+    <h3 class="sub-title"><span class="sub-num">1.3</span> Union Types vs Intersection Types</h3>
+
+    <div class="diagram">
+      <div class="diag-title">Union vs Intersection — Set Theory Analogy</div>
+      <pre style="background:transparent;color:var(--ink);padding:0;font-family:var(--mono);font-size:13px;line-height:1.9;">
+  Union:        A | B  →  A ∪ B  →  "A or B"    (value can be EITHER)
+
+     ┌──────A──────┐   ┌──────B──────┐
+     │   string    │   │   number    │
+     │             │   │             │
+     └─────────────┘   └─────────────┘
+     string | number = "accepts strings OR numbers"
+
+
+  Intersection: A & B  →  A ∩ B  →  "A and B"   (value must be BOTH)
+
+     ┌─────────────┐
+     │   TypeA     │
+     │         ┌───┼───────────────┐
+     │         │ A&B │   TypeB     │
+     │         └───┼───────────────┘
+     └─────────────┘
+     { name: string } & { age: number } = { name: string; age: number }
+      </pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">unions and intersections — real patterns</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── UNION TYPES ─────────────────────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">StringOrNumber</span> = <span class="type">string</span> | <span class="type">number</span>;
+
+<span class="cm">// A union means TypeScript requires you to handle BOTH cases
+// before using type-specific methods:</span>
+<span class="kw">function</span> <span class="fn">format</span>(val: <span class="type">string</span> | <span class="type">number</span>) {
+  <span class="cm">// val.toFixed()  ← ❌ ERROR: only number has toFixed</span>
+  <span class="cm">// val.toUpperCase() ← ❌ ERROR: only string has toUpperCase</span>
+  
+  <span class="kw">if</span> (<span class="kw">typeof</span> val === <span class="str">"string"</span>) {
+    <span class="kw">return</span> val.<span class="fn">toUpperCase</span>();  <span class="cm">// ✅ narrowed to string</span>
+  }
+  <span class="kw">return</span> val.<span class="fn">toFixed</span>(<span class="num">2</span>);         <span class="cm">// ✅ narrowed to number</span>
+}
+
+<span class="cm">// ─── INTERSECTION TYPES ───────────────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">Timestamped</span> = { <span class="prop">createdAt</span>: <span class="type">Date</span>; <span class="prop">updatedAt</span>: <span class="type">Date</span> };
+<span class="kw">type</span> <span class="type">User</span> = { <span class="prop">id</span>: <span class="type">string</span>; <span class="prop">name</span>: <span class="type">string</span>; <span class="prop">email</span>: <span class="type">string</span> };
+
+<span class="cm">// Intersection = combined type — value must satisfy ALL members</span>
+<span class="kw">type</span> <span class="type">TimestampedUser</span> = <span class="type">User</span> & <span class="type">Timestamped</span>;
+<span class="cm">// Equivalent to: { id: string; name: string; email: string; createdAt: Date; updatedAt: Date }</span>
+
+<span class="cm">// Useful pattern: Omit & extend to "override" a property</span>
+<span class="kw">type</span> <span class="type">AdminUser</span> = <span class="fn">Omit</span><<span class="type">User</span>, <span class="str">'id'</span>> & { <span class="prop">id</span>: <span class="type">number</span> }; <span class="cm">// id is now number</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 1.4 LITERAL TYPES -->
+  <div class="sub" id="literal-types">
+    <h3 class="sub-title"><span class="sub-num">1.4</span> Literal Types — Exactly This Value</h3>
+
+    <p>A literal type narrows a type to a specific value. Instead of <code>string</code> (any string), you get <code>"light"</code> (exactly that string). This is how TypeScript models enums, discriminated unions, and constrained APIs.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">literal types and const assertion</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── LITERAL TYPES ───────────────────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">Direction</span> = <span class="str">"north"</span> | <span class="str">"south"</span> | <span class="str">"east"</span> | <span class="str">"west"</span>;
+<span class="kw">type</span> <span class="type">StatusCode</span> = <span class="num">200</span> | <span class="num">201</span> | <span class="num">400</span> | <span class="num">401</span> | <span class="num">403</span> | <span class="num">404</span> | <span class="num">500</span>;
+
+<span class="kw">function</span> <span class="fn">move</span>(dir: <span class="type">Direction</span>) {
+  <span class="cm">// TypeScript ensures you can only pass "north" | "south" | "east" | "west"</span>
+  <span class="fn">move</span>(<span class="str">"up"</span>); <span class="cm">// ❌ Type '"up"' is not assignable to type 'Direction'</span>
+}
+
+<span class="cm">// ─── const vs let widening ─────────────────────────────────────</span>
+<span class="kw">let</span> mutable = <span class="str">"hello"</span>;   <span class="cm">// type: string (could change)</span>
+<span class="kw">const</span> immutable = <span class="str">"hello"</span>; <span class="cm">// type: "hello" (literal, can't change)</span>
+
+<span class="cm">// ─── const assertion — freeze an object's types ────────────────</span>
+<span class="kw">const</span> config = {
+  <span class="prop">theme</span>: <span class="str">"dark"</span>,     <span class="cm">// inferred as: string</span>
+  <span class="prop">size</span>: <span class="num">12</span>,          <span class="cm">// inferred as: number</span>
+} <span class="kw">as const</span>;           <span class="cm">// Now: { readonly theme: "dark"; readonly size: 12 }</span>
+
+<span class="cm">// This is EXTREMELY useful for lookup tables:</span>
+<span class="kw">const</span> ROUTES = {
+  <span class="prop">home</span>: <span class="str">"/"</span>,
+  <span class="prop">about</span>: <span class="str">"/about"</span>,
+  <span class="prop">dashboard</span>: <span class="str">"/dashboard"</span>,
+} <span class="kw">as const</span>;
+
+<span class="kw">type</span> <span class="type">Route</span> = <span class="kw">typeof</span> ROUTES[<span class="kw">keyof typeof</span> ROUTES];
+<span class="cm">// Route = "/" | "/about" | "/dashboard"
+// You never have to maintain this union manually — it derives from ROUTES!</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 1.5 TYPE NARROWING -->
+  <div class="sub" id="narrowing">
+    <h3 class="sub-title"><span class="sub-num">1.5</span> Type Narrowing — Making TypeScript Trust You</h3>
+
+    <p>Narrowing is how you go from a wide type (like <code>string | number | null</code>) to a narrow type (like <code>string</code>) inside a block. TypeScript tracks your control flow and adjusts the type accordingly.</p>
+
+    <div class="video-wrap fade-up">
+      <div class="video-label">🎬 Type Narrowing Deep Dive — Matt Pocock (TypeScript Wizard)</div>
+      <iframe src="https://www.youtube.com/embed/P0uDc-4kp0I" allowfullscreen loading="lazy"></iframe>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">all narrowing techniques</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// 1. typeof narrowing — primitives</span>
+<span class="kw">function</span> <span class="fn">process</span>(val: <span class="type">string</span> | <span class="type">number</span>) {
+  <span class="kw">if</span> (<span class="kw">typeof</span> val === <span class="str">"string"</span>) {
+    val.<span class="fn">toUpperCase</span>(); <span class="cm">// val: string here</span>
+  } <span class="kw">else</span> {
+    val.<span class="fn">toFixed</span>();     <span class="cm">// val: number here</span>
+  }
+}
+
+<span class="cm">// 2. instanceof narrowing — class instances</span>
+<span class="kw">function</span> <span class="fn">handleError</span>(e: <span class="type">Error</span> | <span class="type">string</span>) {
+  <span class="kw">if</span> (e <span class="kw">instanceof</span> <span class="cl">Error</span>) {
+    <span class="fn">console</span>.<span class="fn">log</span>(e.<span class="prop">message</span>); <span class="cm">// e: Error here</span>
+  }
+}
+
+<span class="cm">// 3. "in" narrowing — property existence check</span>
+<span class="kw">type</span> <span class="type">Fish</span> = { <span class="prop">swim</span>: () => <span class="type">void</span> };
+<span class="kw">type</span> <span class="type">Bird</span> = { <span class="prop">fly</span>: () => <span class="type">void</span> };
+
+<span class="kw">function</span> <span class="fn">move</span>(animal: <span class="type">Fish</span> | <span class="type">Bird</span>) {
+  <span class="kw">if</span> (<span class="str">"swim"</span> <span class="kw">in</span> animal) {
+    animal.<span class="fn">swim</span>(); <span class="cm">// animal: Fish here</span>
+  } <span class="kw">else</span> {
+    animal.<span class="fn">fly</span>();  <span class="cm">// animal: Bird here</span>
+  }
+}
+
+<span class="cm">// 4. Discriminated unions — THE most important narrowing pattern</span>
+<span class="kw">type</span> <span class="type">Shape</span> =
+  | { <span class="prop">kind</span>: <span class="str">"circle"</span>; <span class="prop">radius</span>: <span class="type">number</span> }
+  | { <span class="prop">kind</span>: <span class="str">"rectangle"</span>; <span class="prop">width</span>: <span class="type">number</span>; <span class="prop">height</span>: <span class="type">number</span> }
+  | { <span class="prop">kind</span>: <span class="str">"triangle"</span>; <span class="prop">base</span>: <span class="type">number</span>; <span class="prop">height</span>: <span class="type">number</span> };
+
+<span class="kw">function</span> <span class="fn">area</span>(shape: <span class="type">Shape</span>): <span class="type">number</span> {
+  <span class="kw">switch</span> (shape.<span class="prop">kind</span>) {
+    <span class="kw">case</span> <span class="str">"circle"</span>:
+      <span class="kw">return</span> Math.<span class="prop">PI</span> * shape.<span class="prop">radius</span> ** <span class="num">2</span>; <span class="cm">// shape: { kind: "circle"; radius: number }</span>
+    <span class="kw">case</span> <span class="str">"rectangle"</span>:
+      <span class="kw">return</span> shape.<span class="prop">width</span> * shape.<span class="prop">height</span>;
+    <span class="kw">case</span> <span class="str">"triangle"</span>:
+      <span class="kw">return</span> (<span class="num">0.5</span>) * shape.<span class="prop">base</span> * shape.<span class="prop">height</span>;
+    <span class="kw">default</span>:
+      <span class="cm">// With exhaustive checking using never:</span>
+      <span class="kw">const</span> _exhaustive: <span class="type">never</span> = shape; <span class="cm">// ← compile error if new Shape kind added</span>
+      <span class="kw">throw new</span> <span class="cl">Error</span>(<span class="str">`Unknown shape: </span>${_exhaustive}<span class="str">`</span>);
+  }
+}</code></pre>
+    </div>
+
+    <div class="callout insight">
+      <div class="callout-title">💡 Discriminated Unions — Why They're The Pattern</div>
+      <p>A discriminated union has a <strong>literal type field (the discriminant)</strong> — usually called <code>kind</code>, <code>type</code>, or <code>status</code>. When you switch/if on that field, TypeScript narrows all other fields automatically. This is how you model API responses (<code>{ status: "ok", data: T } | { status: "error", error: string }</code>), Redux actions, and state machines — all correctly typed with zero manual assertion.</p>
+    </div>
+  </div>
+
+  <!-- 1.6 NEVER -->
+  <div class="sub" id="never-type">
+    <h3 class="sub-title"><span class="sub-num">1.6</span> The <code>never</code> Type — Unreachable Code</h3>
+
+    <p><code>never</code> is the type of values that never occur. It's the bottom type — a value of type <code>never</code> is assignable to every type, but no type is assignable to <code>never</code>. It has three uses:</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">three uses of never</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ── Use 1: Exhaustive switch checking ────────────────────────────</span>
+<span class="kw">function</span> <span class="fn">assertNever</span>(x: <span class="type">never</span>): <span class="type">never</span> {
+  <span class="kw">throw new</span> <span class="cl">Error</span>(<span class="str">"Unexpected value: "</span> + x);
+}
+
+<span class="kw">type</span> <span class="type">Action</span> = { <span class="prop">type</span>: <span class="str">"ADD"</span> } | { <span class="prop">type</span>: <span class="str">"REMOVE"</span> };
+
+<span class="kw">function</span> <span class="fn">handle</span>(action: <span class="type">Action</span>) {
+  <span class="kw">switch</span> (action.<span class="prop">type</span>) {
+    <span class="kw">case</span> <span class="str">"ADD"</span>: <span class="kw">return</span>;
+    <span class="kw">case</span> <span class="str">"REMOVE"</span>: <span class="kw">return</span>;
+    <span class="kw">default</span>: <span class="fn">assertNever</span>(action); <span class="cm">// ← if you add "EDIT" to Action but forget the case, THIS ERRORS</span>
+  }
+}
+
+<span class="cm">// ── Use 2: Functions that never return ───────────────────────────</span>
+<span class="kw">function</span> <span class="fn">throwError</span>(msg: <span class="type">string</span>): <span class="type">never</span> {
+  <span class="kw">throw new</span> <span class="cl">Error</span>(msg); <span class="cm">// always throws, never returns</span>
+}
+
+<span class="kw">function</span> <span class="fn">infiniteLoop</span>(): <span class="type">never</span> {
+  <span class="kw">while</span> (<span class="kw">true</span>) {} <span class="cm">// never terminates</span>
+}
+
+<span class="cm">// ── Use 3: Conditional type filtering ────────────────────────────</span>
+<span class="kw">type</span> <span class="type">NonNullable</span><<span class="type">T</span>> = <span class="type">T</span> <span class="kw">extends</span> <span class="type">null</span> | <span class="type">undefined</span> ? <span class="type">never</span> : <span class="type">T</span>;
+<span class="cm">// NonNullable<string | null> → string (null becomes never, filtered out of union)</span>
+
+<span class="kw">type</span> <span class="type">FilterString</span><<span class="type">T</span>> = <span class="type">T</span> <span class="kw">extends</span> <span class="type">string</span> ? <span class="type">T</span> : <span class="type">never</span>;
+<span class="kw">type</span> <span class="type">Result</span> = <span class="type">FilterString</span><<span class="type">string</span> | <span class="type">number</span> | <span class="type">boolean</span>>;
+<span class="cm">// Result = string (number and boolean become never, union collapses to string)</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 1.7 UNKNOWN VS ANY -->
+  <div class="sub" id="unknown-any">
+    <h3 class="sub-title"><span class="sub-num">1.7</span> unknown vs any — This Question Will Be Asked</h3>
+
+    <div class="ba">
+      <div class="ba-pane ba-bad">
+        <div class="ba-head">❌ any — A Lie</div>
+        <pre><code><span class="kw">function</span> <span class="fn">parse</span>(data: <span class="type">any</span>) {
+  <span class="cm">// TypeScript shuts up entirely.
+  // No errors. Ever. Even if wrong.</span>
+  data.<span class="fn">toUpperCase</span>();   <span class="cm">// no error</span>
+  data.<span class="fn">nonExistent</span>();  <span class="cm">// no error</span>
+  data[<span class="num">0</span>].<span class="prop">blah</span>;        <span class="cm">// no error</span>
+  <span class="cm">// any spreads: once a value is any,
+  // everything derived from it is also any</span>
+}</code></pre>
+      </div>
+      <div class="ba-pane ba-good">
+        <div class="ba-head">✅ unknown — Safe</div>
+        <pre><code><span class="kw">function</span> <span class="fn">parse</span>(data: <span class="type">unknown</span>) {
+  <span class="cm">// TypeScript forces you to check first.</span>
+  data.<span class="fn">toUpperCase</span>();  <span class="cm">// ❌ ERROR: check first</span>
+
+  <span class="kw">if</span> (<span class="kw">typeof</span> data === <span class="str">"string"</span>) {
+    data.<span class="fn">toUpperCase</span>(); <span class="cm">// ✅ safe</span>
+  }
+  <span class="cm">// unknown does NOT spread.
+  // Forces you to be explicit about
+  // what you know at each point.</span>
+}</code></pre>
+      </div>
+    </div>
+
+    <div class="callout danger">
+      <div class="callout-title">🚫 When any Is Legitimate (Rarely)</div>
+      <p>In <code>.d.ts</code> files when you genuinely can't know the type. In extremely complex generic transformations as an escape hatch temporarily. In JSON.parse return value (which IS typed as <code>any</code> in TS stdlib — use <code>unknown</code> and narrow). That's it. In application code, there is almost never a legitimate use of <code>any</code>.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 2 — ADVANCED TYPES
+═══════════════════════════════════════════════════════ -->
+<section class="section fade-up" id="advanced-types">
+  <div class="section-number">Topic 02</div>
+  <h2 class="sec-title">Advanced <span>Types</span></h2>
+  <p class="sec-lead">This is the section that separates TypeScript juniors from seniors. Generics, utility types, mapped types, and conditional types let you write type-level programs — code that runs at compile time to ensure correctness at runtime.</p>
+
+  <!-- 2.1 GENERICS -->
+  <div class="sub" id="generics">
+    <h3 class="sub-title"><span class="sub-num">2.1</span> Generics — Type Variables</h3>
+
+    <p>Generics let you write code that works with any type while preserving type information. Think of <code>T</code> as a variable that holds a type, not a value. When you call a generic function, TypeScript infers what <code>T</code> should be.</p>
+
+    <div class="video-wrap fade-up">
+      <div class="video-label">🎬 TypeScript Generics Explained — Traversy Media</div>
+      <iframe src="https://www.youtube.com/embed/nViEqpgwxHE" allowfullscreen loading="lazy"></iframe>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">generics — from basic to constrained</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── BASIC GENERIC ───────────────────────────────────────────────</span>
+<span class="cm">// Without generics: forces a specific type, loses info</span>
+<span class="kw">function</span> <span class="fn">identity</span>(x: <span class="type">string</span>): <span class="type">string</span> { <span class="kw">return</span> x; }
+
+<span class="cm">// With generics: works with ANY type, PRESERVES what that type is</span>
+<span class="kw">function</span> <span class="fn">identity</span><<span class="type">T</span>>(x: <span class="type">T</span>): <span class="type">T</span> { <span class="kw">return</span> x; }
+
+<span class="kw">const</span> s = <span class="fn">identity</span>(<span class="str">"hello"</span>); <span class="cm">// TypeScript infers T = string → s is string</span>
+<span class="kw">const</span> n = <span class="fn">identity</span>(<span class="num">42</span>);      <span class="cm">// TypeScript infers T = number → n is number</span>
+<span class="kw">const</span> b = <span class="fn">identity</span>(<span class="kw">true</span>);    <span class="cm">// TypeScript infers T = boolean → b is boolean</span>
+
+<span class="cm">// ─── GENERIC WITH CONSTRAINT ──────────────────────────────────────</span>
+<span class="cm">// T extends string means T must be a string (or string literal type)</span>
+<span class="kw">function</span> <span class="fn">getLength</span><<span class="type">T</span> <span class="kw">extends</span> { <span class="prop">length</span>: <span class="type">number</span> }>(val: <span class="type">T</span>): <span class="type">number</span> {
+  <span class="kw">return</span> val.<span class="prop">length</span>; <span class="cm">// safe: T must have .length</span>
+}
+<span class="fn">getLength</span>(<span class="str">"hello"</span>);       <span class="cm">// ✅ string has .length</span>
+<span class="fn">getLength</span>([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]);      <span class="cm">// ✅ array has .length</span>
+<span class="fn">getLength</span>({ <span class="prop">length</span>: <span class="num">10</span> }); <span class="cm">// ✅ has .length</span>
+<span class="fn">getLength</span>(<span class="num">42</span>);             <span class="cm">// ❌ number doesn't have .length</span>
+
+<span class="cm">// ─── MULTIPLE GENERICS + keyof CONSTRAINT ────────────────────────</span>
+<span class="cm">// K must be a key of T — this is how you type "pick a property safely"</span>
+<span class="kw">function</span> <span class="fn">getProperty</span><<span class="type">T</span>, <span class="type">K</span> <span class="kw">extends keyof</span> <span class="type">T</span>>(obj: <span class="type">T</span>, key: <span class="type">K</span>): <span class="type">T</span>[<span class="type">K</span>] {
+  <span class="kw">return</span> obj[key]; <span class="cm">// TypeScript knows the return type is exactly T[K]</span>
+}
+
+<span class="kw">const</span> user = { <span class="prop">name</span>: <span class="str">"Raghav"</span>, <span class="prop">age</span>: <span class="num">25</span>, <span class="prop">active</span>: <span class="kw">true</span> };
+<span class="kw">const</span> name = <span class="fn">getProperty</span>(user, <span class="str">"name"</span>);   <span class="cm">// type: string</span>
+<span class="kw">const</span> age = <span class="fn">getProperty</span>(user, <span class="str">"age"</span>);     <span class="cm">// type: number</span>
+<span class="fn">getProperty</span>(user, <span class="str">"email"</span>);               <span class="cm">// ❌ "email" not a key of user</span>
+
+<span class="cm">// ─── GENERIC INTERFACES ───────────────────────────────────────────</span>
+<span class="kw">interface</span> <span class="type">ApiResponse</span><<span class="type">T</span>> {
+  <span class="prop">data</span>: <span class="type">T</span>;
+  <span class="prop">status</span>: <span class="type">number</span>;
+  <span class="prop">message</span>: <span class="type">string</span>;
+}
+
+<span class="kw">type</span> <span class="type">UserResponse</span> = <span class="type">ApiResponse</span><{ <span class="prop">id</span>: <span class="type">string</span>; <span class="prop">name</span>: <span class="type">string</span> }>;
+<span class="cm">// { data: { id: string; name: string }; status: number; message: string }</span>
+
+<span class="kw">type</span> <span class="type">ListResponse</span><<span class="type">T</span>> = <span class="type">ApiResponse</span><<span class="type">T</span>[]>; <span class="cm">// generic composition</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 2.2 UTILITY TYPES -->
+  <div class="sub" id="utility-types">
+    <h3 class="sub-title"><span class="sub-num">2.2</span> Utility Types — Know Them All, Build Them From Scratch</h3>
+
+    <p>TypeScript ships with built-in utility types. Interviewers love asking you to implement them from scratch — so you'll both memorize the API and understand the mechanics.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">utility types — usage + implementation</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="kw">interface</span> <span class="type">User</span> {
+  <span class="prop">id</span>: <span class="type">string</span>;
+  <span class="prop">name</span>: <span class="type">string</span>;
+  <span class="prop">email</span>: <span class="type">string</span>;
+  <span class="prop">role</span>: <span class="str">"admin"</span> | <span class="str">"user"</span>;
+}
+
+<span class="cm">// ─── Partial<T> — all properties optional ─────────────────────────</span>
+<span class="kw">type</span> <span class="type">UpdateUser</span> = <span class="type">Partial</span><<span class="type">User</span>>;
+<span class="cm">// { id?: string; name?: string; email?: string; role?: "admin" | "user" }</span>
+
+<span class="cm">// Implementation from scratch:</span>
+<span class="kw">type</span> <span class="type">MyPartial</span><<span class="type">T</span>> = { [<span class="type">K</span> <span class="kw">in keyof</span> <span class="type">T</span>]?: <span class="type">T</span>[<span class="type">K</span>] };
+
+<span class="cm">// ─── Required<T> — all properties required ────────────────────────</span>
+<span class="kw">type</span> <span class="type">RequiredUser</span> = <span class="type">Required</span><<span class="type">Partial</span><<span class="type">User</span>>>;
+<span class="cm">// Implementation: -? removes optionality</span>
+<span class="kw">type</span> <span class="type">MyRequired</span><<span class="type">T</span>> = { [<span class="type">K</span> <span class="kw">in keyof</span> <span class="type">T</span>]-?: <span class="type">T</span>[<span class="type">K</span>] };
+
+<span class="cm">// ─── Readonly<T> — all properties readonly ────────────────────────</span>
+<span class="kw">type</span> <span class="type">ImmutableUser</span> = <span class="type">Readonly</span><<span class="type">User</span>>;
+<span class="kw">type</span> <span class="type">MyReadonly</span><<span class="type">T</span>> = { <span class="kw">readonly</span> [<span class="type">K</span> <span class="kw">in keyof</span> <span class="type">T</span>]: <span class="type">T</span>[<span class="type">K</span>] };
+
+<span class="cm">// ─── Pick<T, K> — select specific keys ───────────────────────────</span>
+<span class="kw">type</span> <span class="type">PublicUser</span> = <span class="type">Pick</span><<span class="type">User</span>, <span class="str">"id"</span> | <span class="str">"name"</span>>;
+<span class="cm">// { id: string; name: string }</span>
+<span class="kw">type</span> <span class="type">MyPick</span><<span class="type">T</span>, <span class="type">K</span> <span class="kw">extends keyof</span> <span class="type">T</span>> = { [<span class="type">P</span> <span class="kw">in</span> <span class="type">K</span>]: <span class="type">T</span>[<span class="type">P</span>] };
+
+<span class="cm">// ─── Omit<T, K> — exclude specific keys ──────────────────────────</span>
+<span class="kw">type</span> <span class="type">CreateUser</span> = <span class="type">Omit</span><<span class="type">User</span>, <span class="str">"id"</span>>;
+<span class="cm">// { name: string; email: string; role: "admin" | "user" }</span>
+<span class="kw">type</span> <span class="type">MyOmit</span><<span class="type">T</span>, <span class="type">K</span> <span class="kw">extends keyof</span> <span class="type">T</span>> = <span class="type">Pick</span><<span class="type">T</span>, <span class="fn">Exclude</span><<span class="kw">keyof</span> <span class="type">T</span>, <span class="type">K</span>>>;
+
+<span class="cm">// ─── Record<K, V> — typed dictionary/map ─────────────────────────</span>
+<span class="kw">type</span> <span class="type">UserMap</span> = <span class="type">Record</span><<span class="type">string</span>, <span class="type">User</span>>;
+<span class="kw">type</span> <span class="type">PageMeta</span> = <span class="type">Record</span><<span class="str">"home"</span> | <span class="str">"about"</span> | <span class="str">"contact"</span>, { <span class="prop">title</span>: <span class="type">string</span> }>;
+<span class="kw">type</span> <span class="type">MyRecord</span><<span class="type">K</span> <span class="kw">extends</span> <span class="type">string</span>, <span class="type">V</span>> = { [<span class="type">P</span> <span class="kw">in</span> <span class="type">K</span>]: <span class="type">V</span> };
+
+<span class="cm">// ─── Exclude<T, U> and Extract<T, U> ─────────────────────────────</span>
+<span class="kw">type</span> <span class="type">Status</span> = <span class="str">"pending"</span> | <span class="str">"active"</span> | <span class="str">"suspended"</span> | <span class="str">"deleted"</span>;
+<span class="kw">type</span> <span class="type">ActiveStatus</span> = <span class="type">Extract</span><<span class="type">Status</span>, <span class="str">"pending"</span> | <span class="str">"active"</span>>; <span class="cm">// "pending" | "active"</span>
+<span class="kw">type</span> <span class="type">InactiveStatus</span> = <span class="type">Exclude</span><<span class="type">Status</span>, <span class="str">"pending"</span> | <span class="str">"active"</span>>; <span class="cm">// "suspended" | "deleted"</span>
+
+<span class="cm">// Implementation:</span>
+<span class="kw">type</span> <span class="type">MyExclude</span><<span class="type">T</span>, <span class="type">U</span>> = <span class="type">T</span> <span class="kw">extends</span> <span class="type">U</span> ? <span class="type">never</span> : <span class="type">T</span>;
+<span class="kw">type</span> <span class="type">MyExtract</span><<span class="type">T</span>, <span class="type">U</span>> = <span class="type">T</span> <span class="kw">extends</span> <span class="type">U</span> ? <span class="type">T</span> : <span class="type">never</span>;
+
+<span class="cm">// ─── ReturnType<T> and Parameters<T> ────────────────────────────</span>
+<span class="kw">function</span> <span class="fn">createUser</span>(<span class="prop">name</span>: <span class="type">string</span>, <span class="prop">email</span>: <span class="type">string</span>): <span class="type">User</span> { <span class="cm">/* ... */</span> }
+
+<span class="kw">type</span> <span class="type">UserCreatorReturn</span> = <span class="type">ReturnType</span><<span class="kw">typeof</span> <span class="fn">createUser</span>>;   <span class="cm">// User</span>
+<span class="kw">type</span> <span class="type">UserCreatorParams</span> = <span class="type">Parameters</span><<span class="kw">typeof</span> <span class="fn">createUser</span>>;  <span class="cm">// [string, string]</span>
+
+<span class="cm">// These are INCREDIBLY useful for typing wrappers around existing functions</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 2.3 MAPPED TYPES -->
+  <div class="sub" id="mapped-types">
+    <h3 class="sub-title"><span class="sub-num">2.3</span> Mapped Types — Transforming Types</h3>
+
+    <p>Mapped types are the type-level equivalent of <code>Array.map()</code> — they iterate over a type's keys and transform them. The syntax <code>[K in keyof T]</code> means "for each key K in T, create a new property..."</p>
+
+    <div class="diagram">
+      <div class="diag-title">Anatomy of a Mapped Type</div>
+      <div class="type-anatomy">
+        <div class="anatomy-row">
+          <div class="anatomy-label">Syntax</div>
+          <div>
+            <div class="anatomy-code">{ <span class="kw">readonly</span> [<span class="type">K</span> <span class="kw">in keyof</span> <span class="type">T</span>]<span class="op">?</span>: <span class="type">NewType</span> }</div>
+          </div>
+        </div>
+        <div class="anatomy-row">
+          <div class="anatomy-label">[K in keyof T]</div>
+          <div>
+            <div class="anatomy-code"><span class="cm">"For each property K in T"</span></div>
+            <div class="anatomy-note">K is the key variable. Iterates over all keys of T.</div>
+          </div>
+        </div>
+        <div class="anatomy-row">
+          <div class="anatomy-label">readonly</div>
+          <div>
+            <div class="anatomy-code"><span class="kw">readonly</span> makes all mapped properties readonly. <span class="op">-readonly</span> removes it.</div>
+          </div>
+        </div>
+        <div class="anatomy-row">
+          <div class="anatomy-label">?</div>
+          <div>
+            <div class="anatomy-code"><span class="op">?</span> makes optional. <span class="op">-?</span> removes optionality (makes Required).</div>
+          </div>
+        </div>
+        <div class="anatomy-row">
+          <div class="anatomy-label">: NewType</div>
+          <div>
+            <div class="anatomy-code"><span class="type">T[K]</span> gives original type. Any transformation is possible here.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">mapped types — practical patterns</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── Basic mapped type ────────────────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">Nullable</span><<span class="type">T</span>> = { [<span class="type">K</span> <span class="kw">in keyof</span> <span class="type">T</span>]: <span class="type">T</span>[<span class="type">K</span>] | <span class="type">null</span> };
+<span class="cm">// Nullable<User> = { id: string | null; name: string | null; ... }</span>
+
+<span class="cm">// ─── DeepReadonly — interview classic ────────────────────────────</span>
+<span class="kw">type</span> <span class="type">DeepReadonly</span><<span class="type">T</span>> = {
+  <span class="kw">readonly</span> [<span class="type">K</span> <span class="kw">in keyof</span> <span class="type">T</span>]: <span class="type">T</span>[<span class="type">K</span>] <span class="kw">extends</span> <span class="type">object</span>
+    ? <span class="type">DeepReadonly</span><<span class="type">T</span>[<span class="type">K</span>]>  <span class="cm">// recursively apply to nested objects</span>
+    : <span class="type">T</span>[<span class="type">K</span>];                  <span class="cm">// primitives stay as-is</span>
+};
+
+<span class="kw">type</span> <span class="type">Config</span> = {
+  <span class="prop">api</span>: { <span class="prop">url</span>: <span class="type">string</span>; <span class="prop">timeout</span>: <span class="type">number</span> };
+  <span class="prop">debug</span>: <span class="type">boolean</span>;
+};
+<span class="kw">type</span> <span class="type">FrozenConfig</span> = <span class="type">DeepReadonly</span><<span class="type">Config</span>>;
+<span class="cm">// { readonly api: { readonly url: string; readonly timeout: number }; readonly debug: boolean }</span>
+
+<span class="cm">// ─── Making a getter/setter API type from a model ─────────────────</span>
+<span class="kw">type</span> <span class="type">Getters</span><<span class="type">T</span>> = {
+  [<span class="type">K</span> <span class="kw">in keyof</span> <span class="type">T</span> <span class="kw">as</span> `get${<span class="fn">Capitalize</span><<span class="type">string</span> & <span class="type">K</span>>}`]: () => <span class="type">T</span>[<span class="type">K</span>]
+};
+<span class="cm">// Getters<{ name: string; age: number }> =
+// { getName: () => string; getAge: () => number }</span>
+
+<span class="cm">// The "as" clause renames the key — this is key remapping (TS 4.1+)</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 2.4 CONDITIONAL TYPES -->
+  <div class="sub" id="conditional-types">
+    <h3 class="sub-title"><span class="sub-num">2.4</span> Conditional Types — Type-Level If/Else</h3>
+
+    <p>Conditional types let you write <code>T extends U ? X : Y</code> — if T is assignable to U, the type is X, otherwise Y. Combined with <code>infer</code>, they're one of TypeScript's most powerful features.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">conditional types — patterns</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── Basic conditional type ───────────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">IsString</span><<span class="type">T</span>> = <span class="type">T</span> <span class="kw">extends</span> <span class="type">string</span> ? <span class="str">"yes"</span> : <span class="str">"no"</span>;
+
+<span class="kw">type</span> <span class="type">A</span> = <span class="type">IsString</span><<span class="type">string</span>>;  <span class="cm">// "yes"</span>
+<span class="kw">type</span> <span class="type">B</span> = <span class="type">IsString</span><<span class="type">number</span>>;  <span class="cm">// "no"</span>
+
+<span class="cm">// ─── Distributive conditional types ──────────────────────────────</span>
+<span class="cm">// When T is a union, conditional types DISTRIBUTE over the union:</span>
+<span class="kw">type</span> <span class="type">IsString</span><<span class="type">T</span>> = <span class="type">T</span> <span class="kw">extends</span> <span class="type">string</span> ? <span class="str">"yes"</span> : <span class="str">"no"</span>;
+<span class="kw">type</span> <span class="type">C</span> = <span class="type">IsString</span><<span class="type">string</span> | <span class="type">number</span>>;
+<span class="cm">// = IsString<string> | IsString<number>
+// = "yes" | "no"</span>
+
+<span class="cm">// This distributive behavior is how Exclude and Extract work!</span>
+<span class="kw">type</span> <span class="type">MyExclude</span><<span class="type">T</span>, <span class="type">U</span>> = <span class="type">T</span> <span class="kw">extends</span> <span class="type">U</span> ? <span class="type">never</span> : <span class="type">T</span>;
+<span class="cm">// MyExclude<"a" | "b" | "c", "b">
+// = ("a" extends "b" ? never : "a") | ("b" extends "b" ? never : "b") | ...
+// = "a" | never | "c"
+// = "a" | "c"</span>
+
+<span class="cm">// ─── Non-distributive conditional (wrap in tuple) ─────────────────</span>
+<span class="kw">type</span> <span class="type">IsNever</span><<span class="type">T</span>> = [<span class="type">T</span>] <span class="kw">extends</span> [<span class="type">never</span>] ? <span class="kw">true</span> : <span class="kw">false</span>;
+<span class="cm">// Wrapping prevents distribution — useful for checking never specifically</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 2.5 INFER -->
+  <div class="sub" id="infer">
+    <h3 class="sub-title"><span class="sub-num">2.5</span> The <code>infer</code> Keyword — Extract Types From Types</h3>
+
+    <p><code>infer</code> lets you declare a type variable inside a conditional type. It's like pattern matching for types — "if T looks like this shape, extract this part of it."</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">infer — the interview question answer</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── ReturnType from scratch — the classic infer example ─────────</span>
+<span class="kw">type</span> <span class="type">MyReturnType</span><<span class="type">T</span>> = <span class="type">T</span> <span class="kw">extends</span> (...args: <span class="type">any</span>[]) => <span class="kw">infer</span> <span class="type">R</span> ? <span class="type">R</span> : <span class="type">never</span>;
+<span class="cm">// "If T is a function type, infer its return type as R, and give me R"</span>
+
+<span class="kw">function</span> <span class="fn">getUser</span>(): { <span class="prop">id</span>: <span class="type">string</span>; <span class="prop">name</span>: <span class="type">string</span> } { <span class="kw">return</span> { <span class="prop">id</span>: <span class="str">"1"</span>, <span class="prop">name</span>: <span class="str">"Raghav"</span> }; }
+<span class="kw">type</span> <span class="type">UserType</span> = <span class="type">MyReturnType</span><<span class="kw">typeof</span> <span class="fn">getUser</span>>;
+<span class="cm">// UserType = { id: string; name: string }</span>
+
+<span class="cm">// ─── Extract Promise's inner type ─────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">Awaited</span><<span class="type">T</span>> = <span class="type">T</span> <span class="kw">extends</span> <span class="type">Promise</span><<span class="kw">infer</span> <span class="type">R</span>> ? <span class="type">R</span> : <span class="type">T</span>;
+<span class="cm">// (This is actually a built-in now, but knowing how it works matters)</span>
+<span class="kw">type</span> <span class="type">UserPromise</span> = <span class="type">Promise</span><{ <span class="prop">name</span>: <span class="type">string</span> }>;
+<span class="kw">type</span> <span class="type">InnerUser</span> = <span class="type">Awaited</span><<span class="type">UserPromise</span>>; <span class="cm">// { name: string }</span>
+
+<span class="cm">// ─── Extract first parameter type ────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">FirstParam</span><<span class="type">T</span>> = <span class="type">T</span> <span class="kw">extends</span> (<span class="prop">first</span>: <span class="kw">infer</span> <span class="type">F</span>, ...args: <span class="type">any</span>[]) => <span class="type">any</span> ? <span class="type">F</span> : <span class="type">never</span>;
+
+<span class="kw">function</span> <span class="fn">login</span>(<span class="prop">email</span>: <span class="type">string</span>, <span class="prop">password</span>: <span class="type">string</span>) {}
+<span class="kw">type</span> <span class="type">EmailType</span> = <span class="type">FirstParam</span><<span class="kw">typeof</span> <span class="fn">login</span>>; <span class="cm">// string</span>
+
+<span class="cm">// ─── Extract Array element type ───────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">ArrayElement</span><<span class="type">T</span>> = <span class="type">T</span> <span class="kw">extends</span> (<span class="kw">infer</span> <span class="type">E</span>)[] ? <span class="type">E</span> : <span class="type">never</span>;
+<span class="kw">type</span> <span class="type">Item</span> = <span class="type">ArrayElement</span><<span class="type">string</span>[]>; <span class="cm">// string</span>
+<span class="kw">type</span> <span class="type">Item2</span> = <span class="type">ArrayElement</span><{ <span class="prop">id</span>: <span class="type">string</span> }[]>; <span class="cm">// { id: string }</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 2.6 TEMPLATE LITERAL TYPES -->
+  <div class="sub" id="template-literals">
+    <h3 class="sub-title"><span class="sub-num">2.6</span> Template Literal Types — String Pattern Types</h3>
+
+    <p>Template literal types create string types by combining other types. They're like template strings (<code>`${...}`</code>) but at the type level.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">template literal types</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── Basic template literal type ─────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">Greeting</span> = `hello ${<span class="type">string</span>}`; <span class="cm">// any string starting with "hello "</span>
+<span class="kw">type</span> <span class="type">Id</span> = `${<span class="type">string</span>}_id`;           <span class="cm">// any string ending with "_id"</span>
+
+<span class="cm">// ─── CSS properties auto-complete ────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">CSSProperty</span> = `margin-${"top" | "right" | "bottom" | "left"}`;
+<span class="cm">// "margin-top" | "margin-right" | "margin-bottom" | "margin-left"</span>
+
+<span class="cm">// ─── Event handler naming convention ─────────────────────────────</span>
+<span class="kw">type</span> <span class="type">EventName</span> = <span class="str">"click"</span> | <span class="str">"focus"</span> | <span class="str">"blur"</span> | <span class="str">"change"</span>;
+<span class="kw">type</span> <span class="type">HandlerName</span> = `on${<span class="fn">Capitalize</span><<span class="type">EventName</span>>}`;
+<span class="cm">// "onClick" | "onFocus" | "onBlur" | "onChange"</span>
+
+<span class="cm">// ─── Auto-generate getter types ───────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">Getters</span><<span class="type">T</span>> = {
+  [<span class="type">K</span> <span class="kw">in keyof</span> <span class="type">T</span> <span class="kw">as</span> `get${<span class="fn">Capitalize</span><<span class="type">string</span> & <span class="type">K</span>>}`]: () => <span class="type">T</span>[<span class="type">K</span>]
+};
+
+<span class="cm">// ─── CSS variable type safety ─────────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">CSSVar</span> = `--${<span class="type">string</span>}`;
+<span class="kw">function</span> <span class="fn">setVar</span>(<span class="prop">name</span>: <span class="type">CSSVar</span>, <span class="prop">value</span>: <span class="type">string</span>) {
+  <span class="prop">document</span>.<span class="prop">documentElement</span>.<span class="prop">style</span>.<span class="fn">setProperty</span>(name, value);
+}
+<span class="fn">setVar</span>(<span class="str">"--primary-color"</span>, <span class="str">"#ff0000"</span>); <span class="cm">// ✅</span>
+<span class="fn">setVar</span>(<span class="str">"color"</span>, <span class="str">"red"</span>);               <span class="cm">// ❌ must start with "--"</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 3 — TYPESCRIPT WITH REACT
+═══════════════════════════════════════════════════════ -->
+<section class="section fade-up" id="react-ts">
+  <div class="section-number">Topic 03</div>
+  <h2 class="sec-title">TypeScript <span>with React</span></h2>
+  <p class="sec-lead">React with TypeScript is the reality of your job. The patterns here are things you'll use every single day. Get them right once, get them right forever.</p>
+
+  <div class="callout warn">
+    <div class="callout-title">⚠️ FC vs Explicit Return Types</div>
+    <p><strong>Do not use <code>React.FC</code></strong>. It was deprecated-in-spirit by the React TypeScript community. Reasons: (1) FC automatically adds <code>children</code> prop, which is wrong for most components. (2) FC makes it harder to use generic components. (3) The return type inference is better without FC. <strong>Use explicit return types or let TypeScript infer from JSX directly.</strong></p>
+  </div>
+
+  <!-- 3.1 COMPONENT TYPING -->
+  <div class="sub" id="component-typing">
+    <h3 class="sub-title"><span class="sub-num">3.1</span> Typing React Components</h3>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">component typing patterns</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="kw">import</span> <span class="type">React</span> <span class="kw">from</span> <span class="str">'react'</span>;
+
+<span class="cm">// ─── Basic component typing ───────────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">ButtonProps</span> = {
+  <span class="prop">label</span>: <span class="type">string</span>;
+  <span class="prop">onClick</span>: () => <span class="type">void</span>;
+  <span class="prop">variant</span>?: <span class="str">"primary"</span> | <span class="str">"secondary"</span> | <span class="str">"danger"</span>; <span class="cm">// optional with default</span>
+  <span class="prop">disabled</span>?: <span class="type">boolean</span>;
+};
+
+<span class="cm">// Preferred: explicit prop type, inferred return type</span>
+<span class="kw">function</span> <span class="fn">Button</span>({ label, onClick, variant = <span class="str">"primary"</span>, disabled = <span class="kw">false</span> }: <span class="type">ButtonProps</span>) {
+  <span class="kw">return</span> <<span class="jsx">button</span> <span class="at">onClick</span>={onClick} <span class="at">disabled</span>={disabled}>{label}</<span class="jsx">button</span>>;
+}
+
+<span class="cm">// ─── Component with children ──────────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">CardProps</span> = {
+  <span class="prop">title</span>: <span class="type">string</span>;
+  <span class="prop">children</span>: <span class="type">React</span>.<span class="type">ReactNode</span>; <span class="cm">// anything React can render</span>
+};
+<span class="cm">// React.ReactNode = React.ReactElement | string | number | null | boolean | undefined | ReactPortal</span>
+
+<span class="kw">function</span> <span class="fn">Card</span>({ title, children }: <span class="type">CardProps</span>) {
+  <span class="kw">return</span> (
+    <<span class="jsx">div</span>>
+      <<span class="jsx">h2</span>>{title}</<span class="jsx">h2</span>>
+      {children}
+    </<span class="jsx">div</span>>
+  );
+}
+
+<span class="cm">// ─── Generic components ───────────────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">ListProps</span><<span class="type">T</span>> = {
+  <span class="prop">items</span>: <span class="type">T</span>[];
+  <span class="prop">renderItem</span>: (<span class="prop">item</span>: <span class="type">T</span>, <span class="prop">index</span>: <span class="type">number</span>) => <span class="type">React</span>.<span class="type">ReactNode</span>;
+  <span class="prop">keyExtractor</span>: (<span class="prop">item</span>: <span class="type">T</span>) => <span class="type">string</span>;
+};
+
+<span class="cm">// Note the <T,> syntax — the comma avoids JSX ambiguity in .tsx files</span>
+<span class="kw">function</span> <span class="fn">List</span><<span class="type">T</span>,>({ items, renderItem, keyExtractor }: <span class="type">ListProps</span><<span class="type">T</span>>) {
+  <span class="kw">return</span> (
+    <<span class="jsx">ul</span>>
+      {items.<span class="fn">map</span>((item, i) => (
+        <<span class="jsx">li</span> <span class="at">key</span>={<span class="fn">keyExtractor</span>(item)}>{<span class="fn">renderItem</span>(item, i)}</<span class="jsx">li</span>>
+      ))}
+    </<span class="jsx">ul</span>>
+  );
+}
+
+<span class="cm">// Usage — T is inferred from items prop:</span>
+<<span class="jsx">List</span>
+  <span class="at">items</span>={[{ <span class="prop">id</span>: <span class="str">"1"</span>, <span class="prop">name</span>: <span class="str">"Raghav"</span> }]}
+  <span class="at">keyExtractor</span>={u => u.id}
+  <span class="at">renderItem</span>={u => <<span class="jsx">span</span>>{u.name}</<span class="jsx">span</span>>}  <span class="cm">// u is { id: string; name: string }</span>
+/>
+
+<span class="cm">// ─── Extending HTML element props ─────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">InputProps</span> = <span class="type">React</span>.<span class="type">InputHTMLAttributes</span><<span class="type">HTMLInputElement</span>> & {
+  <span class="prop">label</span>: <span class="type">string</span>;
+  <span class="prop">error</span>?: <span class="type">string</span>;
+};
+<span class="cm">// Now Input accepts ALL native input props (type, placeholder, onChange, etc.)
+// plus our custom label and error props</span>
+
+<span class="kw">function</span> <span class="fn">Input</span>({ label, error, ...inputProps }: <span class="type">InputProps</span>) {
+  <span class="kw">return</span> (
+    <<span class="jsx">div</span>>
+      <<span class="jsx">label</span>>{label}</<span class="jsx">label</span>>
+      <<span class="jsx">input</span> {...inputProps} />
+      {error && <<span class="jsx">span</span> <span class="at">className</span>=<span class="str">"error"</span>>{error}</<span class="jsx">span</span>>}
+    </<span class="jsx">div</span>>
+  );
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- 3.2 HOOKS TYPING -->
+  <div class="sub" id="hooks-typing">
+    <h3 class="sub-title"><span class="sub-num">3.2</span> Typing React Hooks</h3>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">useState, useRef, useReducer, custom hooks</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── useState ─────────────────────────────────────────────────────</span>
+<span class="kw">const</span> [count, setCount] = <span class="fn">useState</span>(<span class="num">0</span>);           <span class="cm">// inferred: number</span>
+<span class="kw">const</span> [name, setName] = <span class="fn">useState</span>(<span class="str">""</span>);            <span class="cm">// inferred: string</span>
+<span class="kw">const</span> [user, setUser] = <span class="fn">useState</span><<span class="type">User</span> | <span class="kw">null</span>>(<span class="kw">null</span>); <span class="cm">// explicit generic needed</span>
+
+<span class="cm">// Why the explicit generic? Without it, TypeScript infers null for the state type
+// useState<User | null>(null) tells TS: this will be User or null</span>
+
+<span class="cm">// ─── useRef ───────────────────────────────────────────────────────</span>
+<span class="cm">// DOM ref — use HTMLInputElement, HTMLDivElement, etc.</span>
+<span class="kw">const</span> inputRef = <span class="fn">useRef</span><<span class="type">HTMLInputElement</span>>(<span class="kw">null</span>);
+<span class="cm">// inputRef.current is HTMLInputElement | null</span>
+
+<span class="cm">// Mutable ref (not a DOM ref) — use RefObject vs MutableRefObject</span>
+<span class="kw">const</span> countRef = <span class="fn">useRef</span>(<span class="num">0</span>);   <span class="cm">// MutableRefObject<number> — can assign .current</span>
+countRef.<span class="prop">current</span> = <span class="num">5</span>;       <span class="cm">// ✅</span>
+
+<span class="cm">// ─── useReducer ───────────────────────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">State</span> = { <span class="prop">count</span>: <span class="type">number</span>; <span class="prop">loading</span>: <span class="type">boolean</span> };
+<span class="kw">type</span> <span class="type">Action</span> =
+  | { <span class="prop">type</span>: <span class="str">"INCREMENT"</span> }
+  | { <span class="prop">type</span>: <span class="str">"DECREMENT"</span> }
+  | { <span class="prop">type</span>: <span class="str">"SET_LOADING"</span>; <span class="prop">payload</span>: <span class="type">boolean</span> };
+
+<span class="kw">function</span> <span class="fn">reducer</span>(state: <span class="type">State</span>, action: <span class="type">Action</span>): <span class="type">State</span> {
+  <span class="kw">switch</span> (action.<span class="prop">type</span>) {
+    <span class="kw">case</span> <span class="str">"INCREMENT"</span>: <span class="kw">return</span> { ...state, <span class="prop">count</span>: state.<span class="prop">count</span> + <span class="num">1</span> };
+    <span class="kw">case</span> <span class="str">"DECREMENT"</span>: <span class="kw">return</span> { ...state, <span class="prop">count</span>: state.<span class="prop">count</span> - <span class="num">1</span> };
+    <span class="kw">case</span> <span class="str">"SET_LOADING"</span>: <span class="kw">return</span> { ...state, <span class="prop">loading</span>: action.<span class="prop">payload</span> }; <span class="cm">// payload typed!</span>
+  }
+}
+<span class="kw">const</span> [state, dispatch] = <span class="fn">useReducer</span>(reducer, { <span class="prop">count</span>: <span class="num">0</span>, <span class="prop">loading</span>: <span class="kw">false</span> });
+
+<span class="cm">// ─── Custom hooks with return types ───────────────────────────────</span>
+<span class="kw">type</span> <span class="type">UseUserReturn</span> = {
+  <span class="prop">user</span>: <span class="type">User</span> | <span class="kw">null</span>;
+  <span class="prop">loading</span>: <span class="type">boolean</span>;
+  <span class="prop">error</span>: <span class="type">string</span> | <span class="kw">null</span>;
+  <span class="prop">refetch</span>: () => <span class="type">Promise</span><<span class="type">void</span>>;
+};
+
+<span class="kw">function</span> <span class="fn">useUser</span>(<span class="prop">id</span>: <span class="type">string</span>): <span class="type">UseUserReturn</span> {
+  <span class="kw">const</span> [user, setUser] = <span class="fn">useState</span><<span class="type">User</span> | <span class="kw">null</span>>(<span class="kw">null</span>);
+  <span class="kw">const</span> [loading, setLoading] = <span class="fn">useState</span>(<span class="kw">true</span>);
+  <span class="kw">const</span> [error, setError] = <span class="fn">useState</span><<span class="type">string</span> | <span class="kw">null</span>>(<span class="kw">null</span>);
+  
+  <span class="kw">const</span> <span class="fn">refetch</span> = <span class="kw">async</span> () => { <span class="cm">/* fetch logic */</span> };
+  
+  <span class="kw">return</span> { user, loading, error, refetch };
+  <span class="cm">// TypeScript verifies the return matches UseUserReturn</span>
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- 3.3 EVENT TYPING -->
+  <div class="sub" id="event-typing">
+    <h3 class="sub-title"><span class="sub-num">3.3</span> Event Typing — Never Guess Again</h3>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">all common event types</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── The most common event types ─────────────────────────────────</span>
+<span class="kw">import</span> { <span class="type">ChangeEvent</span>, <span class="type">MouseEvent</span>, <span class="type">FormEvent</span>, <span class="type">KeyboardEvent</span>, <span class="type">FocusEvent</span> } <span class="kw">from</span> <span class="str">'react'</span>;
+
+<span class="cm">// Input change</span>
+<span class="kw">const</span> <span class="fn">handleChange</span> = (e: <span class="type">ChangeEvent</span><<span class="type">HTMLInputElement</span>>) => {
+  <span class="fn">console</span>.<span class="fn">log</span>(e.<span class="prop">target</span>.<span class="prop">value</span>);  <span class="cm">// ✅ .value is typed as string</span>
+};
+
+<span class="cm">// Select change</span>
+<span class="kw">const</span> <span class="fn">handleSelect</span> = (e: <span class="type">ChangeEvent</span><<span class="type">HTMLSelectElement</span>>) => {
+  <span class="fn">console</span>.<span class="fn">log</span>(e.<span class="prop">target</span>.<span class="prop">value</span>);
+};
+
+<span class="cm">// Button click</span>
+<span class="kw">const</span> <span class="fn">handleClick</span> = (e: <span class="type">MouseEvent</span><<span class="type">HTMLButtonElement</span>>) => {
+  e.<span class="fn">preventDefault</span>();
+};
+
+<span class="cm">// Form submit</span>
+<span class="kw">const</span> <span class="fn">handleSubmit</span> = (e: <span class="type">FormEvent</span><<span class="type">HTMLFormElement</span>>) => {
+  e.<span class="fn">preventDefault</span>();
+  <span class="cm">// e.currentTarget is HTMLFormElement</span>
+};
+
+<span class="cm">// Keyboard events</span>
+<span class="kw">const</span> <span class="fn">handleKeyDown</span> = (e: <span class="type">KeyboardEvent</span><<span class="type">HTMLInputElement</span>>) => {
+  <span class="kw">if</span> (e.<span class="prop">key</span> === <span class="str">"Enter"</span>) { <span class="cm">/* submit */</span> }
+  <span class="kw">if</span> (e.<span class="prop">metaKey</span> && e.<span class="prop">key</span> === <span class="str">"k"</span>) { <span class="cm">/* cmd+k */</span> }
+};
+
+<span class="cm">// ─── Pattern: inline vs extracted handlers ────────────────────────</span>
+<span class="kw">function</span> <span class="fn">Form</span>() {
+  <span class="cm">// Inline: TypeScript infers event type from JSX context</span>
+  <span class="kw">return</span> <<span class="jsx">input</span> <span class="at">onChange</span>={e => <span class="fn">console</span>.<span class="fn">log</span>(e.<span class="prop">target</span>.<span class="prop">value</span>)} />;
+  <span class="cm">// e is automatically ChangeEvent<HTMLInputElement> — no annotation needed!</span>
+  
+  <span class="cm">// Extracted (for reuse): need explicit type annotation</span>
+  <span class="kw">const</span> <span class="fn">onChange</span> = (e: <span class="type">ChangeEvent</span><<span class="type">HTMLInputElement</span>>) => {};
+  <span class="kw">return</span> <<span class="jsx">input</span> <span class="at">onChange</span>={onChange} />;
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- 3.4 CONTEXT TYPING -->
+  <div class="sub" id="context-typing">
+    <h3 class="sub-title"><span class="sub-num">3.4</span> Typing React Context — The Right Pattern</h3>
+
+    <p>The naive approach to typing context has a problem: <code>createContext</code> needs a default value, but often you don't have one. The correct pattern handles this without lying to TypeScript.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">context — the correct pattern</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── Pattern: Context with undefined default + safety hook ───────</span>
+<span class="kw">import</span> { <span class="fn">createContext</span>, <span class="fn">useContext</span>, <span class="type">ReactNode</span> } <span class="kw">from</span> <span class="str">'react'</span>;
+
+<span class="kw">type</span> <span class="type">AuthContextValue</span> = {
+  <span class="prop">user</span>: <span class="type">User</span> | <span class="kw">null</span>;
+  <span class="prop">login</span>: (<span class="prop">email</span>: <span class="type">string</span>, <span class="prop">password</span>: <span class="type">string</span>) => <span class="type">Promise</span><<span class="type">void</span>>;
+  <span class="prop">logout</span>: () => <span class="type">void</span>;
+};
+
+<span class="cm">// undefined default — honest about "no provider yet"</span>
+<span class="kw">const</span> <span class="cl">AuthContext</span> = <span class="fn">createContext</span><<span class="type">AuthContextValue</span> | <span class="kw">undefined</span>>(<span class="kw">undefined</span>);
+
+<span class="cm">// Safety hook — throws if used outside provider</span>
+<span class="kw">export function</span> <span class="fn">useAuth</span>(): <span class="type">AuthContextValue</span> {
+  <span class="kw">const</span> context = <span class="fn">useContext</span>(<span class="cl">AuthContext</span>);
+  <span class="kw">if</span> (context === <span class="kw">undefined</span>) {
+    <span class="kw">throw new</span> <span class="cl">Error</span>(<span class="str">"useAuth must be used within AuthProvider"</span>);
+  }
+  <span class="kw">return</span> context; <span class="cm">// type is now AuthContextValue (not | undefined)</span>
+}
+
+<span class="kw">export function</span> <span class="fn">AuthProvider</span>({ children }: { <span class="prop">children</span>: <span class="type">ReactNode</span> }) {
+  <span class="kw">const</span> [user, setUser] = <span class="fn">useState</span><<span class="type">User</span> | <span class="kw">null</span>>(<span class="kw">null</span>);
+
+  <span class="kw">const</span> <span class="fn">login</span> = <span class="kw">async</span> (<span class="prop">email</span>: <span class="type">string</span>, <span class="prop">password</span>: <span class="type">string</span>) => {
+    <span class="cm">/* ... */</span>
+  };
+  <span class="kw">const</span> <span class="fn">logout</span> = () => <span class="fn">setUser</span>(<span class="kw">null</span>);
+
+  <span class="kw">return</span> (
+    <<span class="jsx">AuthContext</span>.<span class="jsx">Provider</span> <span class="at">value</span>={{ user, login, logout }}>
+      {children}
+    </<span class="jsx">AuthContext</span>.<span class="jsx">Provider</span>>
+  );
+}
+
+<span class="cm">// Usage:</span>
+<span class="kw">function</span> <span class="fn">Profile</span>() {
+  <span class="kw">const</span> { user, logout } = <span class="fn">useAuth</span>(); <span class="cm">// ✅ fully typed, no | undefined</span>
+  <span class="kw">return</span> <<span class="jsx">div</span>>{user?.<span class="prop">name</span>}</<span class="jsx">div</span>>;
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════ KNOWLEDGE CHECK ═══════════ -->
+<section class="section fade-up" id="check">
+  <div class="section-number">Knowledge Check</div>
+  <h2 class="sec-title">10 Questions — <span>No Peeking</span></h2>
+  <p class="sec-lead">Answer these without looking at the document. They're exactly the questions interviewers ask. Click "Reveal" to see the answer once you've attempted it.</p>
+
+  <div class="check-grid">
+
+    <div class="check-item">
+      <div class="check-q">Q01 / 10</div>
+      <div class="check-text">What is the difference between <code>interface</code> and <code>type</code> alias? Give a concrete example of where they behave differently.</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        The key difference is <strong>declaration merging</strong>: interfaces can be declared multiple times and TypeScript merges them; type aliases cannot (you get a "Duplicate identifier" error). Also: only <code>type</code> can represent unions (<code>type X = A | B</code>), primitive aliases (<code>type ID = string</code>), and conditional types. Interfaces have the advantage of better error messages (shown by name, not expanded). Practical example: <code>interface User { name: string } interface User { age: number }</code> → User becomes <code>{ name: string; age: number }</code>. This is how @types packages augment Express's Request type.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q02 / 10</div>
+      <div class="check-text">Explain discriminated unions. Write a <code>Shape</code> type with Circle, Rectangle, Triangle and a function that uses exhaustive checking with <code>never</code>.</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        A discriminated union has a <strong>literal type field (the discriminant)</strong> shared across all members. TypeScript uses it to narrow the union in switch/if statements. The <code>never</code> trick catches missing cases at compile time:
+        <br><br>
+        <code>type Shape = { kind: "circle"; radius: number } | { kind: "rect"; w: number; h: number }</code>
+        <br>
+        In the switch default case: <code>const x: never = shape;</code> — if you add a new Shape without a corresponding case, this line becomes a compile error because the unhandled member isn't <code>never</code>.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q03 / 10</div>
+      <div class="check-text">What does the <code>infer</code> keyword do? Write a <code>ReturnType&lt;T&gt;</code> utility type from scratch without using the built-in.</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        <code>infer</code> declares a type variable inside a conditional type for pattern matching. It extracts a part of a type.
+        <br><br>
+        <code>type MyReturnType&lt;T&gt; = T extends (...args: any[]) => infer R ? R : never;</code>
+        <br><br>
+        "If T is a function type, infer its return type as R and give me R. If T is not a function, give me never." The <code>infer R</code> captures whatever type the function returns.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q04 / 10</div>
+      <div class="check-text">What's wrong with using <code>any</code>? When would you legitimately use <code>unknown</code> instead?</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        <code>any</code> disables type checking entirely — TypeScript accepts any operation on <code>any</code> values without error. It also "spreads": anything derived from an <code>any</code> value becomes <code>any</code>. This defeats the purpose of TypeScript.
+        <br><br>
+        <code>unknown</code> is the "safe any" — you can assign anything to it, but TypeScript forces you to narrow/check before using it. Use <code>unknown</code> for: function parameters where you don't know the input type (e.g., error handling <code>catch (e: unknown)</code>), API response parsing before validation, and anywhere you'd be tempted to use <code>any</code>. The legitimate uses of <code>any</code> are extremely rare: complex generic escape hatches, and interop with untyped legacy code.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q05 / 10</div>
+      <div class="check-text">Write a <code>DeepReadonly&lt;T&gt;</code> mapped type that recursively makes all nested properties readonly.</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        <code>type DeepReadonly&lt;T&gt; = { readonly [K in keyof T]: T[K] extends object ? DeepReadonly&lt;T[K]&gt; : T[K] };</code>
+        <br><br>
+        Breakdown: <code>readonly [K in keyof T]</code> iterates all keys and adds readonly. The conditional type checks if the value is an object — if yes, apply <code>DeepReadonly</code> recursively; if no (primitive), leave as-is.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q06 / 10</div>
+      <div class="check-text">Explain how TypeScript's structural typing works. Can you assign <code>{ name: string, age: number }</code> to <code>{ name: string }</code>?</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        Yes. TypeScript uses structural typing (shape-based, not name-based). A type is assignable to another if it has at least all the required properties. Since <code>{ name: string, age: number }</code> has <code>name: string</code> plus more, it satisfies <code>{ name: string }</code>.
+        <br><br>
+        <strong>Exception:</strong> excess property checking on fresh object literals. If you write <code>fn({ name: "x", age: 5 })</code> where fn expects <code>{ name: string }</code>, TypeScript will error on the literal. But if you first assign to a variable and pass that variable, it works. This is intentional — it catches typos in literal objects.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q07 / 10</div>
+      <div class="check-text">What is a conditional type? Write a <code>NonNullable&lt;T&gt;</code> implementation.</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        A conditional type is <code>T extends U ? X : Y</code> — a type-level ternary. If T is assignable to U, the type evaluates to X, otherwise Y.
+        <br><br>
+        <code>type MyNonNullable&lt;T&gt; = T extends null | undefined ? never : T;</code>
+        <br><br>
+        When used with a union like <code>string | null | undefined</code>, conditional types distribute: <code>string</code> → <code>string</code>, <code>null</code> → <code>never</code>, <code>undefined</code> → <code>never</code>. Final union: <code>string | never | never = string</code>.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q08 / 10</div>
+      <div class="check-text">How do you type a function that accepts a key of an object and returns the value at that key?</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        Use two generics with a <code>keyof</code> constraint:
+        <br><br>
+        <code>function getProperty&lt;T, K extends keyof T&gt;(obj: T, key: K): T[K] { return obj[key]; }</code>
+        <br><br>
+        <code>K extends keyof T</code> ensures K can only be a valid key of T. The return type <code>T[K]</code> is an indexed access type — it gives you the type of the value at that key. So for <code>{ name: string, age: number }</code>, calling with <code>"name"</code> returns <code>string</code>, with <code>"age"</code> returns <code>number</code>.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q09 / 10</div>
+      <div class="check-text">What is the difference between <code>Partial&lt;T&gt;</code> and <code>Required&lt;T&gt;</code>? Write both from scratch using mapped types.</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        <code>Partial&lt;T&gt;</code> makes all properties optional. <code>Required&lt;T&gt;</code> makes all properties required (removes optionality).
+        <br><br>
+        <code>type MyPartial&lt;T&gt; = { [K in keyof T]?: T[K] };</code>
+        <br>The <code>?</code> after the key makes it optional.
+        <br><br>
+        <code>type MyRequired&lt;T&gt; = { [K in keyof T]-?: T[K] };</code>
+        <br>The <code>-?</code> is a mapping modifier that removes optionality. Similarly <code>-readonly</code> removes readonly.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q10 / 10</div>
+      <div class="check-text">Explain template literal types. How would you create a type <code>EventName</code> that is <code>on${Capitalize&lt;string&gt;}</code>?</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        Template literal types create string types using the template string syntax at the type level. They can reference other types inside <code>${}</code>.
+        <br><br>
+        <code>type EventName = `on${Capitalize&lt;string&gt;}`;</code>
+        <br><br>
+        This type matches any string that starts with "on" followed by a capitalized string: "onClick", "onChange", "onSubmit", etc. <code>Capitalize&lt;string&gt;</code> is a built-in intrinsic string manipulation type. Practical use: you can use this with a union of specific events (<code>type BaseEvent = "click" | "change"; type Handler = `on${Capitalize&lt;BaseEvent&gt;}`</code>) to get <code>"onClick" | "onChange"</code>.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════ RESOURCES ═══════════ -->
+<section class="section fade-up" id="resources">
+  <div class="section-number">Resources</div>
+  <h2 class="sec-title">Reference <span>Materials</span></h2>
+  <p class="sec-lead">Everything you need to deepen today's learning — curated, ordered by when to use them.</p>
+
+  <div class="res-grid">
+    <a class="res-card" href="https://www.typescriptlang.org/docs/handbook/2/types-from-types.html" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--teal);">📘 Official Docs</div>
+      <div class="res-card-name">TypeScript Handbook: Types from Types</div>
+      <div class="res-card-desc">The official reference for generics, conditional types, mapped types, template literals. Read the sections that correspond to today's doc. The gold standard.</div>
+    </a>
+    <a class="res-card" href="https://www.totaltypescript.com/tutorials" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--rust);">🎓 Interactive Course</div>
+      <div class="res-card-name">Total TypeScript — Matt Pocock</div>
+      <div class="res-card-desc">The best interactive TypeScript course by the TypeScript wizard himself. Do the Beginner's TypeScript section today. Each exercise is exactly what you need.</div>
+    </a>
+    <a class="res-card" href="https://www.typescriptlang.org/play" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--plum);">🔬 Interactive</div>
+      <div class="res-card-name">TypeScript Playground</div>
+      <div class="res-card-desc">Your best friend. Paste any code from today, hover types, see errors instantly. Use it to verify your knowledge check answers. Essential tool.</div>
+    </a>
+    <a class="res-card" href="https://youtu.be/30LWjhZzg50" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--rust);">🎬 Video</div>
+      <div class="res-card-name">TypeScript — The Complete Course (Traversy)</div>
+      <div class="res-card-desc">Watch the generics and utility types sections (timestamps in description). Good visual explanation of concepts to supplement the reading.</div>
+    </a>
+    <a class="res-card" href="https://github.com/type-challenges/type-challenges" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--green);">💻 Practice</div>
+      <div class="res-card-name">Type Challenges (GitHub)</div>
+      <div class="res-card-desc">LeetCode for TypeScript types. Start with "Easy" challenges. Do 3-5 today. These will make you extremely dangerous in interviews when they ask about utility types.</div>
+    </a>
+    <a class="res-card" href="https://react-typescript-cheatsheet.netlify.app/" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--teal);">📋 Cheatsheet</div>
+      <div class="res-card-name">React TypeScript Cheatsheet</div>
+      <div class="res-card-desc">Every React + TypeScript pattern in one place. Bookmark this. When you forget the exact event type or how to type a ref, this is your first stop.</div>
+    </a>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════ TODAY'S SCHEDULE ═══════════ -->
+<section class="section" id="tasks">
+  <div class="section-number">Action Plan</div>
+  <h2 class="sec-title">Today's <span>8-Hour</span> Schedule</h2>
+
+  <div class="sched">
+    <div class="sched-row">
+      <div class="sched-time">6:00 – 7:30am</div>
+      <div class="sched-desc">
+        <strong>DSA Block — DAILY NON-NEGOTIABLE</strong><br>
+        2 LeetCode problems. Day 1 recommended: LC 1 (Two Sum) and LC 242 (Valid Anagram). These are warm-up — get the Python habit established. Track in your LeetCode tracker.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">7:30 – 8:00am</div>
+      <div class="sched-desc">
+        <strong>Review / Spaced Repetition</strong><br>
+        Day 1, so there's no yesterday to review. Use this time to watch the TypeScript in 100 Seconds video and write down the 5 things you already knew vs the 5 things you didn't. Sets the baseline.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">8:00 – 12:00pm</div>
+      <div class="sched-desc">
+        <strong>Deep Learning Block — Read This Document</strong><br>
+        Read this document top to bottom. For every code block: type it manually in the TypeScript Playground — don't copy-paste. See the type hover. Break it intentionally. Fix it. For the utility types section, implement each one from scratch before reading the implementation. This 4-hour block should feel hard. If it doesn't, you're going too fast.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">12:00 – 1:00pm</div>
+      <div class="sched-desc">
+        <strong>Break + Eat</strong><br>
+        Mandatory. Don't code. Let the morning session consolidate.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">1:00 – 5:00pm</div>
+      <div class="sched-desc">
+        <strong>Build: TypeScript Utility Library</strong><br>
+        Build a file <code>utils.ts</code> with 5 functions using advanced types: (1) A generic <code>groupBy&lt;T&gt;</code> that groups an array by a key. (2) A typed <code>pick(obj, keys[])</code> function. (3) An <code>omit(obj, keys[])</code> function. (4) A <code>deepMerge&lt;T&gt;</code>. (5) A typed event emitter class with generic event maps. No <code>any</code> allowed anywhere. Run in strict mode.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">5:00 – 6:00pm</div>
+      <div class="sched-desc">
+        <strong>Break / Walk</strong><br>
+        Step away. Your brain needs it.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">6:00 – 8:00pm</div>
+      <div class="sched-desc">
+        <strong>Total TypeScript Exercises + Type Challenges</strong><br>
+        Go to totaltypescript.com/tutorials → Beginner's TypeScript. Do all exercises. Then pick 3 Easy challenges from type-challenges GitHub. These exercises encode the muscle memory you need.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">8:00 – 9:30pm</div>
+      <div class="sched-desc">
+        <strong>GitHub Commit + Knowledge Log</strong><br>
+        Commit your utility library. Write 3 insights in your learning log. Answer the 10 knowledge check questions without looking at answers — score yourself honestly. Write down which answers you were unsure about. Those are the ones to revisit tomorrow morning.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout tip" style="margin-top:36px;">
+    <div class="callout-title">✅ Tomorrow — Day 2</div>
+    <p>Day 2 is <strong>TypeScript Advanced + Async Patterns</strong>. You'll learn the Result pattern for error handling, <code>tsconfig.json</code> deep dive (strict, paths, moduleResolution), typing Express middleware, ambient declarations, and the <code>satisfies</code> operator. Everything tomorrow assumes you understand today's content — so get today right.</p>
+  </div>
+
+  <div style="margin-top:52px;padding:36px;background:var(--bg2);border:2px solid var(--border);border-radius:10px;text-align:center;">
+    <div style="font-family:var(--serif);font-size:28px;font-weight:900;color:var(--ink);margin-bottom:8px;">Day 01 of 56.</div>
+    <div style="font-size:16px;color:var(--muted);margin-bottom:20px;">The lie on your resume about TypeScript dies today. Every type you write from here is honest.</div>
+    <div class="hero-tags" style="justify-content:center;">
+      <span class="tag r">TS Async Patterns →</span>
+      <span class="tag t">tsconfig Deep Dive →</span>
+      <span class="tag g">Express Typing →</span>
+      <span class="tag p">55 days to go</span>
+    </div>
+  </div>
+</section>
+
+</div>
+</main>
+
+<script>
+const prog = document.getElementById('prog');
+const topBtn = document.getElementById('top-btn');
+
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY;
+  const total = document.body.scrollHeight - window.innerHeight;
+  prog.style.width = (scrolled / total * 100) + '%';
+  topBtn.classList.toggle('show', scrolled > 400);
+  updateToc();
+});
+
+function updateToc() {
+  const links = document.querySelectorAll('.toc-link');
+  let current = '';
+  document.querySelectorAll('[id]').forEach(el => {
+    if (window.scrollY >= el.offsetTop - 100) current = el.id;
+  });
+  links.forEach(l => {
+    l.classList.toggle('on', l.getAttribute('href') === '#' + current);
+  });
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'copied!';
+    btn.style.background = 'var(--green)';
+    btn.style.color = '#fff';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(() => {
+      btn.textContent = 'copy';
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2200);
+  });
+}
+
+function revealAnswer(btn) {
+  const reveal = btn.nextElementSibling;
+  if (reveal.style.display === 'block') {
+    reveal.style.display = 'none';
+    btn.textContent = 'Reveal Answer';
+  } else {
+    reveal.style.display = 'block';
+    btn.textContent = 'Hide Answer';
+    btn.style.background = 'var(--green)';
+    btn.style.color = '#fff';
+    btn.style.borderColor = 'var(--green)';
+  }
+}
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'none';
+      e.target.style.transition = 'opacity .5s ease, transform .5s ease';
+      obs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.05 });
+
+document.querySelectorAll('.section, .sub, .callout, .video-wrap').forEach(el => {
+  if (!el.classList.contains('fade-up')) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(14px)';
+    obs.observe(el);
+  }
+});
+</script>
+</body>
+</html>
