@@ -2,105 +2,316 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Skill Up Docs 2026</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <title>Skill Up Docs 2026 — Your Roadmaps</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg: #0c0c0f;
+            --bg-elevated: #12121a;
+            --bg-card: #16161f;
+            --border: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(255, 255, 255, 0.12);
+            --text: #f0f0f5;
+            --text-muted: #8888a0;
+            --accent: #e8a476;
+            --accent-dim: #c48a5c;
+            --accent-glow: rgba(232, 164, 118, 0.15);
+            --success: #4ade80;
+            --card-radius: 16px;
+            --font: 'Outfit', system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #151515, #2c2c2c);
-            color: #F7ECE5;
+            min-height: 100vh;
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            background-image:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(232, 164, 118, 0.08), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 0%, rgba(100, 80, 200, 0.04), transparent),
+                radial-gradient(ellipse 60% 40% at 0% 50%, rgba(232, 164, 118, 0.03), transparent);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
         }
 
         header {
             text-align: center;
-            padding: 60px 20px;
+            padding: 4rem 0 3rem;
+        }
+
+        .logo {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
         }
 
         h1 {
-            font-size: 3rem;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            margin: 0 0 0.5rem;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff 0%, #e0e0ec 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            font-weight: 400;
+            color: var(--text-muted);
             margin: 0;
-            color: #E8A476;
         }
 
-        p {
-            color: #7B7B7B;
-            font-size: 1.2rem;
+        #roadmaps {
+            display: grid;
+            gap: 1.25rem;
+            padding: 0;
         }
 
-        .container {
-            max-width: 1000px;
-            margin: auto;
-            padding: 20px;
+        .roadmap-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--card-radius);
+            padding: 1.5rem 1.75rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+            list-style: none;
+            animation: cardIn 0.5s ease backwards;
         }
 
-        .card {
-            background: #1f1f1f;
-            padding: 25px;
-            border-radius: 20px;
-            margin: 20px 0;
-            transition: 0.3s ease;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        .roadmap-card:hover {
+            border-color: var(--border-hover);
+            box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.5);
+            transform: translateY(-2px);
         }
 
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .card h2 {
-            margin: 0 0 10px 0;
-            color: #E8A476;
+        .roadmap-card .name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0 0 1rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .links a {
-            display: inline-block;
-            margin: 10px 10px 0 0;
-            padding: 10px 20px;
-            background: #E8A476;
-            color: #151515;
+        .roadmap-card .name::before {
+            content: '';
+            width: 4px;
+            height: 1.25em;
+            background: linear-gradient(180deg, var(--accent), var(--accent-dim));
+            border-radius: 2px;
+        }
+
+        .roadmap-card .docs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .roadmap-card .doc-link {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
             text-decoration: none;
-            border-radius: 30px;
-            font-weight: bold;
-            transition: 0.3s ease;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
         }
 
-        .links a:hover {
-            background: #F7ECE5;
+        .roadmap-card .doc-link:hover {
+            background: var(--accent-glow);
+            border-color: rgba(232, 164, 118, 0.3);
+            color: var(--accent);
+        }
+
+        .roadmap-card .doc-link:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        #loading .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 1rem;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #error {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--card-radius);
+            color: var(--text-muted);
+        }
+
+        #error strong {
+            color: var(--text);
+        }
+
+        #error a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        #error a:hover {
+            text-decoration: underline;
         }
 
         footer {
             text-align: center;
-            padding: 40px;
-            color: #7B7B7B;
-            font-size: 0.9rem;
+            padding: 3rem 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
         }
 
+        footer .reload-hint {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            opacity: 0.8;
+        }
     </style>
 </head>
-
 <body>
 
-<header>
-    <h1>Skill Up Docs 2026</h1>
-    <p>Your Structured Learning Journey</p>
-</header>
+    <header>
+        <p class="logo">Skill Up 2026</p>
+        <h1>Your Roadmaps</h1>
+        <p class="tagline">Structured learning plans — DSA, Frontend, Full Stack & more</p>
+    </header>
 
-<div class="container">
-
-    <div class="card">
-        <h2>📘 Month 1 — Week 1</h2>
-        <div class="links">
-            <a href="FE-plan/day-1-plan.html">Day 1</a>
+    <div class="container">
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Loading roadmaps…</p>
         </div>
+        <ul id="roadmaps" class="hidden" aria-live="polite"></ul>
+        <div id="error" class="hidden" role="alert"></div>
     </div>
 
-</div>
+    <footer>
+        Built with focus. Updated regularly.
+        <p class="reload-hint">Add a new folder with .html docs and run <code>node scripts/generate-roadmaps.js</code> to see it here.</p>
+    </footer>
 
-<footer>
-    Built with focus. Updated regularly. 🚀
-</footer>
+    <script src="roadmaps-data.js"></script>
+    <script>
+        (function () {
+            const roadmapsEl = document.getElementById('roadmaps');
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
 
+            function show(el) { el.classList.remove('hidden'); }
+            function hide(el) { el.classList.add('hidden'); }
+
+            function render(roadmaps) {
+                hide(loadingEl);
+                hide(errorEl);
+                roadmapsEl.innerHTML = '';
+                roadmaps.forEach(function (r, i) {
+                    const card = document.createElement('li');
+                    card.className = 'roadmap-card';
+                    card.style.animationDelay = (i * 0.06) + 's';
+                    const name = document.createElement('h2');
+                    name.className = 'name';
+                    name.textContent = r.name;
+                    const docsWrap = document.createElement('div');
+                    docsWrap.className = 'docs';
+                    (r.docs || []).forEach(function (d) {
+                        const a = document.createElement('a');
+                        a.className = 'doc-link';
+                        a.href = d.href;
+                        a.textContent = d.title;
+                        a.setAttribute('data-roadmap', r.name);
+                        docsWrap.appendChild(a);
+                    });
+                    card.appendChild(name);
+                    card.appendChild(docsWrap);
+                    roadmapsEl.appendChild(card);
+                });
+                show(roadmapsEl);
+            }
+
+            function showError(msg) {
+                hide(loadingEl);
+                hide(roadmapsEl);
+                errorEl.innerHTML = '<strong>Could not load roadmaps.</strong> ' + msg + ' <a href="#" onclick="location.reload()">Reload</a>';
+                show(errorEl);
+            }
+
+            // Use inline data when opened from file:// (script tag works; fetch does not)
+            if (window.ROADMAPS_DATA && window.ROADMAPS_DATA.roadmaps && window.ROADMAPS_DATA.roadmaps.length > 0) {
+                render(window.ROADMAPS_DATA.roadmaps);
+                return;
+            }
+
+            fetch('roadmaps.json')
+                .then(function (res) {
+                    if (!res.ok) throw new Error('roadmaps.json not found (run: node scripts/generate-roadmaps.js)');
+                    return res.json();
+                })
+                .then(function (data) {
+                    const list = data.roadmaps || [];
+                    if (list.length === 0) {
+                        showError('No roadmaps defined. Add folders with .html docs and run <code>node scripts/generate-roadmaps.js</code>.');
+                        return;
+                    }
+                    render(list);
+                })
+                .catch(function (err) {
+                    showError(err.message || 'Run <code>node scripts/generate-roadmaps.js</code> to generate roadmaps-data.js, or serve this folder over HTTP.');
+                });
+        })();
+    </script>
+
+    <style>
+        .hidden { display: none !important; }
+    </style>
 </body>
 </html>

@@ -211,10 +211,40 @@ ul.prose-list li code, ol.prose-list li code { font-family: var(--mono); font-si
 .code-label { font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,.3); font-style: italic; }
 .copy-btn { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.5); font-family: var(--mono); font-size: 10px; padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all .2s; }
 .copy-btn:hover { background: var(--rust); color: #fff; border-color: var(--rust); }
-pre { background: #1c1612; padding: 22px 24px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.85; }
-pre::-webkit-scrollbar { height: 3px }
-pre::-webkit-scrollbar-thumb { background: #3a3028; border-radius: 2px }
-pre code { background: none; padding: 0; font-size: inherit; color: inherit; border: none; }
+pre {
+  background: #1c1612;
+  color: #e8e6e3;
+  padding: 22px 24px;
+  overflow-x: auto;
+  overflow-y: auto;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.85;
+  white-space: pre;
+  margin: 0;
+  display: block;
+  word-break: normal;
+  overflow-wrap: normal;
+  tab-size: 4;
+}
+pre::-webkit-scrollbar { height: 6px; width: 6px; }
+pre::-webkit-scrollbar-thumb { background: #3a3028; border-radius: 3px; }
+pre::-webkit-scrollbar-track { background: #252019; }
+pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  color: #e8e6e3;
+  border: none;
+  display: block;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+/* Keep syntax spans inline so code stays on correct lines */
+pre code .kw, pre code .fn, pre code .str, pre code .num, pre code .cm,
+pre code .cl, pre code .var, pre code .op, pre code .prop, pre code .dec,
+pre code .py-kw, pre code .py-bi, pre code .py-dec { display: inline; }
 code { font-family: var(--mono); font-size: 13px; }
 
 .kw  { color: #e06c75 }
