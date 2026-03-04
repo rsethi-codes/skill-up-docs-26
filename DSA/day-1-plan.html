@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 1 — Python Warmup + Arrays & Hashing | Raghav's DSA Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,700;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f0e8;
+  --bg2: #ede8de;
+  --bg3: #e4ddd0;
+  --ink: #1a1410;
+  --ink2: #2d2520;
+  --ink3: #453d35;
+  --muted: #7a6f62;
+  --muted2: #a89e92;
+  --border: rgba(26,20,16,0.12);
+  --border2: rgba(26,20,16,0.06);
+  --rust: #c0392b;
+  --rust2: #e74c3c;
+  --rust-bg: rgba(192,57,43,0.07);
+  --rust-border: rgba(192,57,43,0.2);
+  --teal: #0d7f7f;
+  --teal2: #0fb3b3;
+  --teal-bg: rgba(13,127,127,0.07);
+  --teal-border: rgba(13,127,127,0.2);
+  --gold: #b8860b;
+  --gold2: #d4a017;
+  --gold-bg: rgba(184,134,11,0.08);
+  --gold-border: rgba(184,134,11,0.22);
+  --plum: #5b2d8e;
+  --plum-bg: rgba(91,45,142,0.07);
+  --plum-border: rgba(91,45,142,0.2);
+  --green: #1a6b3c;
+  --green-bg: rgba(26,107,60,0.07);
+  --green-border: rgba(26,107,60,0.2);
+  --serif: 'Playfair Display', Georgia, serif;
+  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --sans: 'DM Sans', system-ui, sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.75;
+  font-size: 16px;
+  overflow-x: hidden;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.6;
+}
+
+#prog {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0;
+  background: linear-gradient(90deg, var(--rust), var(--gold), var(--teal));
+  z-index: 1000; transition: width .1s linear;
+  box-shadow: 0 0 8px rgba(192,57,43,0.4);
+}
+
+#top-btn {
+  position: fixed; bottom: 28px; right: 28px; width: 40px; height: 40px;
+  background: var(--ink); color: #fff; border: none; border-radius: 6px;
+  font-size: 18px; cursor: pointer; z-index: 900; opacity: 0; transition: opacity .3s;
+  display: flex; align-items: center; justify-content: center;
+}
+#top-btn.show { opacity: 1; }
+
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; height: 54px;
+  background: rgba(245,240,232,0.94); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; z-index: 900;
+}
+.tb-brand { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--rust); letter-spacing: .06em; }
+.tb-day { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.tb-nav { display: flex; gap: 22px; list-style: none; }
+.tb-nav a { font-family: var(--sans); font-size: 12px; font-weight: 500; color: var(--muted); text-decoration: none; transition: color .2s; }
+.tb-nav a:hover { color: var(--rust); }
+
+.sidebar {
+  position: fixed; left: 0; top: 54px; width: 218px;
+  height: calc(100vh - 54px); overflow-y: auto;
+  padding: 24px 0; border-right: 1px solid var(--border);
+  background: rgba(245,240,232,0.8); backdrop-filter: blur(12px);
+  z-index: 800;
+}
+.sidebar::-webkit-scrollbar { width: 2px }
+.sidebar::-webkit-scrollbar-thumb { background: var(--muted2); }
+.toc-head {
+  padding: 0 18px 12px; font-family: var(--mono); font-size: 9px;
+  font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--muted2); border-bottom: 1px solid var(--border); margin-bottom: 10px;
+}
+.toc-link {
+  display: block; padding: 5px 18px; font-family: var(--sans); font-size: 12px;
+  font-weight: 400; color: var(--muted); text-decoration: none;
+  border-left: 2px solid transparent; transition: all .18s; line-height: 1.4;
+}
+.toc-link:hover, .toc-link.on { color: var(--rust); border-left-color: var(--rust); background: var(--rust-bg); }
+.toc-link.sub { padding-left: 28px; font-size: 11.5px; }
+.toc-link.sub:hover, .toc-link.sub.on { color: var(--teal); border-left-color: var(--teal); background: var(--teal-bg); }
+
+.main { margin-left: 218px; padding-top: 54px; }
+.content { max-width: 860px; margin: 0 auto; padding: 60px 40px 120px; }
+
+.hero { margin-bottom: 72px; padding-bottom: 56px; border-bottom: 2px solid var(--border); }
+.day-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--rust); color: #fff;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  padding: 4px 14px; border-radius: 2px; margin-bottom: 20px;
+}
+.day-pill::before {
+  content: ''; width: 5px; height: 5px; background: #fff;
+  border-radius: 50%; animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.6)} }
+
+h1.hero-title {
+  font-family: var(--serif);
+  font-size: clamp(36px, 5.5vw, 62px);
+  font-weight: 900; line-height: 1.0;
+  letter-spacing: -.02em; color: var(--ink); margin-bottom: 18px;
+}
+h1.hero-title span { color: var(--rust); font-style: italic; }
+.hero-lead { font-family: var(--sans); font-size: 17px; font-weight: 300; color: var(--ink3); max-width: 620px; line-height: 1.75; margin-bottom: 28px; }
+.hero-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+.tag { font-family: var(--mono); font-size: 10px; padding: 3px 10px; border-radius: 2px; border: 1px solid; letter-spacing: .04em; }
+.tag.r { color: var(--rust); border-color: var(--rust-border); background: var(--rust-bg); }
+.tag.t { color: var(--teal); border-color: var(--teal-border); background: var(--teal-bg); }
+.tag.g { color: var(--gold); border-color: var(--gold-border); background: var(--gold-bg); }
+.tag.p { color: var(--plum); border-color: var(--plum-border); background: var(--plum-bg); }
+.tag.gr { color: var(--green); border-color: var(--green-border); background: var(--green-bg); }
+
+.section { margin-bottom: 80px; scroll-margin-top: 74px; }
+.section-number {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--muted2); margin-bottom: 4px;
+  display: flex; align-items: center; gap: 12px;
+}
+.section-number::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+h2.sec-title {
+  font-family: var(--serif); font-size: clamp(24px, 3vw, 36px);
+  font-weight: 900; letter-spacing: -.01em; line-height: 1.1;
+  color: var(--ink); margin-bottom: 14px;
+}
+h2.sec-title span { color: var(--rust); font-style: italic; }
+.sec-lead { font-size: 15.5px; color: var(--ink3); max-width: 680px; margin-bottom: 40px; line-height: 1.78; }
+
+.sub { margin-bottom: 52px; scroll-margin-top: 74px; }
+h3.sub-title {
+  font-family: var(--sans); font-size: 19px; font-weight: 600;
+  color: var(--ink); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+h3.sub-title .sub-num {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  color: #fff; background: var(--rust); padding: 2px 7px; border-radius: 2px; flex-shrink: 0;
+}
+h3.sub-title .sub-num.t { background: var(--teal); }
+h3.sub-title .sub-num.g { background: var(--gold); }
+h3.sub-title .sub-num.p { background: var(--plum); }
+h3.sub-title .sub-num.gr { background: var(--green); }
+
+h4.mini-title { font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--ink); margin: 22px 0 8px; letter-spacing: -.01em; }
+
+p { color: var(--ink3); line-height: 1.8; margin-bottom: 16px; font-size: 15.5px; }
+p strong { color: var(--ink); font-weight: 600; }
+p em { color: var(--rust); font-style: italic; }
+p code { font-family: var(--mono); font-size: 13px; background: var(--bg3); padding: 2px 6px; border-radius: 3px; color: var(--ink); border: 1px solid var(--border); }
+
+ul.prose-list, ol.prose-list { margin: 14px 0 20px 22px; display: flex; flex-direction: column; gap: 7px; }
+ul.prose-list li, ol.prose-list li { color: var(--ink3); font-size: 15px; line-height: 1.7; }
+ul.prose-list li strong, ol.prose-list li strong { color: var(--ink); }
+ul.prose-list li code, ol.prose-list li code { font-family: var(--mono); font-size: 12.5px; background: var(--bg3); padding: 1px 5px; border-radius: 3px; color: var(--ink); border: 1px solid var(--border); }
+
+.callout { border-radius: 6px; padding: 18px 22px; margin: 24px 0; border-left: 3px solid; }
+.callout-title { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 9px; display: flex; align-items: center; gap: 7px; }
+.callout p { margin-bottom: 0; font-size: 14.5px; }
+.callout.danger { background: var(--rust-bg); border-color: var(--rust); }
+.callout.danger .callout-title { color: var(--rust); }
+.callout.insight { background: var(--plum-bg); border-color: var(--plum); }
+.callout.insight .callout-title { color: var(--plum); }
+.callout.tip { background: var(--green-bg); border-color: var(--green); }
+.callout.tip .callout-title { color: var(--green); }
+.callout.warn { background: var(--gold-bg); border-color: var(--gold); }
+.callout.warn .callout-title { color: var(--gold); }
+.callout.info { background: var(--teal-bg); border-color: var(--teal); }
+.callout.info .callout-title { color: var(--teal); }
+
+.code-block { border-radius: 8px; overflow: hidden; margin: 22px 0; border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,.05); }
+.code-head { display: flex; align-items: center; justify-content: space-between; padding: 9px 16px; background: var(--ink2); border-bottom: 1px solid rgba(255,255,255,.06); }
+.code-lang { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.4); }
+.code-label { font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,.3); font-style: italic; }
+.copy-btn { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.5); font-family: var(--mono); font-size: 10px; padding: 3px 9px; border-radius: 3px; cursor: pointer; transition: all .2s; }
+.copy-btn:hover { background: var(--rust); color: #fff; border-color: var(--rust); }
+pre { background: #1c1612; padding: 22px 24px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.85; }
+pre::-webkit-scrollbar { height: 3px }
+pre::-webkit-scrollbar-thumb { background: #3a3028; border-radius: 2px }
+pre code { background: none; padding: 0; font-size: inherit; color: inherit; border: none; }
+code { font-family: var(--mono); font-size: 13px; }
+
+.kw  { color: #e06c75 }
+.fn  { color: #61afef }
+.str { color: #98c379 }
+.num { color: #d19a66 }
+.cm  { color: #5c6370; font-style: italic }
+.cl  { color: #e5c07b }
+.var { color: #abb2bf }
+.op  { color: #e06c75 }
+.prop{ color: #61afef }
+.dec { color: #c678dd }
+.py-kw { color: #c678dd }
+.py-bi { color: #e5c07b }
+.py-dec { color: #c678dd }
+
+.diagram { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 26px; margin: 22px 0; overflow-x: auto; }
+.diag-title { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); text-align: center; margin-bottom: 22px; }
+
+.ba { display: grid; grid-template-columns: 1fr 1fr; margin: 22px 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+.ba-head { padding: 9px 16px; font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; display: flex; align-items: center; gap: 7px; }
+.ba-bad .ba-head { background: rgba(192,57,43,.1); color: var(--rust); border-bottom: 1px solid rgba(192,57,43,.15); }
+.ba-good .ba-head { background: rgba(26,107,60,.08); color: var(--green); border-bottom: 1px solid rgba(26,107,60,.15); }
+.ba-pane pre { border-radius: 0; }
+
+.video-wrap { margin: 28px 0; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+.video-label { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--ink2); font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+.video-label span { color: var(--rust2); }
+.video-wrap iframe { display: block; width: 100%; aspect-ratio: 16/9; border: none; }
+
+.inline-res { display: flex; gap: 14px; padding: 14px 18px; background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; margin: 18px 0; text-decoration: none; transition: all .2s; align-items: flex-start; }
+.inline-res:hover { border-color: var(--rust); background: var(--rust-bg); }
+.ir-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.ir-label { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted2); margin-bottom: 3px; }
+.ir-title { font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+.ir-desc { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+
+.check-grid { display: flex; flex-direction: column; gap: 16px; margin-top: 28px; }
+.check-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 7px; padding: 18px 22px; transition: border-color .2s; }
+.check-item:hover { border-color: var(--rust); }
+.check-q { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--rust); margin-bottom: 7px; }
+.check-text { font-size: 14.5px; color: var(--ink); font-weight: 500; line-height: 1.6; }
+.check-reveal { margin-top: 12px; padding: 14px; background: var(--bg3); border-radius: 5px; font-size: 13.5px; color: var(--ink3); line-height: 1.7; display: none; }
+.check-reveal code { font-family: var(--mono); font-size: 12px; background: var(--bg2); padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); }
+.check-btn { margin-top: 10px; padding: 4px 12px; background: transparent; border: 1px solid var(--border); border-radius: 3px; font-family: var(--mono); font-size: 10px; cursor: pointer; color: var(--muted); transition: all .2s; }
+.check-btn:hover { background: var(--rust); color: #fff; border-color: var(--rust); }
+
+.res-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap: 14px; margin-top: 28px; }
+.res-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 7px; padding: 18px; text-decoration: none; transition: all .2s; display: block; }
+.res-card:hover { border-color: var(--teal); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+.res-card-type { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 7px; }
+.res-card-name { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.res-card-desc { font-size: 12px; color: var(--muted); line-height: 1.55; }
+
+.sched { display: flex; flex-direction: column; gap: 3px; margin-top: 20px; }
+.sched-row { display: grid; grid-template-columns: 160px 1fr; background: var(--bg2); border: 1px solid var(--border); border-radius: 5px; overflow: hidden; gap: 0; }
+.sched-time { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--rust); padding: 14px 16px; border-right: 1px solid var(--border); background: var(--rust-bg); display: flex; align-items: center; }
+.sched-desc { padding: 14px 18px; font-size: 14px; color: var(--ink3); line-height: 1.65; }
+.sched-desc strong { color: var(--ink); }
+.sched-desc code { font-family: var(--mono); font-size: 12px; background: var(--bg3); padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); }
+
+.div { border: none; border-top: 1px solid var(--border); margin: 56px 0; }
+
+/* complexity badge */
+.complexity-row { display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap; }
+.complexity-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; font-family: var(--mono); font-size: 12px; font-weight: 700; border: 1px solid; }
+.cb-time { background: var(--teal-bg); color: var(--teal); border-color: var(--teal-border); }
+.cb-space { background: var(--plum-bg); color: var(--plum); border-color: var(--plum-border); }
+.cb-label { font-weight: 400; opacity: 0.7; font-size: 10px; }
+
+/* mental model box */
+.mental-model { background: linear-gradient(135deg, var(--plum-bg), var(--teal-bg)); border: 2px solid var(--plum-border); border-radius: 10px; padding: 28px 30px; margin: 28px 0; }
+.mental-model h4 { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--plum); margin-bottom: 14px; }
+.mental-model p { font-size: 16px; color: var(--ink); margin-bottom: 0; line-height: 1.75; }
+.mental-model p strong { color: var(--plum); }
+
+/* memory layout diagram */
+.mem-diagram {
+  font-family: var(--mono); font-size: 12.5px; line-height: 2;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 24px; margin: 18px 0; overflow-x: auto;
+}
+
+/* comparison table */
+.comp-table { width: 100%; border-collapse: collapse; margin: 22px 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; font-size: 14px; }
+.comp-table th { background: var(--ink2); color: rgba(255,255,255,.7); font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: 10px 16px; text-align: left; }
+.comp-table td { padding: 11px 16px; border-top: 1px solid var(--border); vertical-align: top; color: var(--ink3); line-height: 1.6; }
+.comp-table td code { font-family: var(--mono); font-size: 12px; background: var(--bg3); padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); }
+.comp-table tr:nth-child(even) td { background: var(--bg2); }
+.comp-table td.yes { color: var(--green); font-weight: 600; }
+.comp-table td.no { color: var(--rust); font-weight: 600; }
+.comp-table td.warn { color: var(--gold); font-weight: 600; }
+
+/* pattern cards */
+.pattern-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 22px 0; }
+.pattern-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; }
+.pattern-card-title { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px; }
+.pattern-card-desc { font-size: 13.5px; color: var(--ink3); line-height: 1.65; }
+.pattern-card-code { font-family: var(--mono); font-size: 11.5px; color: var(--teal); margin-top: 8px; }
+
+/* lc problem row */
+.lc-grid { display: flex; flex-direction: column; gap: 10px; margin: 20px 0; }
+.lc-row { display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; text-decoration: none; transition: all .2s; }
+.lc-row:hover { border-color: var(--rust); background: var(--rust-bg); }
+.lc-diff { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .08em; padding: 2px 8px; border-radius: 3px; flex-shrink: 0; }
+.lc-easy { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.lc-med { background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold-border); }
+.lc-name { font-size: 14px; font-weight: 600; color: var(--ink); flex: 1; }
+.lc-why { font-size: 12px; color: var(--muted); }
+.lc-num { font-family: var(--mono); font-size: 11px; color: var(--muted2); flex-shrink: 0; }
+
+.fade-up { animation: fadeUp .5s ease both; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+
+@media (max-width: 860px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .content { padding: 40px 20px 80px; }
+  .ba { grid-template-columns: 1fr; }
+  .sched-row { grid-template-columns: 1fr; }
+  .pattern-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+<button id="top-btn" onclick="scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- TOPBAR -->
+<nav class="topbar">
+  <div class="tb-brand">RAGHAV.DSA // ROADMAP</div>
+  <div class="tb-day">DAY 01 / 84</div>
+  <ul class="tb-nav">
+    <li><a href="#warmup">Python Warmup</a></li>
+    <li><a href="#arrays">Arrays</a></li>
+    <li><a href="#hashing">Hashing</a></li>
+    <li><a href="#patterns">Patterns</a></li>
+    <li><a href="#check">Check</a></li>
+    <li><a href="#problems">Problems</a></li>
+  </ul>
+</nav>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="toc-head">Day 01 Contents</div>
+  <a class="toc-link" href="#hero">Overview</a>
+  <a class="toc-link" href="#warmup">0. Python Warmup</a>
+  <a class="toc-link sub" href="#data-structs">Core Data Structures</a>
+  <a class="toc-link sub" href="#syntax-tricks">Syntax You Must Know</a>
+  <a class="toc-link sub" href="#big-o-primer">Big-O Primer</a>
+  <a class="toc-link" href="#arrays">1. Arrays Deep Dive</a>
+  <a class="toc-link sub" href="#array-memory">Memory & Access</a>
+  <a class="toc-link sub" href="#array-ops">Key Operations</a>
+  <a class="toc-link sub" href="#prefix-sums">Prefix Sums</a>
+  <a class="toc-link sub" href="#kadane">Kadane's Algorithm</a>
+  <a class="toc-link" href="#hashing">2. Hashing Deep Dive</a>
+  <a class="toc-link sub" href="#how-hash">How Hashing Works</a>
+  <a class="toc-link sub" href="#dict-ops">dict / set Operations</a>
+  <a class="toc-link sub" href="#counter">Counter & defaultdict</a>
+  <a class="toc-link sub" href="#anagram">Anagram Detection</a>
+  <a class="toc-link" href="#patterns">3. Core Patterns</a>
+  <a class="toc-link sub" href="#two-sum-pattern">Two Sum Pattern</a>
+  <a class="toc-link sub" href="#freq-pattern">Frequency Map Pattern</a>
+  <a class="toc-link sub" href="#groupby-pattern">Group By Pattern</a>
+  <a class="toc-link" href="#check">Knowledge Check</a>
+  <a class="toc-link" href="#problems">Today's Problems</a>
+  <a class="toc-link" href="#schedule">Schedule</a>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+<div class="content">
+
+<!-- ═══════════ HERO ═══════════ -->
+<div class="hero fade-up" id="hero">
+  <div class="day-pill">Day 01 — Phase 1 — Week 1</div>
+  <h1 class="hero-title">Python Warmup<br>+ Arrays &<br><span>Hashing</span></h1>
+  <p class="hero-lead">Before you touch a single LeetCode problem, you need Python to feel like home. Today you build the foundation: the data structures Python uses for DSA, the Big-O mental model, and a deep understanding of Arrays and Hashing — the two topics that unlock 40% of all interview problems. By end of today, Two Sum should feel trivially easy.</p>
+  <div class="hero-tags">
+    <span class="tag r">Python Syntax</span>
+    <span class="tag t">Arrays</span>
+    <span class="tag g">Hashing</span>
+    <span class="tag p">Prefix Sums</span>
+    <span class="tag gr">Kadane's Algo</span>
+    <span class="tag r">2 LeetCode Problems</span>
+  </div>
+</div>
+
+<div class="callout info fade-up">
+  <div class="callout-title">📌 How to use this document</div>
+  <p>Read each section fully before touching any code editor. Then open the <strong>Python REPL</strong> or a <strong>Python file</strong> and retype every code block by hand — do not copy-paste. Muscle memory matters. After reading, attempt the LeetCode problems. Come back to look at explanations only after trying for 25+ minutes.</p>
+</div>
+
+<hr class="div">
+
+<!-- ═══════════════════════════
+     SECTION 0 — PYTHON WARMUP
+═══════════════════════════ -->
+<section class="section fade-up" id="warmup">
+  <div class="section-number">Section 00</div>
+  <h2 class="sec-title">Python <span>Warmup</span></h2>
+  <p class="sec-lead">You already know programming from JavaScript. This section is pure syntax mapping — not new concepts. Spend 45 minutes here max. The goal: Python should feel natural enough that during an interview, syntax is never a blocker.</p>
+
+  <div class="callout danger">
+    <div class="callout-title">🚫 The Most Expensive DSA Mistake</div>
+    <p>Using <code>list.pop(0)</code> for queue operations. This is <strong>O(n)</strong> — not O(1). Every element shifts left. In a 50,000-element list, this is a performance disaster. Always use <code>collections.deque</code> for queues. This distinction alone has failed candidates in interviews.</p>
+  </div>
+
+  <!-- 0.1 CORE DATA STRUCTURES -->
+  <div class="sub" id="data-structs">
+    <h3 class="sub-title"><span class="sub-num">0.1</span> The 6 Data Structures You'll Use 95% of the Time</h3>
+
+    <div class="mental-model">
+      <h4>🧠 The Mental Model</h4>
+      <p>Python gives you powerful built-in data structures that map directly to DSA concepts. Know <strong>which structure to reach for</strong> based on the operation you need — and know their time complexities cold. Everything else in DSA is built on top of these six.</p>
+    </div>
+
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Python Structure</th>
+          <th>DSA Equivalent</th>
+          <th>Best For</th>
+          <th>Key Import</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>list</code></td>
+          <td>Dynamic Array / Stack</td>
+          <td>Ordered sequence, append/pop from end</td>
+          <td class="yes">Built-in</td>
+        </tr>
+        <tr>
+          <td><code>dict</code></td>
+          <td>Hash Map</td>
+          <td>Key→Value lookups, frequency counting</td>
+          <td class="yes">Built-in</td>
+        </tr>
+        <tr>
+          <td><code>set</code></td>
+          <td>Hash Set</td>
+          <td>Unique elements, O(1) membership check</td>
+          <td class="yes">Built-in</td>
+        </tr>
+        <tr>
+          <td><code>collections.deque</code></td>
+          <td>Queue / Deque</td>
+          <td>O(1) append/pop from BOTH ends</td>
+          <td class="warn">from collections import deque</td>
+        </tr>
+        <tr>
+          <td><code>heapq</code></td>
+          <td>Min-Heap (Priority Queue)</td>
+          <td>Always get the smallest item in O(log n)</td>
+          <td class="warn">import heapq</td>
+        </tr>
+        <tr>
+          <td><code>collections.defaultdict</code></td>
+          <td>Hash Map with default</td>
+          <td>Avoid KeyError, build adjacency lists</td>
+          <td class="warn">from collections import defaultdict</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">python</span>
+        <span class="code-label">all 6 structures — syntax reference</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm"># ── LIST (Dynamic Array / Stack) ────────────────────────────────</span>
+arr = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>]
+arr.append(<span class="num">6</span>)        <span class="cm"># O(1) amortized — add to end</span>
+arr.pop()             <span class="cm"># O(1) — remove from end (stack pop)</span>
+arr.pop(<span class="num">0</span>)           <span class="cm"># O(n) ⚠️ — don't use for queues!</span>
+arr.insert(<span class="num">0</span>, <span class="num">99</span>)   <span class="cm"># O(n) ⚠️ — shifts everything right</span>
+arr[<span class="num">2</span>]               <span class="cm"># O(1) — random access by index</span>
+<span class="py-bi">len</span>(arr)              <span class="cm"># O(1)</span>
+arr.sort()            <span class="cm"># O(n log n) — in-place Timsort</span>
+<span class="py-bi">sorted</span>(arr)           <span class="cm"># O(n log n) — returns NEW list</span>
+arr.reverse()         <span class="cm"># O(n) — in-place</span>
+arr[::-<span class="num">1</span>]            <span class="cm"># O(n) — returns NEW reversed list</span>
+arr[<span class="num">1</span>:<span class="num">4</span>]             <span class="cm"># O(k) — slice, k = 4-1 = 3 elements</span>
+<span class="num">3</span> <span class="kw">in</span> arr             <span class="cm"># O(n) ⚠️ — linear search in list!</span>
+
+<span class="cm"># ── DICT (Hash Map) ─────────────────────────────────────────────</span>
+d = {<span class="str">"a"</span>: <span class="num">1</span>, <span class="str">"b"</span>: <span class="num">2</span>}
+d[<span class="str">"c"</span>] = <span class="num">3</span>           <span class="cm"># O(1) — insert / update</span>
+d[<span class="str">"a"</span>]              <span class="cm"># O(1) — access (KeyError if missing)</span>
+d.get(<span class="str">"z"</span>, <span class="num">0</span>)       <span class="cm"># O(1) — safe access, returns 0 if missing</span>
+<span class="str">"a"</span> <span class="kw">in</span> d            <span class="cm"># O(1) — key membership check</span>
+d.keys()             <span class="cm"># view of all keys</span>
+d.values()           <span class="cm"># view of all values</span>
+d.items()            <span class="cm"># view of (key, value) tuples</span>
+<span class="kw">del</span> d[<span class="str">"b"</span>]          <span class="cm"># O(1) — delete key</span>
+d.pop(<span class="str">"a"</span>, <span class="kw">None</span>)    <span class="cm"># O(1) — delete and return (None if missing)</span>
+
+<span class="cm"># ── SET (Hash Set) ──────────────────────────────────────────────</span>
+s = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>}
+s = <span class="py-bi">set</span>([<span class="num">1</span>, <span class="num">2</span>, <span class="num">2</span>, <span class="num">3</span>])  <span class="cm"># {1, 2, 3} — duplicates removed</span>
+s.add(<span class="num">4</span>)             <span class="cm"># O(1)</span>
+s.remove(<span class="num">2</span>)          <span class="cm"># O(1) — KeyError if missing</span>
+s.discard(<span class="num">99</span>)        <span class="cm"># O(1) — safe, no error if missing</span>
+<span class="num">3</span> <span class="kw">in</span> s              <span class="cm"># O(1) — THIS is why you use set over list for lookup</span>
+s1 & s2              <span class="cm"># intersection</span>
+s1 | s2              <span class="cm"># union</span>
+s1 - s2              <span class="cm"># difference</span>
+
+<span class="cm"># ── DEQUE (Queue) ───────────────────────────────────────────────</span>
+<span class="kw">from</span> collections <span class="kw">import</span> deque
+q = deque([<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>])
+q.append(<span class="num">4</span>)          <span class="cm"># O(1) — add to RIGHT</span>
+q.appendleft(<span class="num">0</span>)      <span class="cm"># O(1) — add to LEFT</span>
+q.pop()              <span class="cm"># O(1) — remove from RIGHT</span>
+q.popleft()          <span class="cm"># O(1) — remove from LEFT (use for BFS!)</span>
+<span class="cm"># deque is your queue. NEVER use list.pop(0) for queue.</span>
+
+<span class="cm"># ── HEAPQ (Min-Heap) ────────────────────────────────────────────</span>
+<span class="kw">import</span> heapq
+heap = [<span class="num">3</span>, <span class="num">1</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">5</span>]
+heapq.heapify(heap)              <span class="cm"># O(n) — convert list to heap in-place</span>
+heapq.heappush(heap, <span class="num">2</span>)         <span class="cm"># O(log n)</span>
+smallest = heapq.heappop(heap)   <span class="cm"># O(log n) — removes AND returns smallest</span>
+smallest = heap[<span class="num">0</span>]              <span class="cm"># O(1) — peek without removing</span>
+<span class="cm"># MAX HEAP trick: negate values</span>
+heapq.heappush(heap, -<span class="num">10</span>)
+largest = -heapq.heappop(heap)   <span class="cm"># negate back to get actual value</span>
+
+<span class="cm"># ── DEFAULTDICT ─────────────────────────────────────────────────</span>
+<span class="kw">from</span> collections <span class="kw">import</span> defaultdict
+freq = defaultdict(<span class="py-bi">int</span>)         <span class="cm"># default value = 0</span>
+freq[<span class="str">"apple"</span>] += <span class="num">1</span>             <span class="cm"># no KeyError! starts at 0</span>
+freq[<span class="str">"apple"</span>] += <span class="num">1</span>             <span class="cm"># freq["apple"] = 2</span>
+
+graph = defaultdict(<span class="py-bi">list</span>)       <span class="cm"># default value = [] — perfect for adjacency lists</span>
+graph[<span class="str">"A"</span>].append(<span class="str">"B"</span>)         <span class="cm"># no KeyError!</span>
+graph[<span class="str">"A"</span>].append(<span class="str">"C"</span>)</code></pre>
+    </div>
+  </div>
+
+  <!-- 0.2 SYNTAX TRICKS -->
+  <div class="sub" id="syntax-tricks">
+    <h3 class="sub-title"><span class="sub-num t">0.2</span> Syntax You Must Know Cold</h3>
+
+    <p>These are Python idioms that appear constantly in DSA solutions. If you hesitate on any of these during an interview, you lose flow. Memorize them now so they're automatic.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">python</span>
+        <span class="code-label">essential python idioms for dsa</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm"># ── ENUMERATE — iterate with index ──────────────────────────────</span>
+arr = [<span class="str">"a"</span>, <span class="str">"b"</span>, <span class="str">"c"</span>]
+<span class="kw">for</span> i, val <span class="kw">in</span> <span class="py-bi">enumerate</span>(arr):
+    <span class="py-bi">print</span>(i, val)          <span class="cm"># 0 a, 1 b, 2 c</span>
+<span class="cm"># NEVER do: for i in range(len(arr)): val = arr[i]  — ugly and error-prone</span>
+
+<span class="cm"># ── ZIP — pair two lists ─────────────────────────────────────────</span>
+a = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]
+b = [<span class="str">"x"</span>, <span class="str">"y"</span>, <span class="str">"z"</span>]
+<span class="kw">for</span> num, letter <span class="kw">in</span> <span class="py-bi">zip</span>(a, b):
+    <span class="py-bi">print</span>(num, letter)     <span class="cm"># 1 x, 2 y, 3 z</span>
+
+<span class="cm"># ── SORTING WITH KEY ─────────────────────────────────────────────</span>
+words = [<span class="str">"banana"</span>, <span class="str">"apple"</span>, <span class="str">"cherry"</span>]
+words.sort(key=<span class="kw">lambda</span> x: <span class="py-bi">len</span>(x))        <span class="cm"># sort by length</span>
+words.sort(key=<span class="kw">lambda</span> x: (-<span class="py-bi">len</span>(x), x))  <span class="cm"># sort by length DESC, then alpha ASC</span>
+
+intervals = [[<span class="num">2</span>,<span class="num">6</span>], [<span class="num">1</span>,<span class="num">3</span>], [<span class="num">8</span>,<span class="num">9</span>]]
+intervals.sort(key=<span class="kw">lambda</span> x: x[<span class="num">0</span>])       <span class="cm"># sort by first element</span>
+
+<span class="cm"># ── STRING ↔ LIST CONVERSION ────────────────────────────────────</span>
+s = <span class="str">"hello"</span>
+chars = <span class="py-bi">list</span>(s)         <span class="cm"># ['h', 'e', 'l', 'l', 'o']</span>
+back = <span class="str">""</span>.join(chars)   <span class="cm"># "hello" — always use join, never += in a loop</span>
+
+words = <span class="str">"split this string"</span>
+word_list = words.split()          <span class="cm"># ['split', 'this', 'string']</span>
+rejoined = <span class="str">" "</span>.join(word_list)    <span class="cm"># "split this string"</span>
+
+<span class="cm"># ── CHARACTER ARITHMETIC ─────────────────────────────────────────</span>
+<span class="py-bi">ord</span>(<span class="str">'a'</span>)                   <span class="cm"># 97 — ASCII value</span>
+<span class="py-bi">chr</span>(<span class="num">97</span>)                    <span class="cm"># 'a'</span>
+<span class="py-bi">ord</span>(<span class="str">'e'</span>) - <span class="py-bi">ord</span>(<span class="str">'a'</span>)       <span class="cm"># 4 — position in alphabet (0-indexed)</span>
+<span class="cm"># Use case: count character frequencies with array instead of dict</span>
+freq = [<span class="num">0</span>] * <span class="num">26</span>
+<span class="kw">for</span> c <span class="kw">in</span> <span class="str">"hello"</span>:
+    freq[<span class="py-bi">ord</span>(c) - <span class="py-bi">ord</span>(<span class="str">'a'</span>)] += <span class="num">1</span>
+
+<span class="cm"># ── USEFUL MATH ──────────────────────────────────────────────────</span>
+<span class="py-bi">float</span>(<span class="str">'inf'</span>)              <span class="cm"># infinity — use instead of large number tricks</span>
+<span class="py-bi">float</span>(<span class="str">'-inf'</span>)             <span class="cm"># negative infinity</span>
+<span class="num">7</span> // <span class="num">2</span>                    <span class="cm"># 3 — integer division (floor)</span>
+<span class="num">7</span> % <span class="num">3</span>                     <span class="cm"># 1 — modulo</span>
+<span class="num">2</span> ** <span class="num">10</span>                   <span class="cm"># 1024 — exponent</span>
+<span class="py-bi">abs</span>(-<span class="num">5</span>)                   <span class="cm"># 5</span>
+<span class="py-bi">max</span>(<span class="num">3</span>, <span class="num">7</span>, <span class="num">1</span>)              <span class="cm"># 7</span>
+<span class="py-bi">min</span>([<span class="num">3</span>, <span class="num">7</span>, <span class="num">1</span>])            <span class="cm"># 1 — can take list too</span>
+
+<span class="cm"># ── MULTI-VARIABLE SWAP ──────────────────────────────────────────</span>
+a, b = <span class="num">3</span>, <span class="num">7</span>
+a, b = b, a               <span class="cm"># swap — no temp variable needed</span>
+
+<span class="cm"># ── LIST COMPREHENSION ───────────────────────────────────────────</span>
+squares = [x**<span class="num">2</span> <span class="kw">for</span> x <span class="kw">in</span> <span class="py-bi">range</span>(<span class="num">10</span>)]
+evens = [x <span class="kw">for</span> x <span class="kw">in</span> arr <span class="kw">if</span> x % <span class="num">2</span> == <span class="num">0</span>]
+matrix = [[<span class="num">0</span>] * <span class="num">3</span> <span class="kw">for</span> _ <span class="kw">in</span> <span class="py-bi">range</span>(<span class="num">3</span>)]  <span class="cm"># 3x3 zero matrix</span>
+<span class="cm"># ⚠️ [[0] * 3] * 3 is WRONG — all rows point to SAME list!</span>
+
+<span class="cm"># ── COLLECTIONS.COUNTER ──────────────────────────────────────────</span>
+<span class="kw">from</span> collections <span class="kw">import</span> Counter
+freq = Counter(<span class="str">"aabbbc"</span>)         <span class="cm"># Counter({'b': 3, 'a': 2, 'c': 1})</span>
+freq = Counter([<span class="num">1</span>,<span class="num">2</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">3</span>,<span class="num">3</span>])    <span class="cm"># Counter({3: 3, 2: 2, 1: 1})</span>
+freq[<span class="str">"a"</span>]                       <span class="cm"># 2</span>
+freq.most_common(<span class="num">2</span>)             <span class="cm"># [('b', 3), ('a', 2)] — top 2</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 0.3 BIG-O PRIMER -->
+  <div class="sub" id="big-o-primer">
+    <h3 class="sub-title"><span class="sub-num g">0.3</span> Big-O — The Language of DSA</h3>
+
+    <p>Big-O describes how your algorithm <strong>scales</strong> as input grows. It's not about actual speed — it's about the <em>shape of growth</em>. You must state Big-O after every solution you write, every time. It becomes automatic if you practice it from day one.</p>
+
+    <div class="video-wrap fade-up">
+      <div class="video-label">🎬 <span>WATCH THIS FIRST</span> — Big O Notation in 100 Seconds (Fireship)</div>
+      <iframe src="https://www.youtube.com/embed/g2o22C3CRfU" allowfullscreen loading="lazy"></iframe>
+    </div>
+
+    <div class="diagram">
+      <div class="diag-title">Big-O Growth Rates — From Best to Worst</div>
+      <pre style="background:transparent;color:var(--ink);padding:0;font-family:var(--mono);font-size:13px;line-height:2;">
+  O(1)       → Constant    — dict lookup, array index, push/pop stack
+  O(log n)   → Logarithmic — binary search, heap push/pop
+  O(n)       → Linear      — single loop, most array traversals
+  O(n log n) → Linearithmic — sorting (Timsort, merge sort, heap sort)
+  O(n²)      → Quadratic   — nested loops — AVOID in interviews
+  O(2ⁿ)      → Exponential — recursion without memo (subsets, backtracking)
+  O(n!)      → Factorial   — generating all permutations
+
+  For n = 1,000:
+  O(1)       →         1 operations
+  O(log n)   →        10 operations
+  O(n)       →     1,000 operations
+  O(n log n) →    10,000 operations
+  O(n²)      → 1,000,000 operations  ← often too slow
+      </pre>
+    </div>
+
+    <div class="callout insight">
+      <div class="callout-title">💡 The Interview Rule for Big-O</div>
+      <p>After every solution, immediately say: <em>"Time complexity is O(n) because we iterate once. Space complexity is O(n) for the hash map."</em> Do this even in practice — solo. It trains the habit. Interviewers mark down candidates who can't immediately state complexity. The answer doesn't have to be perfect; the instinct to analyze it does.</p>
+    </div>
+
+    <h4 class="mini-title">Amortized O(1) — Why list.append() is "O(1)"</h4>
+    <p>Python lists double their capacity when full. So most appends are O(1), but occasionally one is O(n) (copying to new memory). <strong>Averaged across many operations</strong>, this is O(1) — that's what "amortized" means. This is why you'll see "O(1) amortized" in Python docs.</p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════
+     SECTION 1 — ARRAYS
+═══════════════════════════ -->
+<section class="section fade-up" id="arrays">
+  <div class="section-number">Section 01</div>
+  <h2 class="sec-title">Arrays <span>Deep Dive</span></h2>
+  <p class="sec-lead">Arrays are the bedrock of DSA. Everything else — stacks, queues, graphs — is built on or adjacent to arrays. Understanding them at the memory level helps you reason about why certain operations are fast or slow, and which patterns exploit that structure.</p>
+
+  <div class="video-wrap fade-up">
+    <div class="video-label">🎬 Arrays in Python — NeetCode (10 min, highly recommended)</div>
+    <iframe src="https://www.youtube.com/embed/drAi5M4BQKU" allowfullscreen loading="lazy"></iframe>
+  </div>
+
+  <!-- 1.1 MEMORY & ACCESS -->
+  <div class="sub" id="array-memory">
+    <h3 class="sub-title"><span class="sub-num">1.1</span> How Arrays Work in Memory</h3>
+
+    <div class="mental-model">
+      <h4>🧠 The Mental Model</h4>
+      <p>An array is a <strong>contiguous block of memory</strong>. Every element sits right next to the previous one. This is why index access is O(1) — you just do math: <code>base_address + index * element_size</code>. The computer can jump directly to any element without searching.</p>
+    </div>
+
+    <div class="diagram">
+      <div class="diag-title">Array Memory Layout — arr = [10, 20, 30, 40, 50]</div>
+      <pre style="background:transparent;color:var(--ink);padding:0;font-family:var(--mono);font-size:13px;line-height:1.9;">
+  Memory Address:   0x100  0x104  0x108  0x10C  0x110
+                   ┌──────┬──────┬──────┬──────┬──────┐
+  arr =            │  10  │  20  │  30  │  40  │  50  │
+                   └──────┴──────┴──────┴──────┴──────┘
+  Index:             [0]    [1]    [2]    [3]    [4]
+
+  arr[2] = 0x100 + 2 * 4 bytes = 0x108 → value = 30
+  This calculation is O(1) — no searching required.
+
+  arr[-1] = arr[4] = 50  ← Python handles negative indices for you
+  arr[-2] = arr[3] = 40
+      </pre>
+    </div>
+
+    <p>This contiguous layout means <strong>insertions and deletions in the middle are expensive</strong> — O(n) — because every element after the insertion point must shift. This is the fundamental tradeoff of arrays vs linked lists.</p>
+
+    <div class="callout warn">
+      <div class="callout-title">⚠️ Python List ≠ C Array</div>
+      <p>Python's <code>list</code> is actually a <strong>dynamic array</strong> — it auto-resizes. When full, Python allocates a new, larger block and copies everything over. This is why <code>append()</code> is amortized O(1) but can occasionally be O(n). For true fixed-size arrays, use <code>array.array</code> or <code>numpy.array</code> — but for DSA interviews, <code>list</code> is always sufficient.</p>
+    </div>
+  </div>
+
+  <!-- 1.2 KEY OPERATIONS -->
+  <div class="sub" id="array-ops">
+    <h3 class="sub-title"><span class="sub-num t">1.2</span> Key Array Operations & Their Complexities</h3>
+
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Python Code</th>
+          <th>Time</th>
+          <th>Why</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Access by index</td>
+          <td><code>arr[i]</code></td>
+          <td class="yes">O(1)</td>
+          <td>Direct memory address calculation</td>
+        </tr>
+        <tr>
+          <td>Append to end</td>
+          <td><code>arr.append(x)</code></td>
+          <td class="yes">O(1) amortized</td>
+          <td>No shifting needed</td>
+        </tr>
+        <tr>
+          <td>Pop from end</td>
+          <td><code>arr.pop()</code></td>
+          <td class="yes">O(1)</td>
+          <td>Just decrease length</td>
+        </tr>
+        <tr>
+          <td>Insert at index</td>
+          <td><code>arr.insert(i, x)</code></td>
+          <td class="no">O(n)</td>
+          <td>All elements after i must shift right</td>
+        </tr>
+        <tr>
+          <td>Delete at index</td>
+          <td><code>arr.pop(i)</code></td>
+          <td class="no">O(n)</td>
+          <td>All elements after i must shift left</td>
+        </tr>
+        <tr>
+          <td>Search (unsorted)</td>
+          <td><code>x in arr</code></td>
+          <td class="no">O(n)</td>
+          <td>Must check each element</td>
+        </tr>
+        <tr>
+          <td>Search (sorted)</td>
+          <td>Binary search</td>
+          <td class="yes">O(log n)</td>
+          <td>Eliminate half the search space each step</td>
+        </tr>
+        <tr>
+          <td>Sort</td>
+          <td><code>arr.sort()</code></td>
+          <td class="warn">O(n log n)</td>
+          <td>Timsort (merge sort + insertion sort)</td>
+        </tr>
+        <tr>
+          <td>Slice</td>
+          <td><code>arr[l:r]</code></td>
+          <td class="warn">O(r-l)</td>
+          <td>Creates new list of that size</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">python</span>
+        <span class="code-label">array traversal patterns — the foundation</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm"># ── SINGLE PASS (most common) ────────────────────────────────────</span>
+arr = [<span class="num">2</span>, <span class="num">7</span>, <span class="num">11</span>, <span class="num">15</span>]
+
+<span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(arr)):          <span class="cm"># when you need index</span>
+    <span class="py-bi">print</span>(arr[i])
+
+<span class="kw">for</span> val <span class="kw">in</span> arr:                      <span class="cm"># when you just need the value</span>
+    <span class="py-bi">print</span>(val)
+
+<span class="kw">for</span> i, val <span class="kw">in</span> <span class="py-bi">enumerate</span>(arr):       <span class="cm"># when you need BOTH — use this!</span>
+    <span class="py-bi">print</span>(i, val)
+
+<span class="cm"># ── REVERSE TRAVERSAL ────────────────────────────────────────────</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(arr) - <span class="num">1</span>, -<span class="num">1</span>, -<span class="num">1</span>):   <span class="cm"># from last index to 0</span>
+    <span class="py-bi">print</span>(arr[i])
+
+<span class="kw">for</span> val <span class="kw">in</span> <span class="py-bi">reversed</span>(arr):           <span class="cm"># cleaner — no index math</span>
+    <span class="py-bi">print</span>(val)
+
+<span class="cm"># ── NESTED LOOPS (O(n²)) — use sparingly ─────────────────────────</span>
+<span class="cm"># Brute force for pair problems. Usually optimizable to O(n) with hash.</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(arr)):
+    <span class="kw">for</span> j <span class="kw">in</span> <span class="py-bi">range</span>(i + <span class="num">1</span>, <span class="py-bi">len</span>(arr)):   <span class="cm"># j starts at i+1 to avoid duplicates</span>
+        <span class="py-bi">print</span>(arr[i], arr[j])          <span class="cm"># every unique pair</span>
+
+<span class="cm"># ── 2D ARRAY (GRID) ──────────────────────────────────────────────</span>
+grid = [[<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>], [<span class="num">4</span>,<span class="num">5</span>,<span class="num">6</span>], [<span class="num">7</span>,<span class="num">8</span>,<span class="num">9</span>]]
+rows, cols = <span class="py-bi">len</span>(grid), <span class="py-bi">len</span>(grid[<span class="num">0</span>])
+
+<span class="kw">for</span> r <span class="kw">in</span> <span class="py-bi">range</span>(rows):
+    <span class="kw">for</span> c <span class="kw">in</span> <span class="py-bi">range</span>(cols):
+        <span class="py-bi">print</span>(grid[r][c])
+
+<span class="cm"># 4-directional movement (up, down, left, right) — used in grid BFS/DFS</span>
+directions = [(-<span class="num">1</span>,<span class="num">0</span>), (<span class="num">1</span>,<span class="num">0</span>), (<span class="num">0</span>,-<span class="num">1</span>), (<span class="num">0</span>,<span class="num">1</span>)]
+<span class="kw">for</span> dr, dc <span class="kw">in</span> directions:
+    nr, nc = r + dr, c + dc
+    <span class="kw">if</span> <span class="num">0</span> <= nr < rows <span class="kw">and</span> <span class="num">0</span> <= nc < cols:
+        <span class="py-bi">print</span>(grid[nr][nc])              <span class="cm"># valid neighbor</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 1.3 PREFIX SUMS -->
+  <div class="sub" id="prefix-sums">
+    <h3 class="sub-title"><span class="sub-num g">1.3</span> Prefix Sums — Turning O(n) Range Queries into O(1)</h3>
+
+    <div class="mental-model">
+      <h4>🧠 The Mental Model</h4>
+      <p>A prefix sum array stores <strong>cumulative sums</strong>. Once built, you can answer "what's the sum of elements from index L to R?" in O(1) using subtraction — instead of looping through the subarray each time. It's a classic <strong>precomputation</strong> strategy: spend O(n) once, save O(n) per query forever.</p>
+    </div>
+
+    <div class="diagram">
+      <div class="diag-title">Prefix Sum — Visual Walkthrough</div>
+      <pre style="background:transparent;color:var(--ink);padding:0;font-family:var(--mono);font-size:13px;line-height:1.9;">
+  Original:  arr   = [3,  1,  4,  1,  5,  9,  2,  6]
+  Index:              0   1   2   3   4   5   6   7
+
+  prefix[0] = 0  (empty sum — the sentinel)
+  prefix[1] = 0 + 3 = 3
+  prefix[2] = 3 + 1 = 4
+  prefix[3] = 4 + 4 = 8
+  prefix[4] = 8 + 1 = 9
+  prefix[5] = 9 + 5 = 14
+  prefix[6] = 14 + 9 = 23
+  prefix[7] = 23 + 2 = 25
+  prefix[8] = 25 + 6 = 31
+
+  Sum from index 2 to 5 (inclusive):
+  = prefix[6] - prefix[2]
+  = 23 - 4
+  = 19   ✓  (4 + 1 + 5 + 9 = 19)
+
+  Formula: sum(L, R) = prefix[R+1] - prefix[L]
+      </pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">python</span>
+        <span class="code-label">prefix sums — build and query</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm"># ── BUILD PREFIX SUM ARRAY ──────────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">build_prefix</span>(arr):
+    n = <span class="py-bi">len</span>(arr)
+    prefix = [<span class="num">0</span>] * (n + <span class="num">1</span>)    <span class="cm"># extra 0 at front (the sentinel)</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(n):
+        prefix[i + <span class="num">1</span>] = prefix[i] + arr[i]
+    <span class="kw">return</span> prefix
+
+<span class="cm"># ── RANGE SUM QUERY ─────────────────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">range_sum</span>(prefix, L, R):
+    <span class="cm"># Sum of arr[L..R] (both inclusive)</span>
+    <span class="kw">return</span> prefix[R + <span class="num">1</span>] - prefix[L]
+
+arr = [<span class="num">3</span>, <span class="num">1</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">5</span>, <span class="num">9</span>, <span class="num">2</span>, <span class="num">6</span>]
+prefix = build_prefix(arr)
+<span class="py-bi">print</span>(range_sum(prefix, <span class="num">2</span>, <span class="num">5</span>))   <span class="cm"># 19 = 4+1+5+9</span>
+<span class="py-bi">print</span>(range_sum(prefix, <span class="num">0</span>, <span class="num">7</span>))   <span class="cm"># 31 = sum of entire array</span>
+
+<span class="cm"># ── REAL PROBLEM: Subarray Sum Equals K (LC #560) ───────────────</span>
+<span class="cm"># How many subarrays sum to target k?</span>
+<span class="cm"># Key insight: if prefix[j] - prefix[i] == k, then arr[i..j-1] sums to k</span>
+<span class="cm"># Equivalently: prefix[j] - k == prefix[i] for some earlier i</span>
+<span class="cm"># So: as we build prefix, track "seen prefix sums" in a hash map</span>
+
+<span class="kw">def</span> <span class="fn">subarray_sum</span>(nums, k):
+    count = <span class="num">0</span>
+    curr_sum = <span class="num">0</span>
+    seen = {<span class="num">0</span>: <span class="num">1</span>}    <span class="cm"># prefix sum 0 has been seen once (the empty prefix)</span>
+    
+    <span class="kw">for</span> num <span class="kw">in</span> nums:
+        curr_sum += num
+        <span class="cm"># if curr_sum - k was seen before, those prefix sums form valid subarrays</span>
+        count += seen.get(curr_sum - k, <span class="num">0</span>)
+        seen[curr_sum] = seen.get(curr_sum, <span class="num">0</span>) + <span class="num">1</span>
+    
+    <span class="kw">return</span> count
+
+<span class="cm"># Time: O(n), Space: O(n)</span>
+<span class="cm"># Without prefix sums: O(n²) brute force</span></code></pre>
+    </div>
+
+    <div class="complexity-row">
+      <div class="complexity-badge cb-time"><span class="cb-label">TIME</span> O(n) build, O(1) query</div>
+      <div class="complexity-badge cb-space"><span class="cb-label">SPACE</span> O(n) for prefix array</div>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-title">✅ When to Reach for Prefix Sums</div>
+      <p>Any time you see the phrase <strong>"sum of subarray"</strong>, <strong>"sum of range [L, R]"</strong>, or <strong>"number of subarrays with property X related to sum"</strong> — prefix sums are your tool. The Subarray Sum Equals K problem (LC #560) is the canonical example — it uses prefix sums + hash map to go from O(n²) to O(n).</p>
+    </div>
+  </div>
+
+  <!-- 1.4 KADANE'S ALGORITHM -->
+  <div class="sub" id="kadane">
+    <h3 class="sub-title"><span class="sub-num p">1.4</span> Kadane's Algorithm — Maximum Subarray</h3>
+
+    <p>Kadane's algorithm finds the contiguous subarray with the largest sum in O(n). It's the classic example of <strong>dynamic programming thinking applied to arrays</strong> — the insight is that at each position, you make one decision: extend the current subarray or start fresh.</p>
+
+    <div class="diagram">
+      <div class="diag-title">Kadane's — Visual Trace for [-2, 1, -3, 4, -1, 2, 1, -5, 4]</div>
+      <pre style="background:transparent;color:var(--ink);padding:0;font-family:var(--mono);font-size:13px;line-height:1.9;">
+  At each index, decide: max(num, curr_sum + num)
+  "Should I start fresh with just num, or extend the current window?"
+
+  Index:   0     1     2     3     4     5     6     7     8
+  num:    -2     1    -3     4    -1     2     1    -5     4
+  curr:   -2     1    -2     4     3     5     6     1     5
+  max:    -2     1     1     4     4     5     6     6     6
+
+  curr at index 1: max(1, -2+1) = max(1, -1) = 1  ← start fresh!
+  curr at index 3: max(4, -2+4) = max(4, 2) = 4   ← start fresh again!
+  curr at index 5: max(2, 3+2) = max(2, 5) = 5    ← extend (5 > 2)
+
+  Answer: 6  (subarray [4, -1, 2, 1])
+      </pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">python</span>
+        <span class="code-label">kadane's algorithm — complete with explanation</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm"># LC #53 — Maximum Subarray</span>
+<span class="kw">def</span> <span class="fn">max_subarray</span>(nums):
+    max_sum = nums[<span class="num">0</span>]    <span class="cm"># global maximum (answer)</span>
+    curr_sum = nums[<span class="num">0</span>]   <span class="cm"># current window sum</span>
+    
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(<span class="num">1</span>, <span class="py-bi">len</span>(nums)):
+        num = nums[i]
+        <span class="cm"># DECISION: start fresh (num alone) OR extend current window</span>
+        curr_sum = <span class="py-bi">max</span>(num, curr_sum + num)
+        max_sum = <span class="py-bi">max</span>(max_sum, curr_sum)
+    
+    <span class="kw">return</span> max_sum
+
+<span class="cm"># One-liner version (same logic)</span>
+<span class="kw">def</span> <span class="fn">max_subarray_v2</span>(nums):
+    curr = best = nums[<span class="num">0</span>]
+    <span class="kw">for</span> n <span class="kw">in</span> nums[<span class="num">1</span>:]:
+        curr = <span class="py-bi">max</span>(n, curr + n)
+        best = <span class="py-bi">max</span>(best, curr)
+    <span class="kw">return</span> best
+
+<span class="cm"># ── Extension: return the actual subarray (not just sum) ─────────</span>
+<span class="kw">def</span> <span class="fn">max_subarray_with_indices</span>(nums):
+    max_sum = curr_sum = nums[<span class="num">0</span>]
+    start = end = temp_start = <span class="num">0</span>
+    
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(<span class="num">1</span>, <span class="py-bi">len</span>(nums)):
+        <span class="kw">if</span> nums[i] > curr_sum + nums[i]:    <span class="cm"># starting fresh is better</span>
+            curr_sum = nums[i]
+            temp_start = i
+        <span class="kw">else</span>:
+            curr_sum += nums[i]
+        
+        <span class="kw">if</span> curr_sum > max_sum:
+            max_sum = curr_sum
+            start = temp_start
+            end = i
+    
+    <span class="kw">return</span> max_sum, nums[start:end+<span class="num">1</span>]
+
+<span class="py-bi">print</span>(max_subarray([-<span class="num">2</span>,<span class="num">1</span>,-<span class="num">3</span>,<span class="num">4</span>,-<span class="num">1</span>,<span class="num">2</span>,<span class="num">1</span>,-<span class="num">5</span>,<span class="num">4</span>]))  <span class="cm"># 6</span></code></pre>
+    </div>
+
+    <div class="complexity-row">
+      <div class="complexity-badge cb-time"><span class="cb-label">TIME</span> O(n)</div>
+      <div class="complexity-badge cb-space"><span class="cb-label">SPACE</span> O(1) — only 2 variables!</div>
+    </div>
+
+    <div class="callout insight">
+      <div class="callout-title">💡 The DP Insight in Kadane's</div>
+      <p>Kadane's is actually 1D dynamic programming in disguise. <code>curr_sum</code> represents: <em>"the maximum subarray sum ending exactly at this index."</em> For each index, we choose: either this element starts a new subarray, or it extends the one ending at the previous index — whichever is larger. This is the same "choice at each step" pattern you'll see in House Robber, Coin Change, and many other DP problems in Week 10.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════
+     SECTION 2 — HASHING
+═══════════════════════════ -->
+<section class="section fade-up" id="hashing">
+  <div class="section-number">Section 02</div>
+  <h2 class="sec-title">Hashing <span>Deep Dive</span></h2>
+  <p class="sec-lead">Hashing is the superpower of DSA — it converts O(n) lookups into O(1). Almost every "optimize from O(n²) to O(n)" trick involves introducing a hash map. Understand hashing deeply once, and you'll see it everywhere forever.</p>
+
+  <div class="video-wrap fade-up">
+    <div class="video-label">🎬 Hashing Deep Dive — NeetCode (essential watch)</div>
+    <iframe src="https://www.youtube.com/embed/U0O8UU7GKgk" allowfullscreen loading="lazy"></iframe>
+  </div>
+
+  <!-- 2.1 HOW HASHING WORKS -->
+  <div class="sub" id="how-hash">
+    <h3 class="sub-title"><span class="sub-num">2.1</span> How Hash Maps Work Internally</h3>
+
+    <div class="mental-model">
+      <h4>🧠 The Mental Model</h4>
+      <p>A hash map is an array under the hood. To store <code>key → value</code>, it computes <code>hash(key) % array_size</code> to find the bucket index, then stores there. <strong>Lookup is O(1)</strong> because you just hash the key and jump directly to the bucket — no searching. Collisions (two keys mapping to the same bucket) are handled via chaining (linked list at each bucket) or open addressing.</p>
+    </div>
+
+    <div class="diagram">
+      <div class="diag-title">Hash Map — How dict Works Under the Hood</div>
+      <pre style="background:transparent;color:var(--ink);padding:0;font-family:var(--mono);font-size:12.5px;line-height:2;">
+  Storing: {"apple": 1, "banana": 2, "cherry": 3}
+
+  hash("apple")  % 8 = 5  → bucket[5] = ("apple", 1)
+  hash("banana") % 8 = 2  → bucket[2] = ("banana", 2)
+  hash("cherry") % 8 = 7  → bucket[7] = ("cherry", 3)
+
+  Backing array:
+  Index: [ 0  ][ 1  ][ 2          ][ 3 ][ 4 ][ 5         ][ 6 ][ 7          ]
+         [None][None]["banana"→ 2 ][None][None]["apple"→ 1][None]["cherry"→ 3]
+
+  Lookup "apple": hash("apple") % 8 = 5 → return bucket[5].value = 1
+  One step. No loop. O(1).
+
+  Collision: if hash("mango") % 8 = 5 too → chaining:
+  bucket[5] = [("apple", 1) → ("mango", 4)]
+  Worst case (all collide): O(n) — but in practice, avg is O(1)
+      </pre>
+    </div>
+
+    <p>This is why <code>dict</code> and <code>set</code> have O(1) average lookups. In the worst case (pathological hash collisions), they degrade to O(n) — but Python's hash function is designed to make this essentially impossible with normal usage.</p>
+
+    <div class="callout warn">
+      <div class="callout-title">⚠️ What Can Be a Key? (Hashability)</div>
+      <p>Only <strong>immutable objects</strong> can be dict keys or set elements, because their hash must never change. <code>str</code>, <code>int</code>, <code>float</code>, <code>tuple</code> ✅. <code>list</code>, <code>dict</code>, <code>set</code> ❌ — they're mutable, so they can't be hashed. This is why you'll often see <code>tuple(sorted(word))</code> as a hashable key for anagram grouping.</p>
+    </div>
+  </div>
+
+  <!-- 2.2 DICT / SET OPERATIONS -->
+  <div class="sub" id="dict-ops">
+    <h3 class="sub-title"><span class="sub-num t">2.2</span> dict and set — Every Operation You Need</h3>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">python</span>
+        <span class="code-label">dict and set — complete reference for dsa</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm"># ── DICT PATTERNS IN DSA ─────────────────────────────────────────</span>
+
+<span class="cm"># Pattern 1: Frequency counting (most common hash map use case)</span>
+nums = [<span class="num">4</span>, <span class="num">2</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">4</span>]
+freq = {}
+<span class="kw">for</span> num <span class="kw">in</span> nums:
+    freq[num] = freq.get(num, <span class="num">0</span>) + <span class="num">1</span>
+<span class="cm"># {4: 3, 2: 2, 1: 1}</span>
+<span class="cm"># Alternative with defaultdict:</span>
+<span class="kw">from</span> collections <span class="kw">import</span> defaultdict
+freq = defaultdict(<span class="py-bi">int</span>)
+<span class="kw">for</span> num <span class="kw">in</span> nums:
+    freq[num] += <span class="num">1</span>
+
+<span class="cm"># Pattern 2: Seen / index tracking</span>
+seen = {}
+<span class="kw">for</span> i, num <span class="kw">in</span> <span class="py-bi">enumerate</span>(nums):
+    <span class="kw">if</span> num <span class="kw">in</span> seen:
+        <span class="py-bi">print</span>(<span class="str">f"Duplicate {num} at indices {seen[num]} and {i}"</span>)
+    seen[num] = i
+
+<span class="cm"># Pattern 3: Building adjacency list</span>
+edges = [(<span class="str">"A"</span>,<span class="str">"B"</span>), (<span class="str">"B"</span>,<span class="str">"C"</span>), (<span class="str">"A"</span>,<span class="str">"C"</span>)]
+graph = defaultdict(<span class="py-bi">list</span>)
+<span class="kw">for</span> u, v <span class="kw">in</span> edges:
+    graph[u].append(v)
+    graph[v].append(u)   <span class="cm"># undirected — add both directions</span>
+
+<span class="cm"># Pattern 4: Two-pass dict (seen vs processed)</span>
+<span class="cm"># First pass: store all keys/values you need later</span>
+<span class="cm"># Second pass: check against stored data</span>
+nums_set = <span class="py-bi">set</span>(nums)     <span class="cm"># O(n) to build, O(1) to check membership</span>
+<span class="kw">for</span> num <span class="kw">in</span> nums:
+    <span class="kw">if</span> num + <span class="num">1</span> <span class="kw">not in</span> nums_set:   <span class="cm"># O(1) check</span>
+        <span class="py-bi">print</span>(<span class="str">f"{num} has no successor"</span>)
+
+<span class="cm"># ── SET PATTERNS IN DSA ──────────────────────────────────────────</span>
+
+<span class="cm"># Pattern 1: Deduplicate</span>
+arr = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">1</span>]
+unique = <span class="py-bi">list</span>(<span class="py-bi">set</span>(arr))   <span class="cm"># [1, 2, 3] — but ORDER NOT PRESERVED</span>
+
+<span class="cm"># Pattern 2: Check if duplicate exists</span>
+<span class="kw">def</span> <span class="fn">contains_duplicate</span>(nums):
+    <span class="kw">return</span> <span class="py-bi">len</span>(nums) != <span class="py-bi">len</span>(<span class="py-bi">set</span>(nums))   <span class="cm"># O(n)</span>
+
+<span class="cm"># Pattern 3: Visited tracking (in DFS/BFS)</span>
+visited = <span class="py-bi">set</span>()
+<span class="kw">def</span> <span class="fn">dfs</span>(node):
+    <span class="kw">if</span> node <span class="kw">in</span> visited:
+        <span class="kw">return</span>
+    visited.add(node)
+    <span class="cm"># process node...</span>
+
+<span class="cm"># Pattern 4: Set intersection / difference</span>
+a = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>}
+b = {<span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>}
+common = a & b              <span class="cm"># {3, 4}</span>
+only_in_a = a - b           <span class="cm"># {1, 2}</span>
+all_together = a | b        <span class="cm"># {1, 2, 3, 4, 5, 6}</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 2.3 COUNTER AND DEFAULTDICT -->
+  <div class="sub" id="counter">
+    <h3 class="sub-title"><span class="sub-num g">2.3</span> Counter and defaultdict — The Power Tools</h3>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">python</span>
+        <span class="code-label">counter and defaultdict — everything you need to know</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="kw">from</span> collections <span class="kw">import</span> Counter, defaultdict
+
+<span class="cm"># ── COUNTER ──────────────────────────────────────────────────────</span>
+c = Counter(<span class="str">"aabbbcccc"</span>)        <span class="cm"># Counter({'c': 4, 'b': 3, 'a': 2})</span>
+c = Counter([<span class="num">1</span>,<span class="num">2</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">3</span>,<span class="num">3</span>])      <span class="cm"># Counter({3: 3, 2: 2, 1: 1})</span>
+
+c[<span class="str">"a"</span>]                         <span class="cm"># 2</span>
+c[<span class="str">"z"</span>]                         <span class="cm"># 0 — NO KeyError! Returns 0 for missing</span>
+c.most_common(<span class="num">2</span>)               <span class="cm"># [('c', 4), ('b', 3)] — top 2 by count</span>
+<span class="py-bi">list</span>(c.elements())              <span class="cm"># each element repeated count times</span>
+
+<span class="cm"># Counter arithmetic</span>
+c1 = Counter(<span class="str">"aab"</span>)
+c2 = Counter(<span class="str">"abc"</span>)
+c1 + c2                         <span class="cm"># Counter({'a': 3, 'b': 2, 'c': 1})</span>
+c1 - c2                         <span class="cm"># Counter({'a': 1}) — only positive counts kept</span>
+c1 & c2                         <span class="cm"># Counter({'a': 1, 'b': 1}) — min of each</span>
+c1 | c2                         <span class="cm"># Counter({'a': 2, 'b': 1, 'c': 1}) — max of each</span>
+
+<span class="cm"># ── DEFAULTDICT ───────────────────────────────────────────────────</span>
+<span class="cm"># defaultdict(type_factory) — factory called on missing key</span>
+d = defaultdict(<span class="py-bi">int</span>)           <span class="cm"># default = 0 — use for counting</span>
+d = defaultdict(<span class="py-bi">list</span>)          <span class="cm"># default = [] — use for grouping</span>
+d = defaultdict(<span class="py-bi">set</span>)           <span class="cm"># default = set() — use for adjacency with no duplicates</span>
+d = defaultdict(<span class="kw">lambda</span>: <span class="py-bi">float</span>(<span class="str">'inf'</span>))  <span class="cm"># custom default</span>
+
+<span class="cm"># Grouping example (Group Anagrams — LC #49)</span>
+words = [<span class="str">"eat"</span>, <span class="str">"tea"</span>, <span class="str">"tan"</span>, <span class="str">"ate"</span>, <span class="str">"nat"</span>, <span class="str">"bat"</span>]
+groups = defaultdict(<span class="py-bi">list</span>)
+<span class="kw">for</span> word <span class="kw">in</span> words:
+    key = <span class="py-bi">tuple</span>(<span class="py-bi">sorted</span>(word))   <span class="cm"># ('a','e','t') for "eat", "tea", "ate"</span>
+    groups[key].append(word)
+<span class="py-bi">print</span>(<span class="py-bi">list</span>(groups.values()))
+<span class="cm"># [['eat', 'tea', 'ate'], ['tan', 'nat'], ['bat']]</span>
+<span class="cm"># Time: O(n * k log k) where k = max word length</span>
+<span class="cm"># Space: O(n * k)</span></code></pre>
+    </div>
+
+    <a class="inline-res" href="https://docs.python.org/3/library/collections.html#collections.Counter" target="_blank" rel="noopener">
+      <div class="ir-icon">📚</div>
+      <div>
+        <div class="ir-label">Python Docs</div>
+        <div class="ir-title">collections.Counter — Official Documentation</div>
+        <div class="ir-desc">Complete API reference. Read the "Counter objects" section — it has many useful methods you'll use in interviews that most people don't know about.</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- 2.4 ANAGRAM DETECTION -->
+  <div class="sub" id="anagram">
+    <h3 class="sub-title"><span class="sub-num p">2.4</span> Anagram Detection — Three Approaches, One Insight</h3>
+
+    <p>Anagram problems are the canonical hash map exercise. By seeing three progressively better solutions to the same problem, you internalize the thought process: <em>brute force → sort → hash</em>. This progression is how you should approach every problem in interviews.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">python</span>
+        <span class="code-label">valid anagram (LC #242) — 3 approaches</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm"># ── APPROACH 1: Sort Both Strings — O(n log n) ───────────────────</span>
+<span class="kw">def</span> <span class="fn">is_anagram_sort</span>(s, t):
+    <span class="kw">if</span> <span class="py-bi">len</span>(s) != <span class="py-bi">len</span>(t):
+        <span class="kw">return</span> <span class="kw">False</span>
+    <span class="kw">return</span> <span class="py-bi">sorted</span>(s) == <span class="py-bi">sorted</span>(t)
+<span class="cm"># Time: O(n log n), Space: O(n) for sorted copies</span>
+<span class="cm"># Simple, readable — good starting point to mention, then optimize</span>
+
+<span class="cm"># ── APPROACH 2: Counter Comparison — O(n) ────────────────────────</span>
+<span class="kw">from</span> collections <span class="kw">import</span> Counter
+<span class="kw">def</span> <span class="fn">is_anagram_counter</span>(s, t):
+    <span class="kw">if</span> <span class="py-bi">len</span>(s) != <span class="py-bi">len</span>(t):
+        <span class="kw">return</span> <span class="kw">False</span>
+    <span class="kw">return</span> Counter(s) == Counter(t)
+<span class="cm"># Time: O(n), Space: O(k) where k = unique characters (26 for lowercase alpha)</span>
+<span class="cm"># Clean and Pythonic — good for interviews</span>
+
+<span class="cm"># ── APPROACH 3: Single Array Count — O(n), no imports ────────────</span>
+<span class="kw">def</span> <span class="fn">is_anagram_array</span>(s, t):
+    <span class="kw">if</span> <span class="py-bi">len</span>(s) != <span class="py-bi">len</span>(t):
+        <span class="kw">return</span> <span class="kw">False</span>
+    
+    count = [<span class="num">0</span>] * <span class="num">26</span>          <span class="cm"># one slot per letter a-z</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(s)):
+        count[<span class="py-bi">ord</span>(s[i]) - <span class="py-bi">ord</span>(<span class="str">'a'</span>)] += <span class="num">1</span>   <span class="cm"># increment for s</span>
+        count[<span class="py-bi">ord</span>(t[i]) - <span class="py-bi">ord</span>(<span class="str">'a'</span>)] -= <span class="num">1</span>   <span class="cm"># decrement for t</span>
+    
+    <span class="kw">return</span> <span class="py-bi">all</span>(c == <span class="num">0</span> <span class="kw">for</span> c <span class="kw">in</span> count)
+<span class="cm"># Time: O(n), Space: O(1) — technically O(26) = O(1)</span>
+<span class="cm"># If ALL counts are 0, s and t have exact same character frequencies</span>
+
+<span class="cm"># ── WHICH TO USE? ────────────────────────────────────────────────</span>
+<span class="cm"># In interview: mention Approach 1 as brute force, code Approach 2 (clean)</span>
+<span class="cm"># If interviewer asks "can you do better?", discuss Approach 3</span>
+<span class="cm"># If problem says "Unicode strings" → must use dict, not 26-element array</span></code></pre>
+    </div>
+
+    <div class="callout insight">
+      <div class="callout-title">💡 The Pattern That Generalizes</div>
+      <p>The key insight from anagram detection: <strong>two strings are anagrams if and only if their character frequency maps are identical.</strong> This insight generalizes: whenever you need to compare two things for "same composition regardless of order," think frequency map. This exact pattern appears in Minimum Window Substring, Permutation in String, and Ransom Note.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════
+     SECTION 3 — CORE PATTERNS
+═══════════════════════════ -->
+<section class="section fade-up" id="patterns">
+  <div class="section-number">Section 03</div>
+  <h2 class="sec-title">Core <span>Patterns</span></h2>
+  <p class="sec-lead">These three patterns appear in dozens of LeetCode problems. Master the template for each — then when you see a new problem, you're not solving from scratch, you're recognizing which template applies and adapting it.</p>
+
+  <!-- 3.1 TWO SUM PATTERN -->
+  <div class="sub" id="two-sum-pattern">
+    <h3 class="sub-title"><span class="sub-num">3.1</span> The Two Sum Pattern — Trading Space for Time</h3>
+
+    <div class="mental-model">
+      <h4>🧠 The Core Insight</h4>
+      <p>The Two Sum problem asks: find two numbers in an array that add up to a target. Brute force is O(n²) — try all pairs. The hash map insight: for each number <code>x</code>, if <code>target - x</code> was seen before, we found our pair. We traded O(n) space for O(n) time improvement.</p>
+    </div>
+
+    <div class="ba">
+      <div class="ba-pane ba-bad">
+        <div class="ba-head">❌ Brute Force — O(n²)</div>
+        <pre><code><span class="kw">def</span> <span class="fn">two_sum</span>(nums, target):
+  <span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(nums)):
+    <span class="kw">for</span> j <span class="kw">in</span> <span class="py-bi">range</span>(i+<span class="num">1</span>, <span class="py-bi">len</span>(nums)):
+      <span class="kw">if</span> nums[i]+nums[j] == target:
+        <span class="kw">return</span> [i, j]
+  <span class="kw">return</span> []
+<span class="cm"># Time: O(n²), Space: O(1)
+# Fails for n=10,000: 100 million comparisons</span></code></pre>
+      </div>
+      <div class="ba-pane ba-good">
+        <div class="ba-head">✅ Hash Map — O(n)</div>
+        <pre><code><span class="kw">def</span> <span class="fn">two_sum</span>(nums, target):
+  seen = {}  <span class="cm"># val → index</span>
+  <span class="kw">for</span> i, num <span class="kw">in</span> <span class="py-bi">enumerate</span>(nums):
+    complement = target - num
+    <span class="kw">if</span> complement <span class="kw">in</span> seen:
+      <span class="kw">return</span> [seen[complement], i]
+    seen[num] = i
+  <span class="kw">return</span> []
+<span class="cm"># Time: O(n), Space: O(n)
+# One pass — as we go, check if complement exists</span></code></pre>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">python</span>
+        <span class="code-label">two sum variations — the full pattern family</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm"># ── VARIATION: Two Sum with sorted array → Two Pointers ──────────</span>
+<span class="cm"># If input is sorted, two pointers is O(n) and O(1) space (even better!)</span>
+<span class="kw">def</span> <span class="fn">two_sum_sorted</span>(nums, target):
+    left, right = <span class="num">0</span>, <span class="py-bi">len</span>(nums) - <span class="num">1</span>
+    <span class="kw">while</span> left < right:
+        total = nums[left] + nums[right]
+        <span class="kw">if</span> total == target:
+            <span class="kw">return</span> [left, right]
+        <span class="kw">elif</span> total < target:
+            left += <span class="num">1</span>     <span class="cm"># need bigger sum → move left pointer right</span>
+        <span class="kw">else</span>:
+            right -= <span class="num">1</span>    <span class="cm"># need smaller sum → move right pointer left</span>
+    <span class="kw">return</span> []
+
+<span class="cm"># ── VARIATION: Check if any two elements sum to target ───────────</span>
+<span class="kw">def</span> <span class="fn">has_two_sum</span>(nums, target):
+    seen = <span class="py-bi">set</span>()       <span class="cm"># just need existence, not index → use set</span>
+    <span class="kw">for</span> num <span class="kw">in</span> nums:
+        <span class="kw">if</span> target - num <span class="kw">in</span> seen:
+            <span class="kw">return</span> <span class="kw">True</span>
+        seen.add(num)
+    <span class="kw">return</span> <span class="kw">False</span>
+
+<span class="cm"># ── VARIATION: All pairs that sum to target ──────────────────────</span>
+<span class="kw">def</span> <span class="fn">all_two_sums</span>(nums, target):
+    freq = Counter(nums)
+    seen_pairs = <span class="py-bi">set</span>()
+    result = []
+    <span class="kw">for</span> num <span class="kw">in</span> nums:
+        complement = target - num
+        <span class="kw">if</span> complement <span class="kw">in</span> freq:
+            pair = <span class="py-bi">tuple</span>(<span class="py-bi">sorted</span>([num, complement]))
+            <span class="kw">if</span> pair <span class="kw">not in</span> seen_pairs:
+                <span class="kw">if</span> num != complement <span class="kw">or</span> freq[num] >= <span class="num">2</span>:
+                    result.append([num, complement])
+                    seen_pairs.add(pair)
+    <span class="kw">return</span> result</code></pre>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-title">✅ The Pattern Template to Memorize</div>
+      <p><strong>Template:</strong> <code>seen = {}</code> → iterate → for each element, compute <code>complement = target - element</code> → check if complement in seen → add current to seen. This one template, with minor variations, solves Two Sum, Three Sum (reduced to Two Sum), Four Sum, etc.</p>
+    </div>
+  </div>
+
+  <!-- 3.2 FREQUENCY MAP PATTERN -->
+  <div class="sub" id="freq-pattern">
+    <h3 class="sub-title"><span class="sub-num t">3.2</span> Frequency Map Pattern — Count Then Decide</h3>
+
+    <p>The frequency map pattern: first count occurrences of all elements, then use those counts to answer the question. This is behind Top K Frequent Elements, Valid Anagram, First Unique Character, and more.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">python</span>
+        <span class="code-label">top K frequent elements — the pattern in action (LC #347)</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm"># ── APPROACH 1: Sort by frequency — O(n log n) ───────────────────</span>
+<span class="kw">def</span> <span class="fn">top_k_frequent_sort</span>(nums, k):
+    freq = Counter(nums)
+    <span class="cm"># Sort items by count descending, take first k</span>
+    <span class="kw">return</span> [num <span class="kw">for</span> num, _ <span class="kw">in</span> freq.most_common(k)]
+
+<span class="cm"># ── APPROACH 2: Bucket Sort — O(n) ───────────────────────────────</span>
+<span class="cm"># Insight: frequency can be at most n (if all elements same)</span>
+<span class="cm"># Create n+1 buckets where bucket[i] = all nums with frequency i</span>
+<span class="kw">def</span> <span class="fn">top_k_frequent</span>(nums, k):
+    freq = Counter(nums)
+    
+    <span class="cm"># bucket[i] contains all nums that appear exactly i times</span>
+    bucket = [[] <span class="kw">for</span> _ <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(nums) + <span class="num">1</span>)]
+    <span class="kw">for</span> num, count <span class="kw">in</span> freq.items():
+        bucket[count].append(num)
+    
+    <span class="cm"># Collect from highest frequency buckets first</span>
+    result = []
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(bucket) - <span class="num">1</span>, -<span class="num">1</span>, -<span class="num">1</span>):
+        <span class="kw">for</span> num <span class="kw">in</span> bucket[i]:
+            result.append(num)
+            <span class="kw">if</span> <span class="py-bi">len</span>(result) == k:
+                <span class="kw">return</span> result
+
+<span class="cm"># Example: nums = [1,1,1,2,2,3], k = 2 → [1, 2]
+# freq = {1:3, 2:2, 3:1}
+# bucket = [[], [3], [2], [1], [], [], []]
+# Scan from right: bucket[3]=[1] → result=[1]
+#                  bucket[2]=[2] → result=[1,2] → len == k, return!</span>
+
+<span class="cm"># Time: O(n), Space: O(n)
+# The bucket sort trick avoids the O(n log n) sort entirely</span></code></pre>
+    </div>
+
+    <div class="complexity-row">
+      <div class="complexity-badge cb-time"><span class="cb-label">Approach 1</span> O(n log n)</div>
+      <div class="complexity-badge cb-time"><span class="cb-label">Approach 2</span> O(n)</div>
+      <div class="complexity-badge cb-space"><span class="cb-label">SPACE</span> O(n) both</div>
+    </div>
+  </div>
+
+  <!-- 3.3 GROUP BY PATTERN -->
+  <div class="sub" id="groupby-pattern">
+    <h3 class="sub-title"><span class="sub-num g">3.3</span> Group By Pattern — Hash Map of Lists</h3>
+
+    <p>Grouping problems: you want to collect elements that share some property into groups. The template is always: compute a hashable key for each element, use <code>defaultdict(list)</code> to group by that key.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">python</span>
+        <span class="code-label">group anagrams (LC #49) — the canonical grouping problem</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm"># Group Anagrams — LC #49</span>
+<span class="cm"># Input: ["eat","tea","tan","ate","nat","bat"]</span>
+<span class="cm"># Output: [["bat"],["nat","tan"],["ate","eat","tea"]]</span>
+
+<span class="cm"># ── APPROACH 1: Sort each word as key — O(n * k log k) ───────────</span>
+<span class="kw">def</span> <span class="fn">group_anagrams_sort</span>(strs):
+    groups = defaultdict(<span class="py-bi">list</span>)
+    <span class="kw">for</span> word <span class="kw">in</span> strs:
+        key = <span class="py-bi">tuple</span>(<span class="py-bi">sorted</span>(word))   <span class="cm"># must be tuple (list is not hashable)</span>
+        groups[key].append(word)
+    <span class="kw">return</span> <span class="py-bi">list</span>(groups.values())
+
+<span class="cm"># ── APPROACH 2: Character count as key — O(n * k) ────────────────</span>
+<span class="cm"># Avoids the k log k sort — uses character frequency tuple as key</span>
+<span class="kw">def</span> <span class="fn">group_anagrams_count</span>(strs):
+    groups = defaultdict(<span class="py-bi">list</span>)
+    <span class="kw">for</span> word <span class="kw">in</span> strs:
+        count = [<span class="num">0</span>] * <span class="num">26</span>
+        <span class="kw">for</span> c <span class="kw">in</span> word:
+            count[<span class="py-bi">ord</span>(c) - <span class="py-bi">ord</span>(<span class="str">'a'</span>)] += <span class="num">1</span>
+        key = <span class="py-bi">tuple</span>(count)           <span class="cm"># (2,0,0,...,1,...) — hashable!</span>
+        groups[key].append(word)
+    <span class="kw">return</span> <span class="py-bi">list</span>(groups.values())
+
+<span class="cm"># ── THE PATTERN TEMPLATE ─────────────────────────────────────────</span>
+<span class="cm"># def group_by_X(items):</span>
+<span class="cm">#     groups = defaultdict(list)</span>
+<span class="cm">#     for item in items:</span>
+<span class="cm">#         key = compute_hashable_key(item)  ← THIS is the creative part</span>
+<span class="cm">#         groups[key].append(item)</span>
+<span class="cm">#     return list(groups.values())</span>
+
+<span class="cm"># The key for anagrams: sorted letters → same key for all anagrams
+# The key for "same sum" problems: sum value
+# The key for "same pattern" problems: normalized pattern string
+# The key for graph problems: tuple(sorted(neighbors))</span></code></pre>
+    </div>
+
+    <a class="inline-res" href="https://neetcode.io/problems/anagram-groups" target="_blank" rel="noopener">
+      <div class="ir-icon">🎯</div>
+      <div>
+        <div class="ir-label">Practice</div>
+        <div class="ir-title">NeetCode: Group Anagrams — Interactive Solution</div>
+        <div class="ir-desc">Read NeetCode's visual explanation of this exact problem. The animation makes the key insight click instantly. Best watched after you've tried to solve it yourself.</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════ KNOWLEDGE CHECK ═══════════ -->
+<section class="section fade-up" id="check">
+  <div class="section-number">Knowledge Check</div>
+  <h2 class="sec-title">10 Questions — <span>No Peeking</span></h2>
+  <p class="sec-lead">Answer these without looking at the document. They cover everything from today. If you struggle, that's where you need to re-read. Click Reveal only after you've attempted an answer.</p>
+
+  <div class="check-grid">
+
+    <div class="check-item">
+      <div class="check-q">Q01 / 10</div>
+      <div class="check-text">What is the time complexity of <code>list.pop(0)</code> in Python? Why is it different from <code>list.pop()</code>? What should you use instead for O(1) removal from the front?</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        <code>list.pop(0)</code> is <strong>O(n)</strong> because when you remove the first element, every other element must shift left by one position to fill the gap. <code>list.pop()</code> (from the end) is <strong>O(1)</strong> — no shifting needed, just reduce the length. For O(1) removal from the front (queue operations), use <code>collections.deque</code> and <code>popleft()</code> — which is O(1) because deque maintains pointers to both ends.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q02 / 10</div>
+      <div class="check-text">Why can't you use a <code>list</code> as a dictionary key? What can you use instead when you need a hashable collection?</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        Lists are <strong>mutable</strong> — they can change after creation. If a list were used as a dict key and then modified, its hash would change, breaking the hash map's invariant (you'd never find the value again). Only <strong>immutable objects</strong> are hashable. Use a <code>tuple</code> instead — it looks like a list but is immutable. This is why <code>tuple(sorted(word))</code> is the canonical key for anagram grouping.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q03 / 10</div>
+      <div class="check-text">Explain how a hash map achieves O(1) lookup. What happens internally when you do <code>d["key"]</code>?</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        Python computes <code>hash("key")</code> — a fixed-size integer derived from the key's value. It then does <code>hash("key") % array_size</code> to get a bucket index. It jumps directly to that bucket and returns the stored value. No iteration — just math and a direct memory access. This is why it's O(1). In the case of a collision (two keys hashing to the same bucket), Python chains them — worst case becomes O(n) if everything collides, but Python's hash functions make this extremely unlikely in practice.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q04 / 10</div>
+      <div class="check-text">What is a prefix sum array? Given <code>arr = [2, 4, 1, 5, 3]</code>, write the prefix array and compute the sum of elements from index 1 to 3.</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        A prefix sum array stores cumulative sums: <code>prefix[i]</code> = sum of arr[0..i-1]. With a sentinel 0 at the start:<br><br>
+        <code>arr    = [2,  4,  1,  5,  3]</code><br>
+        <code>prefix = [0,  2,  6,  7, 12, 15]</code><br><br>
+        Sum from index 1 to 3 (inclusive): <code>prefix[4] - prefix[1] = 12 - 2 = 10</code> (= 4+1+5 ✓). Built once in O(n), each query is O(1).
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q05 / 10</div>
+      <div class="check-text">Explain Kadane's algorithm in one sentence. What is the "decision" it makes at each step?</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        Kadane's algorithm finds the maximum sum contiguous subarray by, at each element, deciding: <strong>is it better to start a new subarray here (take just this element), or extend the existing one?</strong> This is: <code>curr = max(num, curr + num)</code>. Track the global best as you go: <code>best = max(best, curr)</code>. Time O(n), space O(1).
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q06 / 10</div>
+      <div class="check-text">Write the Two Sum solution using a hash map. What is the key insight that makes it O(n) instead of O(n²)?</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        The key insight: for each element <code>x</code>, its complement is <code>target - x</code>. Instead of searching the entire array for the complement (O(n) per element → O(n²) total), store each element in a hash map as we go. Check if the complement already exists in the map — O(1) lookup. One pass, O(n) total.<br><br>
+        <code>seen = {}</code><br>
+        <code>for i, num in enumerate(nums):</code><br>
+        <code>&nbsp;&nbsp;if target - num in seen: return [seen[target-num], i]</code><br>
+        <code>&nbsp;&nbsp;seen[num] = i</code>
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q07 / 10</div>
+      <div class="check-text">What is the difference between <code>sorted(arr)</code> and <code>arr.sort()</code>? When would you use each?</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        <code>arr.sort()</code> sorts <strong>in-place</strong> — modifies the original list, returns <code>None</code>. <code>sorted(arr)</code> returns a <strong>new list</strong> — original is unchanged. Use <code>arr.sort()</code> when you don't need the original order. Use <code>sorted(arr)</code> when you need to preserve the original, or when sorting any iterable (not just lists — e.g. <code>sorted(dict.items())</code>). Both are O(n log n) Timsort.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q08 / 10</div>
+      <div class="check-text">What does <code>Counter.most_common(k)</code> return? What is its time complexity?</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        <code>most_common(k)</code> returns a list of the k most frequent elements as <code>(element, count)</code> tuples, sorted from most to least frequent. Example: <code>Counter("aabbc").most_common(2)</code> → <code>[('a', 2), ('b', 2)]</code>. Time complexity: O(n log k) using a heap internally — or O(n log n) if k is None (returns all). The key interview fact: use this instead of manually sorting the full frequency dict when you only need the top k.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q09 / 10</div>
+      <div class="check-text">What is amortized O(1) and which Python list operation has this property?</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        Amortized O(1) means that while individual operations might occasionally be expensive, the <strong>average cost per operation over many operations</strong> is O(1). <code>list.append()</code> has this property. Most appends are O(1) — just write to the next slot. But when the list is full, Python allocates a new, larger array (2x size) and copies all elements — that one operation is O(n). However, since it happens rarely and the list doubles each time, the amortized cost across all appends is O(1).
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-q">Q10 / 10</div>
+      <div class="check-text">What is the template for the "group by" pattern? Give the Group Anagrams key computation using sorted characters.</div>
+      <button class="check-btn" onclick="revealAnswer(this)">Reveal Answer</button>
+      <div class="check-reveal">
+        Template: <code>groups = defaultdict(list)</code> → for each item, compute a hashable key → <code>groups[key].append(item)</code> → return <code>list(groups.values())</code>. The creative part is the key computation.<br><br>
+        For anagrams: <code>key = tuple(sorted(word))</code> — all anagrams of the same word will have the same sorted character tuple. E.g. "eat", "tea", "ate" all produce <code>('a', 'e', 't')</code>. Must be <code>tuple</code> (not <code>list</code>) because tuples are hashable.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════ TODAY'S PROBLEMS ═══════════ -->
+<section class="section fade-up" id="problems">
+  <div class="section-number">Today's LeetCode Problems</div>
+  <h2 class="sec-title">2 Problems — <span>Do Both</span></h2>
+  <p class="sec-lead">These two problems directly test today's concepts. Attempt each for 25 minutes before looking at hints. Write Big-O complexity after solving. Both should be very solvable with today's content.</p>
+
+  <div class="lc-grid">
+    <a class="lc-row" href="https://leetcode.com/problems/contains-duplicate/" target="_blank" rel="noopener">
+      <div class="lc-diff lc-easy">Easy</div>
+      <div>
+        <div class="lc-name">#217 — Contains Duplicate</div>
+        <div class="lc-why">Uses: set membership, O(1) lookup vs O(n) list check. If you use a set, it's O(n) time. If you sort first, it's O(n log n). Know both.</div>
+      </div>
+      <div class="lc-num">#217</div>
+    </a>
+    <a class="lc-row" href="https://leetcode.com/problems/two-sum/" target="_blank" rel="noopener">
+      <div class="lc-diff lc-easy">Easy</div>
+      <div>
+        <div class="lc-name">#1 — Two Sum</div>
+        <div class="lc-why">Uses: Two Sum pattern. Must solve in O(n) with hash map. First think brute force O(n²), then optimize. The most famous first LeetCode problem.</div>
+      </div>
+      <div class="lc-num">#1</div>
+    </a>
+  </div>
+
+  <div class="callout info" style="margin-top: 28px;">
+    <div class="callout-title">🎯 How to approach these problems</div>
+    <p><strong>Step 1:</strong> Read the problem. Note the constraints (n ≤ 10⁵ usually means O(n) or O(n log n) required). <strong>Step 2:</strong> Verbalize the brute force — even if O(n²). <strong>Step 3:</strong> Think about which structure helps (set? dict?). <strong>Step 4:</strong> Code it up. <strong>Step 5:</strong> After solving, write down time and space complexity and verify your solution handles edge cases (empty array, single element, all duplicates).</p>
+  </div>
+
+  <div class="callout tip" style="margin-top: 16px;">
+    <div class="callout-title">📺 If you're completely stuck after 25 minutes</div>
+    <p>For Contains Duplicate: Think — what data structure gives O(1) membership check? For Two Sum: Think — for each number, what's the one other number you need? How do you find it fast? If still stuck after 5 more minutes, read only the <strong>approach hint</strong> on NeetCode, not the full solution. Then try coding it yourself.</p>
+  </div>
+
+  <a class="inline-res" href="https://neetcode.io/roadmap" target="_blank" rel="noopener">
+    <div class="ir-icon">🗺️</div>
+    <div>
+      <div class="ir-label">Your Primary Resource</div>
+      <div class="ir-title">NeetCode Roadmap — Arrays & Hashing Section</div>
+      <div class="ir-desc">After solving both problems, look at NeetCode's written solution. Even if you solved correctly, always read the editorial — there are often more elegant approaches or edge cases you missed. The roadmap groups problems by pattern — work through the Arrays & Hashing section over this week.</div>
+    </div>
+  </a>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════ RESOURCES ═══════════ -->
+<section class="section fade-up" id="resources">
+  <div class="section-number">Curated Resources</div>
+  <h2 class="sec-title">Read / Watch <span>Now</span></h2>
+  <p class="sec-lead">Every link here is specifically relevant to today's content. No filler. Use these to fill gaps, not replace reading this document.</p>
+
+  <div class="res-grid">
+    <a class="res-card" href="https://visualgo.net/en/array" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--rust);">🎬 Visual</div>
+      <div class="res-card-name">VisuAlgo — Array Visualizer</div>
+      <div class="res-card-desc">Animated visualization of array insertions, deletions, and searches. Watch the O(n) insert shift animation once — it'll burn the concept into memory permanently.</div>
+    </a>
+    <a class="res-card" href="https://visualgo.net/en/hashtable" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--teal);">🎬 Visual</div>
+      <div class="res-card-name">VisuAlgo — Hash Table Visualizer</div>
+      <div class="res-card-desc">See exactly how hash collisions are handled, how the table resizes, and how keys are distributed. Essential for internalizing why dict lookup is O(1).</div>
+    </a>
+    <a class="res-card" href="https://www.youtube.com/watch?v=KLlXCFG5TnA" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--rust);">🎬 YouTube</div>
+      <div class="res-card-name">Hashing (NeetCode) — 12 min</div>
+      <div class="res-card-desc">NeetCode's own explanation of hashing for DSA. Explains exactly the hash map patterns you'll use in 40%+ of interview problems. Watch after reading this doc.</div>
+    </a>
+    <a class="res-card" href="https://docs.python.org/3/library/collections.html" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--gold);">📚 Docs</div>
+      <div class="res-card-name">Python collections module docs</div>
+      <div class="res-card-desc">Official docs for deque, defaultdict, Counter, OrderedDict. Bookmark this — you'll reference it weekly. Read the Counter and deque sections today.</div>
+    </a>
+    <a class="res-card" href="https://www.bigocheatsheet.com/" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--plum);">📋 Cheatsheet</div>
+      <div class="res-card-name">Big-O Cheat Sheet</div>
+      <div class="res-card-desc">Every data structure's operation complexities in one page. Bookmark and keep open during your first 3 weeks of practice. Second-nature after 100 problems.</div>
+    </a>
+    <a class="res-card" href="https://www.youtube.com/watch?v=BgLTDT03QtU" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--green);">🎬 YouTube</div>
+      <div class="res-card-name">Prefix Sums Explained (NeetCode)</div>
+      <div class="res-card-desc">8-minute video with animated walkthrough of prefix sums and the "Subarray Sum Equals K" problem. Watch this after reading section 1.3 — it makes the pattern click.</div>
+    </a>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════ SCHEDULE ═══════════ -->
+<section class="section fade-up" id="schedule">
+  <div class="section-number">Action Plan</div>
+  <h2 class="sec-title">Today's <span>Schedule</span></h2>
+
+  <div class="sched">
+    <div class="sched-row">
+      <div class="sched-time">Morning (1.5 hr)</div>
+      <div class="sched-desc">
+        <strong>Read this document, Section 0 + 1</strong><br>
+        Python Warmup + Arrays. Type every code block in a Python file or REPL. Don't just read — run and modify. Break things intentionally. Watch the VisuAlgo array animation.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">Mid-day (1 hr)</div>
+      <div class="sched-desc">
+        <strong>Read Section 2 + 3</strong><br>
+        Hashing Deep Dive + Core Patterns. Watch the NeetCode Hashing video. Implement <code>group_anagrams</code> from memory after reading. Check your implementation against the solution.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">Afternoon (1 hr)</div>
+      <div class="sched-desc">
+        <strong>LeetCode Problem 1 — Contains Duplicate (#217)</strong><br>
+        25 minutes to attempt. Then read solution if needed. Write time + space complexity in your notebook. Note which pattern it uses.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">Afternoon (1 hr)</div>
+      <div class="sched-desc">
+        <strong>LeetCode Problem 2 — Two Sum (#1)</strong><br>
+        25 minutes to attempt without hints. Start with brute force, then optimize. After solving, check NeetCode for any better approaches. Must solve in O(n).
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">Evening (30 min)</div>
+      <div class="sched-desc">
+        <strong>Knowledge Check + Review</strong><br>
+        Attempt all 10 knowledge check questions without looking. Score honestly. Write the 2-3 concepts you were shakiest on. These are your review targets for tomorrow morning.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">Evening (30 min)</div>
+      <div class="sched-desc">
+        <strong>Python Practice — Drill the Syntax</strong><br>
+        Open a blank Python file. Without looking: write a <code>Counter</code> frequency map from scratch, implement <code>two_sum</code> from memory, write the <code>group_anagrams</code> template. If you can't, re-read those sections.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout tip" style="margin-top:36px;">
+    <div class="callout-title">✅ Tomorrow — Day 2</div>
+    <p>Day 2 is <strong>Arrays Medium + Hashing Medium</strong>. You'll tackle Kadane's algorithm on real problems, the Longest Consecutive Sequence (a deceptively clever hash set problem), and Product of Array Except Self — a prefix/suffix sum masterclass. Everything tomorrow assumes today's patterns are solid — so get today right.</p>
+  </div>
+
+  <div style="margin-top:52px;padding:36px;background:var(--bg2);border:2px solid var(--border);border-radius:10px;text-align:center;">
+    <div style="font-family:var(--serif);font-size:28px;font-weight:900;color:var(--ink);margin-bottom:8px;">Day 01 of 84.</div>
+    <div style="font-size:16px;color:var(--muted);margin-bottom:20px;">Every expert was once a beginner who didn't quit. The array and the hash map — these two structures will appear in your interview. Own them today.</div>
+    <div class="hero-tags" style="justify-content:center;">
+      <span class="tag r">Arrays Medium →</span>
+      <span class="tag t">Two Pointers →</span>
+      <span class="tag g">Sliding Window →</span>
+      <span class="tag p">83 days to go</span>
+    </div>
+  </div>
+</section>
+
+</div>
+</main>
+
+<script>
+const prog = document.getElementById('prog');
+const topBtn = document.getElementById('top-btn');
+
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY;
+  const total = document.body.scrollHeight - window.innerHeight;
+  prog.style.width = (scrolled / total * 100) + '%';
+  topBtn.classList.toggle('show', scrolled > 400);
+  updateToc();
+});
+
+function updateToc() {
+  const links = document.querySelectorAll('.toc-link');
+  let current = '';
+  document.querySelectorAll('[id]').forEach(el => {
+    if (window.scrollY >= el.offsetTop - 100) current = el.id;
+  });
+  links.forEach(l => {
+    l.classList.toggle('on', l.getAttribute('href') === '#' + current);
+  });
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'copied!';
+    btn.style.background = 'var(--green)';
+    btn.style.color = '#fff';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(() => {
+      btn.textContent = 'copy';
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2200);
+  });
+}
+
+function revealAnswer(btn) {
+  const reveal = btn.nextElementSibling;
+  if (reveal.style.display === 'block') {
+    reveal.style.display = 'none';
+    btn.textContent = 'Reveal Answer';
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+  } else {
+    reveal.style.display = 'block';
+    btn.textContent = 'Hide Answer';
+    btn.style.background = 'var(--green)';
+    btn.style.color = '#fff';
+    btn.style.borderColor = 'var(--green)';
+  }
+}
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'none';
+      e.target.style.transition = 'opacity .5s ease, transform .5s ease';
+      obs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.05 });
+
+document.querySelectorAll('.section, .sub, .callout, .video-wrap').forEach(el => {
+  if (!el.classList.contains('fade-up')) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(14px)';
+    obs.observe(el);
+  }
+});
+</script>
+</body>
+</html>
