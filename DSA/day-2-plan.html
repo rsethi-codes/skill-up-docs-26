@@ -1,0 +1,2810 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Day 02 &mdash; Two Pointers &amp; Sliding Window | Raghav's DSA
+    </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,700;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f5f0e8;
+        --bg2: #ede8de;
+        --bg3: #e4ddd0;
+        --bg4: #d8d0c4;
+        --ink: #1a1410;
+        --ink2: #2d2520;
+        --ink3: #453d35;
+        --muted: #7a6f62;
+        --muted2: #a89e92;
+        --border: rgba(26, 20, 16, 0.12);
+        --border2: rgba(26, 20, 16, 0.07);
+        --rust: #c0392b;
+        --rust2: #e74c3c;
+        --rust-bg: rgba(192, 57, 43, 0.07);
+        --rust-border: rgba(192, 57, 43, 0.22);
+        --teal: #0d7f7f;
+        --teal-bg: rgba(13, 127, 127, 0.07);
+        --teal-border: rgba(13, 127, 127, 0.22);
+        --gold: #a07000;
+        --gold-bg: rgba(160, 112, 0, 0.07);
+        --gold-border: rgba(160, 112, 0, 0.22);
+        --plum: #5b2d8e;
+        --plum-bg: rgba(91, 45, 142, 0.07);
+        --plum-border: rgba(91, 45, 142, 0.22);
+        --green: #1a6b3c;
+        --green-bg: rgba(26, 107, 60, 0.07);
+        --green-border: rgba(26, 107, 60, 0.22);
+        --serif: "Playfair Display", Georgia, serif;
+        --mono: "JetBrains Mono", "Fira Code", monospace;
+        --sans: "DM Sans", system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--ink);
+        line-height: 1.75;
+        font-size: 16px;
+        overflow-x: hidden;
+      }
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 9999;
+        opacity: 0.5;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+      }
+      #prog {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 3px;
+        width: 0;
+        z-index: 1000;
+        transition: width 0.08s linear;
+        background: linear-gradient(
+          90deg,
+          var(--rust),
+          var(--gold),
+          var(--teal)
+        );
+        box-shadow: 0 0 8px rgba(192, 57, 43, 0.4);
+      }
+      #top-btn {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        width: 40px;
+        height: 40px;
+        background: var(--ink);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 18px;
+        cursor: pointer;
+        z-index: 900;
+        opacity: 0;
+        transition: opacity 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #top-btn.show {
+        opacity: 1;
+      }
+      .topbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 54px;
+        z-index: 900;
+        background: rgba(245, 240, 232, 0.94);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 28px;
+      }
+      .tb-brand {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--rust);
+        letter-spacing: 0.07em;
+      }
+      .tb-day {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.04em;
+      }
+      .tb-nav {
+        display: flex;
+        gap: 22px;
+        list-style: none;
+      }
+      .tb-nav a {
+        font-family: var(--sans);
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--muted);
+        text-decoration: none;
+        transition: color 0.18s;
+      }
+      .tb-nav a:hover {
+        color: var(--rust);
+      }
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 54px;
+        width: 224px;
+        height: calc(100vh - 54px);
+        overflow-y: auto;
+        padding: 22px 0;
+        border-right: 1px solid var(--border);
+        background: rgba(245, 240, 232, 0.85);
+        backdrop-filter: blur(12px);
+        z-index: 800;
+      }
+      .sidebar::-webkit-scrollbar {
+        width: 2px;
+      }
+      .sidebar::-webkit-scrollbar-thumb {
+        background: var(--muted2);
+      }
+      .toc-head {
+        padding: 0 18px 10px;
+        font-family: var(--mono);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted2);
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 8px;
+      }
+      .toc-link {
+        display: block;
+        padding: 5px 18px;
+        font-family: var(--sans);
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--muted);
+        text-decoration: none;
+        border-left: 2px solid transparent;
+        transition: all 0.16s;
+        line-height: 1.4;
+      }
+      .toc-link:hover,
+      .toc-link.on {
+        color: var(--rust);
+        border-left-color: var(--rust);
+        background: var(--rust-bg);
+      }
+      .toc-link.sub {
+        padding-left: 30px;
+        font-size: 11px;
+      }
+      .toc-link.sub:hover,
+      .toc-link.sub.on {
+        color: var(--teal);
+        border-left-color: var(--teal);
+        background: var(--teal-bg);
+      }
+      .main {
+        margin-left: 224px;
+        padding-top: 54px;
+      }
+      .content {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 64px 44px 120px;
+      }
+      .hero {
+        margin-bottom: 72px;
+        padding-bottom: 56px;
+        border-bottom: 2px solid var(--border);
+      }
+      .day-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--rust);
+        color: #fff;
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        padding: 4px 14px;
+        border-radius: 2px;
+        margin-bottom: 20px;
+      }
+      .day-pill::before {
+        content: "";
+        width: 5px;
+        height: 5px;
+        background: #fff;
+        border-radius: 50%;
+        animation: blink 2s ease-in-out infinite;
+      }
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.35;
+          transform: scale(0.55);
+        }
+      }
+      h1.hero-title {
+        font-family: var(--serif);
+        font-size: clamp(36px, 5.5vw, 64px);
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -0.025em;
+        color: var(--ink);
+        margin-bottom: 18px;
+      }
+      h1.hero-title em {
+        color: var(--rust);
+        font-style: italic;
+      }
+      .hero-lead {
+        font-size: 17px;
+        font-weight: 300;
+        color: var(--ink3);
+        max-width: 640px;
+        line-height: 1.8;
+        margin-bottom: 28px;
+      }
+      .hero-tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .tag {
+        font-family: var(--mono);
+        font-size: 10px;
+        padding: 3px 10px;
+        border-radius: 2px;
+        border: 1px solid;
+        letter-spacing: 0.04em;
+      }
+      .tag.r {
+        color: var(--rust);
+        border-color: var(--rust-border);
+        background: var(--rust-bg);
+      }
+      .tag.t {
+        color: var(--teal);
+        border-color: var(--teal-border);
+        background: var(--teal-bg);
+      }
+      .tag.g {
+        color: var(--gold);
+        border-color: var(--gold-border);
+        background: var(--gold-bg);
+      }
+      .tag.p {
+        color: var(--plum);
+        border-color: var(--plum-border);
+        background: var(--plum-bg);
+      }
+      .tag.gr {
+        color: var(--green);
+        border-color: var(--green-border);
+        background: var(--green-bg);
+      }
+      .section {
+        margin-bottom: 88px;
+        scroll-margin-top: 74px;
+      }
+      .section-number {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--muted2);
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .sn-label {
+        letter-spacing: 0.04em;
+        font-weight: 400;
+      }
+      .section-number::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+      h2.sec-title {
+        font-family: var(--serif);
+        font-size: clamp(26px, 3.2vw, 40px);
+        font-weight: 900;
+        letter-spacing: -0.015em;
+        line-height: 1.1;
+        color: var(--ink);
+        margin-bottom: 16px;
+      }
+      h2.sec-title em {
+        color: var(--rust);
+        font-style: italic;
+      }
+      .sec-lead {
+        font-size: 15.5px;
+        color: var(--ink3);
+        max-width: 700px;
+        margin-bottom: 40px;
+        line-height: 1.8;
+      }
+      .sub {
+        margin-bottom: 56px;
+        scroll-margin-top: 74px;
+      }
+      h3.sub-title {
+        font-family: var(--sans);
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--ink);
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .sub-num {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        color: #fff;
+        padding: 2px 8px;
+        border-radius: 2px;
+        flex-shrink: 0;
+        background: var(--rust);
+      }
+      .sub-num.t {
+        background: var(--teal);
+      }
+      .sub-num.g {
+        background: var(--gold);
+      }
+      .sub-num.p {
+        background: var(--plum);
+      }
+      .sub-num.gr {
+        background: var(--green);
+      }
+      p.prose {
+        color: var(--ink3);
+        line-height: 1.82;
+        margin-bottom: 18px;
+        font-size: 15.5px;
+      }
+      p.prose strong {
+        color: var(--ink);
+        font-weight: 600;
+      }
+      p.prose em {
+        color: var(--rust);
+        font-style: italic;
+      }
+      p.prose code {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        background: var(--bg3);
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: var(--ink);
+        border: 1px solid var(--border);
+      }
+      .callout {
+        border-radius: 6px;
+        padding: 18px 24px;
+        margin: 24px 0;
+        border-left: 3px solid;
+      }
+      .callout-title {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .callout p {
+        margin-bottom: 0;
+        font-size: 14.5px;
+        line-height: 1.72;
+        color: var(--ink3);
+      }
+      .callout p code {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        background: rgba(0, 0, 0, 0.06);
+        padding: 1px 5px;
+        border-radius: 3px;
+      }
+      .callout p strong {
+        color: var(--ink);
+      }
+      .callout.danger {
+        background: var(--rust-bg);
+        border-color: var(--rust);
+      }
+      .callout.danger .callout-title {
+        color: var(--rust);
+      }
+      .callout.insight {
+        background: var(--plum-bg);
+        border-color: var(--plum);
+      }
+      .callout.insight .callout-title {
+        color: var(--plum);
+      }
+      .callout.tip {
+        background: var(--green-bg);
+        border-color: var(--green);
+      }
+      .callout.tip .callout-title {
+        color: var(--green);
+      }
+      .callout.warn {
+        background: var(--gold-bg);
+        border-color: var(--gold);
+      }
+      .callout.warn .callout-title {
+        color: var(--gold);
+      }
+      .callout.info {
+        background: var(--teal-bg);
+        border-color: var(--teal);
+      }
+      .callout.info .callout-title {
+        color: var(--teal);
+      }
+      .code-block {
+        border-radius: 8px;
+        overflow: hidden;
+        margin: 22px 0;
+        border: 1px solid rgba(0, 0, 0, 0.18);
+        box-shadow: 0 3px 16px rgba(0, 0, 0, 0.08);
+      }
+      .code-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 9px 16px;
+        background: #1c1612;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      }
+      .code-lang {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.35);
+      }
+      .code-label {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        color: rgba(255, 255, 255, 0.28);
+        font-style: italic;
+        flex: 1;
+        text-align: center;
+      }
+      .copy-btn {
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.45);
+        font-family: var(--mono);
+        font-size: 10px;
+        padding: 3px 9px;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: all 0.18s;
+      }
+      .copy-btn:hover {
+        background: var(--rust);
+        color: #fff;
+        border-color: var(--rust);
+      }
+      pre {
+        background: #1c1612;
+        padding: 22px 26px;
+        overflow-x: auto;
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 1.9;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+        color: #abb2bf;
+      }
+      .kw {
+        color: #c678dd;
+        font-weight: 500;
+      }
+      .fn {
+        color: #61afef;
+      }
+      .st {
+        color: #98c379;
+      }
+      .nu {
+        color: #d19a66;
+      }
+      .cm {
+        color: #5c6370;
+        font-style: italic;
+      }
+      .py-bi {
+        color: #e5c07b;
+      }
+      .diagram {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 28px;
+        margin: 22px 0;
+        overflow-x: auto;
+      }
+      .diag-title {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--muted);
+        text-align: center;
+        margin-bottom: 22px;
+      }
+      .diag-pre {
+        background: transparent;
+        color: var(--ink);
+        padding: 0;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        line-height: 2;
+        white-space: pre;
+      }
+      .mental-model {
+        background: linear-gradient(135deg, var(--plum-bg), var(--teal-bg));
+        border: 2px solid var(--plum-border);
+        border-radius: 10px;
+        padding: 28px 32px;
+        margin: 28px 0;
+      }
+      .mental-model h4 {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--plum);
+        margin-bottom: 14px;
+      }
+      .mental-model p {
+        font-size: 16px;
+        color: var(--ink);
+        margin-bottom: 0;
+        line-height: 1.78;
+      }
+      .mental-model p strong {
+        color: var(--plum);
+      }
+      .mental-model p code {
+        font-family: var(--mono);
+        font-size: 13.5px;
+        background: rgba(91, 45, 142, 0.1);
+        padding: 2px 7px;
+        border-radius: 3px;
+      }
+      .think-steps {
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 28px 0;
+        border: 1px solid var(--border);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+      }
+      .think-step {
+        padding: 22px 26px;
+        border-bottom: 1px solid var(--border);
+      }
+      .think-step:last-child {
+        border-bottom: none;
+      }
+      .think-step-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+      }
+      .think-step-num {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 3px 10px;
+        border-radius: 3px;
+        flex-shrink: 0;
+      }
+      .step-brute .think-step-num {
+        background: rgba(192, 57, 43, 0.14);
+        color: var(--rust);
+      }
+      .step-better .think-step-num {
+        background: rgba(160, 112, 0, 0.14);
+        color: var(--gold);
+      }
+      .step-optimal .think-step-num {
+        background: rgba(26, 107, 60, 0.14);
+        color: var(--green);
+      }
+      .step-brute {
+        background: rgba(192, 57, 43, 0.025);
+      }
+      .step-better {
+        background: rgba(160, 112, 0, 0.025);
+      }
+      .step-optimal {
+        background: rgba(26, 107, 60, 0.025);
+      }
+      .think-step-title {
+        font-family: var(--sans);
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .think-step-complexity {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted);
+        margin-left: auto;
+      }
+      .think-step-body {
+        font-size: 14.5px;
+        color: var(--ink3);
+        line-height: 1.75;
+        margin-bottom: 0;
+      }
+      .think-step-body code {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        background: rgba(0, 0, 0, 0.07);
+        padding: 2px 6px;
+        border-radius: 3px;
+      }
+      .think-step-body strong {
+        color: var(--ink);
+      }
+      .think-step .code-block {
+        margin: 14px 0 0;
+      }
+      .think-arrow {
+        text-align: center;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--muted2);
+        padding: 8px;
+        background: var(--bg3);
+        border-bottom: 1px solid var(--border);
+        letter-spacing: 0.06em;
+      }
+      .complexity-row {
+        display: flex;
+        gap: 12px;
+        margin: 16px 0;
+        flex-wrap: wrap;
+      }
+      .cb {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 13px;
+        border-radius: 4px;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        font-weight: 700;
+        border: 1px solid;
+      }
+      .cb-label {
+        font-weight: 400;
+        opacity: 0.6;
+        font-size: 10px;
+      }
+      .cb-time {
+        background: var(--teal-bg);
+        color: var(--teal);
+        border-color: var(--teal-border);
+      }
+      .cb-space {
+        background: var(--plum-bg);
+        color: var(--plum);
+        border-color: var(--plum-border);
+      }
+      .cb-bad {
+        background: var(--rust-bg);
+        color: var(--rust);
+        border-color: var(--rust-border);
+      }
+      .cb-ok {
+        background: var(--gold-bg);
+        color: var(--gold);
+        border-color: var(--gold-border);
+      }
+      .cb-good {
+        background: var(--green-bg);
+        color: var(--green);
+        border-color: var(--green-border);
+      }
+      .video-wrap {
+        margin: 28px 0;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      }
+      .video-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        background: var(--ink2);
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.45);
+      }
+      .video-label span {
+        color: var(--rust2);
+      }
+      .video-wrap iframe {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16/9;
+        border: none;
+      }
+      .lc-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin: 22px 0;
+      }
+      .lc-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 16px 18px;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        text-decoration: none;
+        transition: all 0.18s;
+      }
+      .lc-row:hover {
+        border-color: var(--rust);
+        background: var(--rust-bg);
+      }
+      .lc-diff {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        padding: 3px 8px;
+        border-radius: 3px;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+      .lc-easy {
+        background: var(--green-bg);
+        color: var(--green);
+        border: 1px solid var(--green-border);
+      }
+      .lc-med {
+        background: var(--gold-bg);
+        color: var(--gold);
+        border: 1px solid var(--gold-border);
+      }
+      .lc-body {
+        flex: 1;
+      }
+      .lc-name {
+        font-size: 14.5px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 4px;
+      }
+      .lc-why {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.55;
+        margin-bottom: 6px;
+      }
+      .lc-hint {
+        font-size: 12.5px;
+        color: var(--teal);
+        font-family: var(--mono);
+        line-height: 1.5;
+        background: var(--teal-bg);
+        padding: 6px 10px;
+        border-radius: 4px;
+        border: 1px solid var(--teal-border);
+      }
+      .check-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-top: 28px;
+      }
+      .check-item {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        padding: 20px 24px;
+        transition: border-color 0.18s;
+      }
+      .check-item:hover {
+        border-color: var(--rust);
+      }
+      .check-q {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--rust);
+        margin-bottom: 8px;
+      }
+      .check-text {
+        font-size: 15px;
+        color: var(--ink);
+        font-weight: 500;
+        line-height: 1.65;
+      }
+      .check-reveal {
+        margin-top: 14px;
+        padding: 16px;
+        background: var(--bg3);
+        border-radius: 6px;
+        font-size: 14px;
+        color: var(--ink3);
+        line-height: 1.78;
+        display: none;
+      }
+      .check-reveal code {
+        font-family: var(--mono);
+        font-size: 12.5px;
+        background: var(--bg2);
+        padding: 1px 5px;
+        border-radius: 3px;
+        border: 1px solid var(--border);
+      }
+      .check-reveal strong {
+        color: var(--ink);
+      }
+      .check-btn {
+        margin-top: 12px;
+        padding: 5px 13px;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        font-family: var(--mono);
+        font-size: 10px;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all 0.18s;
+      }
+      .check-btn:hover {
+        background: var(--rust);
+        color: #fff;
+        border-color: var(--rust);
+      }
+      .res-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 14px;
+        margin-top: 28px;
+      }
+      .res-card {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        padding: 18px;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: block;
+      }
+      .res-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 18px rgba(0, 0, 0, 0.09);
+      }
+      .res-card-type {
+        font-family: var(--mono);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+      .res-card-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 6px;
+      }
+      .res-card-desc {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+      .sched {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        margin-top: 22px;
+      }
+      .sched-row {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      .sched-time {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--rust);
+        padding: 14px 16px;
+        border-right: 1px solid var(--border);
+        background: var(--rust-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .sched-desc {
+        padding: 14px 18px;
+        font-size: 14px;
+        color: var(--ink3);
+        line-height: 1.65;
+      }
+      .sched-desc strong {
+        color: var(--ink);
+      }
+      .divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 64px 0;
+      }
+      .fade-up {
+        animation: fadeUp 0.5s ease both;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .closing-card {
+        margin-top: 56px;
+        padding: 40px;
+        background: var(--bg2);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        text-align: center;
+      }
+      .closing-card .day-num {
+        font-family: var(--serif);
+        font-size: 32px;
+        font-weight: 900;
+        color: var(--ink);
+        margin-bottom: 8px;
+      }
+      .closing-card .closing-line {
+        font-size: 16px;
+        color: var(--muted);
+        margin-bottom: 22px;
+      }
+      @media (max-width: 860px) {
+        .sidebar {
+          display: none;
+        }
+        .main {
+          margin-left: 0;
+        }
+        .content {
+          padding: 40px 20px 80px;
+        }
+        .sched-row {
+          grid-template-columns: 1fr;
+        }
+        .think-step-complexity {
+          margin-left: 0;
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="prog"></div>
+    <button id="top-btn" onclick="scrollTo({ top: 0, behavior: 'smooth' })">
+      &#8593;
+    </button>
+    <nav class="topbar">
+      <div class="tb-brand">RAGHAV.DSA // Phase 1</div>
+      <div class="tb-day">DAY 02 / 84</div>
+      <ul class="tb-nav">
+        <li><a href="#two-pointers">Two Pointers</a></li>
+        <li><a href="#sliding-window">Sliding Window</a></li>
+        <li><a href="#check">Check</a></li>
+        <li><a href="#problems">Problems</a></li>
+      </ul>
+    </nav>
+    <aside class="sidebar">
+      <div class="toc-head">Contents</div>
+      <a class="toc-link" href="#hero">Overview</a
+      ><a class="toc-link" href="#two-pointers">1. Two Pointers</a
+      ><a class="toc-link sub" href="#tp-mental">1.1 Mental Model</a
+      ><a class="toc-link sub" href="#tp-twosum2">1.2 Two Sum II</a
+      ><a class="toc-link sub" href="#tp-palindrome">1.3 Palindromes</a
+      ><a class="toc-link sub" href="#tp-3sum">1.4 3Sum</a
+      ><a class="toc-link" href="#sliding-window">2. Sliding Window</a
+      ><a class="toc-link sub" href="#sw-types">2.1 Fixed vs Variable</a
+      ><a class="toc-link sub" href="#sw-fixed">2.2 Fixed Window</a
+      ><a class="toc-link sub" href="#sw-variable">2.3 Variable Window</a
+      ><a class="toc-link sub" href="#sw-min">2.4 Min Window Sum</a
+      ><a class="toc-link sub" href="#sw-template">2.5 The Template</a
+      ><a class="toc-link" href="#check">Knowledge Check</a
+      ><a class="toc-link" href="#problems">LeetCode Problems</a
+      ><a class="toc-link" href="#resources">Resources</a
+      ><a class="toc-link" href="#schedule">Schedule</a>
+    </aside>
+    <main class="main">
+      <div class="content">
+        <div class="hero fade-up" id="hero">
+          <div class="day-pill">Day 02 &mdash; Phase 1 &mdash; Week 1</div>
+          <h1 class="hero-title">
+            Two Pointers<br />&amp; <em>Sliding Window</em>
+          </h1>
+          <p class="hero-lead">
+            Yesterday you traded space for time with hash maps. Today you trade
+            <em>neither</em>. Two Pointers and Sliding Window both run in O(n)
+            with O(1) extra space &mdash; by being clever about which work you
+            never need to do. These are the most elegant patterns in DSA.
+            Internalize them and you'll recognize them in a third of all medium
+            problems.
+          </p>
+          <div class="hero-tags">
+            <span class="tag r">Two Pointers</span
+            ><span class="tag t">Sliding Window</span
+            ><span class="tag g">Fixed Window</span
+            ><span class="tag p">Variable Window</span
+            ><span class="tag gr">3Sum</span
+            ><span class="tag r">4 Problems</span>
+          </div>
+        </div>
+        <div class="callout info">
+          <div class="callout-title">
+            &#128260; Review First &mdash; 5 Minutes
+          </div>
+          <p>
+            Before starting: implement <code>two_sum</code> (hash map) and
+            <code>group_anagrams</code> from scratch, from memory. No looking.
+            If you cannot, re-read Day 1 first. This morning ritual runs every
+            day from here on.
+          </p>
+        </div>
+        <hr class="divider" />
+        <section class="section" id="two-pointers">
+          <div class="section-number">
+            Section 01 <span class="sn-label">Two Pointers</span>
+          </div>
+          <h2 class="sec-title">Two <em>Pointers</em></h2>
+          <p class="sec-lead">
+            Two Pointers maintains two index variables that move through the
+            array in a coordinated way. The core insight: on a
+            <strong>sorted array</strong>, the sum of any pair tells you exactly
+            which pointer to advance &mdash; and advancing it permanently
+            eliminates every pair involving that element. O(n²) becomes O(n)
+            with zero extra space.
+          </p>
+          <div class="video-wrap">
+            <div class="video-label">
+              &#127902; <span>START HERE</span> &mdash; Two Pointers &mdash;
+              NeetCode (8 min)
+            </div>
+            <iframe
+              src="https://www.youtube.com/embed/VEPCm3BZEcw"
+              allowfullscreen
+              loading="lazy"
+            ></iframe>
+          </div>
+          <div class="sub" id="tp-mental">
+            <h3 class="sub-title">
+              <span class="sub-num">1.1</span>The Mental Model: Eliminating
+              Search Space
+            </h3>
+            <div class="mental-model">
+              <h4>
+                &#129504; Two Pointers = Permanently Eliminating Candidates
+              </h4>
+              <p>
+                At every step ask:
+                <strong>which of these two elements is forever useless?</strong>
+                If <code>arr[L] + arr[R] &lt; target</code>, then
+                <code>arr[L]</code> paired with <em>any</em> value &le;
+                <code>arr[R]</code> is also too small &mdash; so L can never be
+                in the answer. Advance L and permanently eliminate it.
+                Symmetrically for R.
+                <strong>n eliminations, one per step, O(n) total.</strong>
+              </p>
+            </div>
+            <div class="diagram">
+              <div class="diag-title">
+                The Invariant: Why Two Pointers Is Provably Correct
+              </div>
+              <pre class="diag-pre">
+  Sorted: [-4, -1, -1,  0,  1,  2,  6,  9]    Target: 8
+          L=0                             R=7
+
+  Step 1: -4 + 9 = 5 &lt; 8
+          For ALL r' &lt;= 7: nums[0]+nums[r'] &lt;= -4+9 = 5 &lt; 8
+          So nums[0]=-4 CANNOT be in any valid pair. Advance L.
+
+  Step 2: -1 + 9 = 8 = target. FOUND [indices 1, 7]
+
+  If sum was 10 &gt; 8:
+          For ALL l' &gt;= 1: nums[l']+nums[7] &gt;= -1+9 = 8 &gt;= 10? No.
+          Actually: nums[l']+9 &gt;= -1+9 = 8 &gt; target means 9 paired
+          with anything &gt;= nums[L] is also too big. Advance R.
+
+  At most n total moves. Neither pointer ever reverses. QED.</pre
+              >
+            </div>
+            <div class="callout insight">
+              <div class="callout-title">
+                &#128161; Why Sorting First Is Almost Always Worth It
+              </div>
+              <p>
+                Sorting costs O(n log n) and enables O(n) two-pointer passes. If
+                brute force is O(n&sup2;), then sort + two-pointer = O(n log n)
+                + O(n) = O(n log n).
+                <strong
+                  >Without monotonicity (sorted order), you cannot safely
+                  eliminate candidates. That is the fundamental
+                  precondition.</strong
+                >
+              </p>
+            </div>
+          </div>
+          <div class="sub" id="tp-twosum2">
+            <h3 class="sub-title">
+              <span class="sub-num">1.2</span>Two Sum II &mdash; The Full
+              Thinking Process
+            </h3>
+            <p class="prose">
+              LC #167. Sorted array, find two 1-indexed positions whose values
+              sum to target. O(1) extra space required &mdash; hash map
+              explicitly disallowed. We build from naive to optimal, with the
+              precise reasoning at each step.
+            </p>
+            <div class="think-steps">
+              <div class="think-step step-brute">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128308; Brute Force</div>
+                  <div class="think-step-title">Try Every Pair</div>
+                  <div class="think-step-complexity">
+                    O(n&sup2;) time &middot; O(1) space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  Two nested loops. No use of sorted order &mdash; pure
+                  exhaustion. For n=10,000:
+                  <strong>~50 million pair checks</strong>.
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label"
+                      >brute force &mdash; try all pairs</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">two_sum_sorted_brute</span>(nums, target):
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(nums)):
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="py-bi">range</span>(i + 1, <span class="py-bi">len</span>(nums)):
+            <span class="kw">if</span> nums[i] + nums[j] == target:
+                <span class="kw">return</span> [i + 1, j + 1]  <span class="cm"># 1-indexed</span>
+    <span class="kw">return</span> []
+
+<span class="cm"># Time:  O(n²) — nested loops, no use of sorted order
+# Space: O(1) — no extra data structures
+# For n=10,000: ~50 million pair checks</span></code></pre>
+                </div>
+              </div>
+              <div class="think-arrow">
+                &#9660; &nbsp;sorted array &mdash; can we exploit sorted order
+                beyond breaking early?
+              </div>
+              <div class="think-step step-better">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128992; Insight</div>
+                  <div class="think-step-title">
+                    Exploit Sorted Order: Early Termination
+                  </div>
+                  <div class="think-step-complexity">
+                    O(n&sup2;) worst &middot; O(1) space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  Sorted means if <code>nums[i]+nums[j] &gt; target</code>, all
+                  larger j are also too big &mdash; break. Improves average
+                  case. But O(n&sup2;) worst case remains. Reveals the key:
+                  <strong
+                    >sorted order tells us when a direction is futile.</strong
+                  >
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label"
+                      >early termination &mdash; not yet optimal</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">two_sum_sorted_better</span>(nums, target):
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(nums)):
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="py-bi">range</span>(i + 1, <span class="py-bi">len</span>(nums)):
+            total = nums[i] + nums[j]
+            <span class="kw">if</span> total == target:
+                <span class="kw">return</span> [i + 1, j + 1]
+            <span class="kw">if</span> total &gt; target:
+                <span class="kw">break</span>  <span class="cm"># sorted: no larger j can help — break inner loop</span>
+    <span class="kw">return</span> []
+
+<span class="cm"># Still O(n²) worst case, but improved average case.
+# The insight: sorted order tells us WHEN a direction is futile.
+# But we still restart the inner loop from scratch each time.
+# Can we eliminate the inner loop entirely?</span></code></pre>
+                </div>
+              </div>
+              <div class="think-arrow">
+                &#9660; &nbsp;we still have an inner O(n) loop &mdash; can we
+                eliminate it entirely with one pass?
+              </div>
+              <div class="think-step step-optimal">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128994; Optimal</div>
+                  <div class="think-step-title">
+                    Two Pointers &mdash; One Pass, Zero Extra Space
+                  </div>
+                  <div class="think-step-complexity">
+                    O(n) time &middot; O(1) space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  <strong>Full insight:</strong> instead of fixing i and
+                  scanning j, place pointers at both extremes. Each step, one
+                  extreme is permanently eliminated. No inner loop.
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label"
+                      >two pointers &mdash; O(n) with invariant proof</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">two_sum_sorted</span>(nums, target):
+    left, right = 0, <span class="py-bi">len</span>(nums) - 1
+
+    <span class="kw">while</span> left &lt; right:
+        total = nums[left] + nums[right]
+
+        <span class="kw">if</span> total == target:
+            <span class="kw">return</span> [left + 1, right + 1]    <span class="cm"># 1-indexed (LC 167)</span>
+        <span class="kw">elif</span> total &lt; target:
+            left += 1    <span class="cm"># nums[left] too small for ANY right &lt;= current</span>
+        <span class="kw">else</span>:
+            right -= 1   <span class="cm"># nums[right] too big for ANY left &gt;= current</span>
+
+    <span class="kw">return</span> []
+
+<span class="cm"># Time:  O(n)  — each pointer moves at most n times total
+# Space: O(1)  — two integer variables
+
+# THE INVARIANT PROOF:
+# When total &lt; target:
+#   For all r' &lt;= right: nums[left]+nums[r'] &lt;= nums[left]+nums[right] &lt; target
+#   So nums[left] CANNOT be part of any valid pair. Advance left. QED.
+# When total &gt; target: symmetric argument for right.
+# Therefore: no valid pair is ever skipped.</span></code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="complexity-row">
+              <div class="cb cb-bad">
+                <span class="cb-label">Brute Force</span>O(n&sup2;)
+              </div>
+              <div class="cb cb-time">
+                <span class="cb-label">Two Pointers</span>O(n)
+              </div>
+              <div class="cb cb-space">
+                <span class="cb-label">Space</span>O(1)
+              </div>
+            </div>
+            <div class="callout tip">
+              <div class="callout-title">
+                &#9989; Interview Move: State the Invariant
+              </div>
+              <p>
+                After writing the optimal solution, add a comment:
+                <em
+                  >"left is eliminated when sum &lt; target because nums[left]
+                  paired with any value &le; nums[right] is also too small."</em
+                >
+                This demonstrates you understand <em>why</em> the algorithm
+                works, not just <em>how</em>.
+              </p>
+            </div>
+          </div>
+          <div class="sub" id="tp-palindrome">
+            <h3 class="sub-title">
+              <span class="sub-num">1.3</span>Palindromes &mdash; Convergence as
+              Symmetry Checking
+            </h3>
+            <p class="prose">
+              The second major two-pointer pattern: verify a palindrome.
+              Pointers converge inward, checking corresponding positions
+              simultaneously. Generalizes to any problem requiring comparison
+              from both ends.
+            </p>
+            <div class="think-steps">
+              <div class="think-step step-brute">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128308; Brute Force</div>
+                  <div class="think-step-title">Reverse and Compare</div>
+                  <div class="think-step-complexity">
+                    O(n) time &middot; O(n) space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  Create a reversed copy and compare. Correct but O(n) extra
+                  memory for the copy &mdash; entirely unnecessary.
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label"
+                      >reverse and compare &mdash; O(n) space wasted</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">is_palindrome_brute</span>(s):
+    <span class="kw">return</span> s == s[::-1]
+
+<span class="cm"># s[::-1] creates a new string of length n — O(n) extra memory.
+# Then comparison is O(n). Total: O(n) time, O(n) space.
+# The copy is created, compared, then thrown away.
+# We can do the same comparison in-place with O(1) space.</span></code></pre>
+                </div>
+              </div>
+              <div class="think-step step-better">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128994; Optimal</div>
+                  <div class="think-step-title">
+                    In-Place Two Pointers &mdash; O(1) Space
+                  </div>
+                  <div class="think-step-complexity">
+                    O(n) time &middot; O(1) space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  Pointers at both ends, move inward. One mismatch &rarr; not a
+                  palindrome. Meet in the middle &rarr; palindrome. Zero
+                  allocation. Extension: LC #680 allows deleting one character.
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label"
+                      >in-place palindrome check + Valid Palindrome II
+                      extension</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">is_palindrome</span>(s):
+    left, right = 0, <span class="py-bi">len</span>(s) - 1
+    <span class="kw">while</span> left &lt; right:
+        <span class="kw">if</span> s[left] != s[right]:
+            <span class="kw">return</span> <span class="kw">False</span>
+        left += 1
+        right -= 1
+    <span class="kw">return</span> <span class="kw">True</span>
+<span class="cm"># O(n) time, O(1) space — never allocates anything</span>
+
+
+<span class="cm"># LC #680: Valid Palindrome II — can delete AT MOST one character</span>
+<span class="kw">def</span> <span class="fn">valid_palindrome_ii</span>(s):
+    <span class="kw">def</span> <span class="fn">is_pal</span>(l, r):
+        <span class="kw">while</span> l &lt; r:
+            <span class="kw">if</span> s[l] != s[r]: <span class="kw">return</span> <span class="kw">False</span>
+            l += 1; r -= 1
+        <span class="kw">return</span> <span class="kw">True</span>
+
+    left, right = 0, <span class="py-bi">len</span>(s) - 1
+    <span class="kw">while</span> left &lt; right:
+        <span class="kw">if</span> s[left] == s[right]:
+            left += 1; right -= 1
+        <span class="kw">else</span>:
+            <span class="cm"># ONE deletion allowed: try skipping left OR skipping right</span>
+            <span class="kw">return</span> <span class="fn">is_pal</span>(left + 1, right) <span class="kw">or</span> <span class="fn">is_pal</span>(left, right - 1)
+    <span class="kw">return</span> <span class="kw">True</span>
+
+<span class="cm"># Time: O(n) — at most two full passes
+# Space: O(1)
+# The "two choices on mismatch" pattern recurs in harder problems.</span></code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sub" id="tp-3sum">
+            <h3 class="sub-title">
+              <span class="sub-num t">1.4</span>3Sum &mdash; Reducing N-Sum to
+              Two Pointers
+            </h3>
+            <p class="prose">
+              LC #15. Find all unique triplets summing to zero. Pattern:
+              <strong>sort, fix one element, two-pointer the rest.</strong> The
+              logic is straightforward. The duplicate handling is where everyone
+              fails.
+            </p>
+            <div class="callout warn">
+              <div class="callout-title">
+                &#9888;&#65039; The Duplicate Trap &mdash; Two Places, Both
+                Required
+              </div>
+              <p>
+                You must skip duplicates at <strong>exactly two places</strong>.
+                <strong>Skip #1:</strong> outer loop &mdash; if current element
+                equals previous, skip (prevents re-fixing the same outer value).
+                <strong>Skip #2:</strong> after finding a valid triplet inside
+                the two-pointer loop &mdash; advance L and R past all their
+                duplicate values. Missing skip #1: duplicate outer elements
+                produce duplicate triplets. Missing skip #2: duplicate inner
+                pairs produce duplicate triplets.
+                <strong>Both must be present.</strong>
+              </p>
+            </div>
+            <div class="think-steps">
+              <div class="think-step step-brute">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128308; Brute Force</div>
+                  <div class="think-step-title">Three Nested Loops</div>
+                  <div class="think-step-complexity">
+                    O(n&sup3;) time &middot; O(1) space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  Try every triplet (i,j,k). For n=3000:
+                  <strong>4.5 billion iterations</strong>. Completely unusable.
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label">O(n&sup3;) brute force</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">three_sum_brute</span>(nums):
+    result = <span class="py-bi">set</span>()
+    n = <span class="py-bi">len</span>(nums)
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(n):
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="py-bi">range</span>(i + 1, n):
+            <span class="kw">for</span> k <span class="kw">in</span> <span class="py-bi">range</span>(j + 1, n):
+                <span class="kw">if</span> nums[i] + nums[j] + nums[k] == 0:
+                    result.add(<span class="py-bi">tuple</span>(<span class="py-bi">sorted</span>([nums[i], nums[j], nums[k]])))
+    <span class="kw">return</span> [<span class="py-bi">list</span>(t) <span class="kw">for</span> t <span class="kw">in</span> result]
+
+<span class="cm"># O(n³) — for n=3000: 4.5 billion iterations. Times out instantly.</span></code></pre>
+                </div>
+              </div>
+              <div class="think-arrow">
+                &#9660; &nbsp;fix one element &mdash; reduces to a two-sum
+                problem
+              </div>
+              <div class="think-step step-better">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128992; Better</div>
+                  <div class="think-step-title">Fix One + Hash Set</div>
+                  <div class="think-step-complexity">
+                    O(n&sup2;) time &middot; O(n) space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  Fix i, find pair summing to <code>-nums[i]</code> with a hash
+                  set. O(n&sup2;) but O(n) extra space per outer iteration.
+                  Duplicate handling via set is implicit &mdash; opaque in
+                  interviews.
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label">O(n&sup2;) hash approach</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">three_sum_hash</span>(nums):
+    nums.sort()
+    result = <span class="py-bi">set</span>()
+    <span class="kw">for</span> i, a <span class="kw">in</span> <span class="py-bi">enumerate</span>(nums):
+        seen = <span class="py-bi">set</span>()  <span class="cm"># O(n) extra space per outer iteration</span>
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="py-bi">range</span>(i + 1, <span class="py-bi">len</span>(nums)):
+            complement = -a - nums[j]
+            <span class="kw">if</span> complement <span class="kw">in</span> seen:
+                result.add(<span class="py-bi">tuple</span>(<span class="py-bi">sorted</span>([a, complement, nums[j]])))
+            seen.add(nums[j])
+    <span class="kw">return</span> [<span class="py-bi">list</span>(t) <span class="kw">for</span> t <span class="kw">in</span> result]
+
+<span class="cm"># O(n²) time but O(n) extra space.
+# Duplicate handling via a set is implicit — harder to reason about in interviews.
+# The two-pointer approach handles duplicates explicitly and uses O(1) space.</span></code></pre>
+                </div>
+              </div>
+              <div class="think-arrow">
+                &#9660; &nbsp;fix one element + sorted remainder &mdash; use two
+                pointers instead of hash set
+              </div>
+              <div class="think-step step-optimal">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128994; Optimal</div>
+                  <div class="think-step-title">Sort + Fix + Two Pointers</div>
+                  <div class="think-step-complexity">
+                    O(n&sup2;) time &middot; O(1) extra space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  Sort once. Fix i with explicit skip. Two pointers on sorted
+                  remainder. Explicit duplicate skips after each found triplet.
+                  Same O(n&sup2;) as hash, O(1) extra space, transparent logic.
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label"
+                      >3sum &mdash; canonical solution with annotated duplicate
+                      skips</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">three_sum</span>(nums):
+    nums.sort()   <span class="cm"># O(n log n) — enables two pointers + explicit dup handling</span>
+    result = []
+
+    <span class="kw">for</span> i, a <span class="kw">in</span> <span class="py-bi">enumerate</span>(nums):
+
+        <span class="cm"># DUPLICATE SKIP #1: same value as previous outer element</span>
+        <span class="cm"># All triplets we'd find are already in result.</span>
+        <span class="kw">if</span> i &gt; 0 <span class="kw">and</span> nums[i] == nums[i - 1]:
+            <span class="kw">continue</span>
+
+        <span class="cm"># EARLY EXIT: sorted array — if smallest element &gt; 0,</span>
+        <span class="cm"># no triplet can ever sum to 0.</span>
+        <span class="kw">if</span> a &gt; 0:
+            <span class="kw">break</span>
+
+        left, right = i + 1, <span class="py-bi">len</span>(nums) - 1
+
+        <span class="kw">while</span> left &lt; right:
+            total = a + nums[left] + nums[right]
+
+            <span class="kw">if</span> total == 0:
+                result.append([a, nums[left], nums[right]])
+
+                <span class="cm"># DUPLICATE SKIP #2: skip duplicate L and R values</span>
+                <span class="kw">while</span> left &lt; right <span class="kw">and</span> nums[left] == nums[left + 1]:
+                    left += 1
+                <span class="kw">while</span> left &lt; right <span class="kw">and</span> nums[right] == nums[right - 1]:
+                    right -= 1
+                left += 1
+                right -= 1
+
+            <span class="kw">elif</span> total &lt; 0:
+                left += 1
+            <span class="kw">else</span>:
+                right -= 1
+
+    <span class="kw">return</span> result
+
+<span class="cm"># Time:  O(n log n) + O(n²) = O(n²)
+# Space: O(1) extra — result list doesn't count
+# The inner "while skip" loops are O(n) TOTAL across all outer iterations,
+# not O(n) per iteration. They share the same pointer movement budget.</span></code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="complexity-row">
+              <div class="cb cb-bad">
+                <span class="cb-label">3 Loops</span>O(n&sup3;)
+              </div>
+              <div class="cb cb-ok">
+                <span class="cb-label">Hash</span>O(n&sup2;)
+              </div>
+              <div class="cb cb-time">
+                <span class="cb-label">Two Pointers</span>O(n&sup2;)
+              </div>
+              <div class="cb cb-space">
+                <span class="cb-label">Extra Space</span>O(1)
+              </div>
+            </div>
+            <div class="callout tip">
+              <div class="callout-title">
+                &#9989; The N-Sum Pattern Generalizes
+              </div>
+              <p>
+                4Sum = two outer loops (skip dups at each level) + two pointers
+                on innermost. kSum = fix (k-2) elements with nested loops,
+                two-pointer the last two. Time: O(n<sup>k-1</sup>). Always sort
+                first.
+                <strong>kSum reduces to (k-1)Sum by fixing one element.</strong>
+              </p>
+            </div>
+          </div>
+        </section>
+        <hr class="divider" />
+        <section class="section" id="sliding-window">
+          <div class="section-number">
+            Section 02 <span class="sn-label">Sliding Window</span>
+          </div>
+          <h2 class="sec-title">Sliding <em>Window</em></h2>
+          <p class="sec-lead">
+            Sliding Window finds subarrays or substrings satisfying a condition
+            in O(n) by incrementally maintaining a window as it moves across the
+            array. The window state is updated in O(1) per step: add one element
+            on the right, remove one on the left. Two types: fixed-size and
+            variable-size.
+          </p>
+          <div class="video-wrap">
+            <div class="video-label">
+              &#127902; <span>ESSENTIAL</span> &mdash; Sliding Window &mdash;
+              NeetCode (14 min)
+            </div>
+            <iframe
+              src="https://www.youtube.com/embed/MK-NZ4hF9Gg"
+              allowfullscreen
+              loading="lazy"
+            ></iframe>
+          </div>
+          <div class="sub" id="sw-types">
+            <h3 class="sub-title">
+              <span class="sub-num">2.1</span>Fixed vs Variable &mdash; Two
+              Mental Models
+            </h3>
+            <div class="mental-model">
+              <h4>&#129504; Two Flavors of Sliding Window</h4>
+              <p>
+                <strong>Fixed window (size k given):</strong> build the first
+                window in O(k), then slide &mdash; each step add right element,
+                remove left element. Formula:
+                <code>sum = sum + arr[right] - arr[right-k]</code>. O(1) per
+                step, O(n) total. <br /><br /><strong
+                  >Variable window (size unknown):</strong
+                >
+                expand right freely, shrink left when the window violates a
+                condition. The tricky part: knowing exactly <em>when</em> to
+                shrink and what to track.
+              </p>
+            </div>
+            <div class="diagram">
+              <div class="diag-title">
+                Fixed Window &mdash; Sliding a Window of Size k
+              </div>
+              <pre class="diag-pre">
+  nums = [2, 1, 5, 1, 3, 2],  k = 3    Goal: max sum
+
+  Build:        [2, 1, 5]  sum = 8
+  Slide right:  add 1, remove 2  [1, 5, 1]  sum = 8-2+1 = 7
+  Slide right:  add 3, remove 1  [5, 1, 3]  sum = 7-1+3 = 9  &lt;- max
+  Slide right:  add 2, remove 5  [1, 3, 2]  sum = 9-5+2 = 6
+
+  Every slide is O(1). Total: O(n). NOT O(n*k).
+  The formula: sum = sum + nums[i] - nums[i-k]</pre
+              >
+            </div>
+            <div class="diagram">
+              <div class="diag-title">
+                Variable Window &mdash; Longest Substring Without Repeat
+              </div>
+              <pre class="diag-pre">
+  s = "a  b  c  a  b  c  b  b"
+          L              R     window tracks {chars in L..R}
+
+  R=0: {a}        "a"    len=1  (expand: no duplicate)
+  R=1: {a,b}      "ab"   len=2  (expand: no duplicate)
+  R=2: {a,b,c}    "abc"  len=3  (expand: no duplicate)
+  R=3: "a" in set! SHRINK: remove s[L=0]="a", L-&gt;1. {b,c,a} len=3
+  R=4: "b" in set! SHRINK: remove s[L=1]="b", L-&gt;2. {c,a,b} len=3
+  R=5: "c" in set! SHRINK: remove s[L=2]="c", L-&gt;3. {a,b,c} len=3
+  R=6: "b" in set! SHRINK: L-&gt;4 (removes "a"), L-&gt;5 (removes "b"). len=2
+  R=7: "b" in set! SHRINK: L-&gt;6 (removes "c"). len=1
+
+  Answer: 3. Total pointer moves: right=8, left=7. 2n = O(n).</pre
+              >
+            </div>
+          </div>
+          <div class="sub" id="sw-fixed">
+            <h3 class="sub-title">
+              <span class="sub-num t">2.2</span>Fixed Window &mdash; Max Sum
+              Subarray of Size k
+            </h3>
+            <p class="prose">
+              The simplest sliding window. Establishes the core formula. Every
+              fixed-window problem is a variation.
+            </p>
+            <div class="think-steps">
+              <div class="think-step step-brute">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128308; Brute Force</div>
+                  <div class="think-step-title">
+                    Recompute Every Window from Scratch
+                  </div>
+                  <div class="think-step-complexity">
+                    O(n&middot;k) time &middot; O(1) space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  For each start, sum the next k elements. Adjacent windows
+                  share k-1 elements &mdash; all repeated work. For n=10,000 and
+                  k=1,000: ten million additions.
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label"
+                      >O(n*k) &mdash; recomputing every window</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">max_sum_brute</span>(nums, k):
+    <span class="kw">if</span> <span class="py-bi">len</span>(nums) &lt; k: <span class="kw">return</span> -1
+    max_sum = <span class="py-bi">float</span>(<span class="st">&#39;-inf&#39;</span>)
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(nums) - k + 1):
+        window_sum = <span class="py-bi">sum</span>(nums[i : i + k])  <span class="cm"># O(k) work per window</span>
+        max_sum = <span class="py-bi">max</span>(max_sum, window_sum)
+    <span class="kw">return</span> max_sum
+
+<span class="cm"># O(n * k): for n=10,000 and k=1,000 → 10 million additions.
+# Adjacent windows [i..i+k] and [i+1..i+k+1] share k-1 elements.
+# We recompute those k-1 elements every single iteration.
+# Can we update the sum in O(1) instead of O(k)?</span></code></pre>
+                </div>
+              </div>
+              <div class="think-step step-better">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128994; Optimal</div>
+                  <div class="think-step-title">
+                    Slide: Add New Right, Remove Old Left
+                  </div>
+                  <div class="think-step-complexity">
+                    O(n) time &middot; O(1) space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  Build first window in O(k). Each slide: one addition + one
+                  subtraction = O(1). The core formula underlies every
+                  fixed-window problem.
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label"
+                      >O(n) sliding window &mdash; the formula</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">max_sum_sliding</span>(nums, k):
+    <span class="kw">if</span> <span class="py-bi">len</span>(nums) &lt; k: <span class="kw">return</span> -1
+
+    <span class="cm"># Build the first window: O(k)</span>
+    window_sum = <span class="py-bi">sum</span>(nums[:k])
+    max_sum = window_sum
+
+    <span class="cm"># Slide: add incoming right element, subtract outgoing left element</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(k, <span class="py-bi">len</span>(nums)):
+        window_sum += nums[i] - nums[i - k]  <span class="cm"># THE FORMULA: O(1) per slide</span>
+        max_sum = <span class="py-bi">max</span>(max_sum, window_sum)
+
+    <span class="kw">return</span> max_sum
+
+<span class="cm"># Time:  O(k) first window + O(n-k) slides = O(n)
+# Space: O(1) — just two integers
+#
+# nums[i]     = element entering window on the right
+# nums[i - k] = element leaving window on the left
+# This formula is the foundation of ALL fixed-window problems.</span></code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="complexity-row">
+              <div class="cb cb-bad">
+                <span class="cb-label">Brute Force</span>O(n&middot;k)
+              </div>
+              <div class="cb cb-time">
+                <span class="cb-label">Sliding Window</span>O(n)
+              </div>
+              <div class="cb cb-space">
+                <span class="cb-label">Space</span>O(1)
+              </div>
+            </div>
+          </div>
+          <div class="sub" id="sw-variable">
+            <h3 class="sub-title">
+              <span class="sub-num p">2.3</span>Variable Window &mdash; Longest
+              Substring Without Repeating Characters
+            </h3>
+            <p class="prose">
+              LC #3. The canonical variable window problem. Window is valid when
+              it contains no duplicate characters. When a duplicate enters,
+              shrink from the left until it is gone.
+              <strong
+                >The crucial insight that makes it O(n): shrink, do not
+                restart.</strong
+              >
+            </p>
+            <div class="think-steps">
+              <div class="think-step step-brute">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128308; Brute Force</div>
+                  <div class="think-step-title">Check Every Substring</div>
+                  <div class="think-step-complexity">
+                    O(n&sup3;) time &middot; O(k) space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  O(n&sup2;) substring pairs &times; O(n) uniqueness check each
+                  = O(n&sup3;). For n=1000: 1 billion operations.
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label"
+                      >O(n&sup3;) &mdash; every substring</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">length_of_longest_brute</span>(s):
+    n = <span class="py-bi">len</span>(s); max_len = 0
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(n):                      <span class="cm"># O(n) starting positions</span>
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="py-bi">range</span>(i, n):                  <span class="cm"># O(n) ending positions</span>
+            sub = s[i:j+1]
+            <span class="kw">if</span> <span class="py-bi">len</span>(<span class="py-bi">set</span>(sub)) == <span class="py-bi">len</span>(sub):  <span class="cm"># O(n) uniqueness check</span>
+                max_len = <span class="py-bi">max</span>(max_len, j - i + 1)
+    <span class="kw">return</span> max_len
+
+<span class="cm"># O(n) × O(n) × O(n) = O(n³). For n=1000: 1 billion operations.</span></code></pre>
+                </div>
+              </div>
+              <div class="think-arrow">
+                &#9660; &nbsp;O(n&sup3;) &rarr; check uniqueness in O(1) per
+                step with a set
+              </div>
+              <div class="think-step step-better">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128992; Better</div>
+                  <div class="think-step-title">
+                    Fix Start, Expand Until Duplicate, Restart
+                  </div>
+                  <div class="think-step-complexity">
+                    O(n&sup2;) time &middot; O(k) space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  O(1) duplicate check per step now. But when duplicate found,
+                  we throw away the entire set and recheck characters we just
+                  validated. The wasted work is the problem.
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label"
+                      >O(n&sup2;) &mdash; restart throws away validated
+                      work</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">length_of_longest_better</span>(s):
+    max_len = 0
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(s)):
+        seen = <span class="py-bi">set</span>()                       <span class="cm"># reset window every outer iteration</span>
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="py-bi">range</span>(i, <span class="py-bi">len</span>(s)):
+            <span class="kw">if</span> s[j] <span class="kw">in</span> seen:
+                <span class="kw">break</span>                      <span class="cm"># duplicate found — abandon this window</span>
+            seen.add(s[j])
+            max_len = <span class="py-bi">max</span>(max_len, j - i + 1)
+    <span class="kw">return</span> max_len
+
+<span class="cm"># O(n²) — improved from O(n³) but still sub-optimal.
+# The flaw: when we abandon and restart from i+1, we throw away the set
+# and re-examine s[i+2], s[i+3], ... which we JUST validated.
+# Key insight: those characters were already valid — we should KEEP them
+# and only remove the one offending character from the left.</span></code></pre>
+                </div>
+              </div>
+              <div class="think-arrow">
+                &#9660; &nbsp;O(n&sup2;) &rarr; instead of restarting the
+                window, shrink it from the left
+              </div>
+              <div class="think-step step-optimal">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128994; Optimal</div>
+                  <div class="think-step-title">
+                    Shrink Left Instead of Restarting
+                  </div>
+                  <div class="think-step-complexity">
+                    O(n) time &middot; O(k) space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  <strong>The insight:</strong> instead of restarting, shrink
+                  from the left until the duplicate is gone. The valid
+                  characters to the right of the removed element are preserved.
+                  Every character enters and leaves the window at most once.
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label"
+                      >O(n) sliding window &mdash; shrink don't restart + dict
+                      variant</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">length_of_longest</span>(s):
+    char_set = <span class="py-bi">set</span>()  <span class="cm"># characters currently in the window</span>
+    left = 0; max_len = 0
+
+    <span class="kw">for</span> right <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(s)):
+        <span class="cm"># Window violated: duplicate entered — shrink from left</span>
+        <span class="kw">while</span> s[right] <span class="kw">in</span> char_set:
+            char_set.remove(s[left])
+            left += 1
+        <span class="cm"># Now s[right] is NOT a duplicate — expand</span>
+        char_set.add(s[right])
+        max_len = <span class="py-bi">max</span>(max_len, right - left + 1)
+
+    <span class="kw">return</span> max_len
+
+<span class="cm"># Time:  O(n) — see amortized argument in callout below
+# Space: O(k) — k = max window size (at most min(n, alphabet_size))
+
+
+# Faster variant: dict stores last-seen index, left jumps directly</span>
+<span class="kw">def</span> <span class="fn">length_of_longest_v2</span>(s):
+    last_seen = {}  <span class="cm"># char → most recent index</span>
+    left = 0; max_len = 0
+    <span class="kw">for</span> right, c <span class="kw">in</span> <span class="py-bi">enumerate</span>(s):
+        <span class="kw">if</span> c <span class="kw">in</span> last_seen <span class="kw">and</span> last_seen[c] &gt;= left:
+            left = last_seen[c] + 1  <span class="cm"># jump directly past the duplicate</span>
+        last_seen[c] = right
+        max_len = <span class="py-bi">max</span>(max_len, right - left + 1)
+    <span class="kw">return</span> max_len
+
+<span class="cm"># v2: left jumps over multiple chars at once instead of one-by-one.
+# Same O(n) asymptotics but fewer iterations in practice.</span></code></pre>
+                </div>
+              </div>
+            </div>
+            <div class="callout insight">
+              <div class="callout-title">
+                &#128161; The Amortized O(n) Argument &mdash; Must Know for
+                Interviews
+              </div>
+              <p>
+                The inner <code>while</code> loop looks like it could run O(n)
+                per outer iteration, making it O(n&sup2;).
+                <strong>It does not.</strong> The key: <code>left</code> only
+                ever moves right &mdash; it never reverses. Across the
+                <em>entire algorithm</em>, <code>left</code> advances at most n
+                times total, regardless of how many individual while iterations
+                fire per outer iteration. Total inner-loop cost across all
+                iterations: O(n). Add O(n) outer: total O(n).
+                <strong
+                  >This argument applies to every single shrinking-window
+                  problem.</strong
+                >
+              </p>
+            </div>
+          </div>
+          <div class="sub" id="sw-min">
+            <h3 class="sub-title">
+              <span class="sub-num g">2.4</span>Minimum Window &mdash; Shrinking
+              When Valid
+            </h3>
+            <p class="prose">
+              LC #209. Minimum Size Subarray Sum. Find the shortest subarray
+              with sum &ge; target. Critical variation:
+              <strong>the shrink condition is inverted.</strong> You shrink
+              <em>when the window is valid</em> to minimize length, not when it
+              is violated. Getting this flip right separates average from strong
+              candidates.
+            </p>
+            <div class="callout warn">
+              <div class="callout-title">
+                &#9888;&#65039; The Shrink Condition Flip
+              </div>
+              <p>
+                For <em>maximum</em> windows: expand until violated, shrink
+                until valid, record. For <em>minimum</em> windows: expand until
+                valid, <strong>record, then shrink while still valid</strong>.
+                The outer structure is identical. Only the shrink condition and
+                record placement differ.
+              </p>
+            </div>
+            <div class="think-steps">
+              <div class="think-step step-brute">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128308; Brute Force</div>
+                  <div class="think-step-title">Check Every Subarray</div>
+                  <div class="think-step-complexity">
+                    O(n&sup2;) time &middot; O(1) space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  For every start index, expand right until sum &ge; target.
+                  O(n&sup2;) total.
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label">O(n&sup2;) brute force</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">min_subarray_sum_brute</span>(target, nums):
+    n = <span class="py-bi">len</span>(nums)
+    min_len = <span class="py-bi">float</span>(<span class="st">&#39;inf&#39;</span>)
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="py-bi">range</span>(n):
+        curr_sum = 0
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="py-bi">range</span>(i, n):
+            curr_sum += nums[j]
+            <span class="kw">if</span> curr_sum &gt;= target:
+                min_len = <span class="py-bi">min</span>(min_len, j - i + 1)
+                <span class="kw">break</span>  <span class="cm"># can't get shorter starting from i</span>
+    <span class="kw">return</span> min_len <span class="kw">if</span> min_len != <span class="py-bi">float</span>(<span class="st">&#39;inf&#39;</span>) <span class="kw">else</span> 0
+
+<span class="cm"># O(n²) — for each start, scan right until sum &gt;= target</span></code></pre>
+                </div>
+              </div>
+              <div class="think-step step-better">
+                <div class="think-step-header">
+                  <div class="think-step-num">&#128994; Optimal</div>
+                  <div class="think-step-title">
+                    Shrink While Valid &mdash; Inverted Condition
+                  </div>
+                  <div class="think-step-complexity">
+                    O(n) time &middot; O(1) space
+                  </div>
+                </div>
+                <p class="think-step-body">
+                  Expand right always. When sum &ge; target: record length,
+                  shrink from left, repeat. Keep shrinking as long as window
+                  remains valid &mdash; each shrink might reveal a shorter valid
+                  window.
+                </p>
+                <div class="code-block">
+                  <div class="code-head">
+                    <span class="code-lang">python</span
+                    ><span class="code-label"
+                      >O(n) minimum window &mdash; shrink when valid</span
+                    ><button class="copy-btn" onclick="copyCode(this)">
+                      copy
+                    </button>
+                  </div>
+                  <pre><code><span class="kw">def</span> <span class="fn">min_subarray_sum</span>(target, nums):
+    left = 0; curr_sum = 0
+    min_len = <span class="py-bi">float</span>(<span class="st">&#39;inf&#39;</span>)
+
+    <span class="kw">for</span> right <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(nums)):
+        curr_sum += nums[right]           <span class="cm"># EXPAND: always add right element</span>
+
+        <span class="cm"># SHRINK: while window is VALID (sum &gt;= target), try to minimize</span>
+        <span class="kw">while</span> curr_sum &gt;= target:
+            min_len = <span class="py-bi">min</span>(min_len, right - left + 1)  <span class="cm"># record BEFORE shrinking</span>
+            curr_sum -= nums[left]
+            left += 1
+
+    <span class="kw">return</span> min_len <span class="kw">if</span> min_len != <span class="py-bi">float</span>(<span class="st">&#39;inf&#39;</span>) <span class="kw">else</span> 0
+
+<span class="cm"># Time:  O(n) — same amortized argument: left moves at most n times total
+# Space: O(1)
+#
+# CONTRAST with longest-window problems:
+#   Longest:  SHRINK while INVALID  → record AFTER shrink loop
+#   Minimum:  SHRINK while VALID    → record INSIDE shrink loop (before removing left)
+#
+# The inversion: for minimum, we record every valid window size
+# as we shrink it — we want the shortest, so we keep shrinking
+# as long as the window remains valid.</span></code></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sub" id="sw-template">
+            <h3 class="sub-title">
+              <span class="sub-num gr">2.5</span>The Universal Variable Window
+              Template
+            </h3>
+            <p class="prose">
+              Every variable window problem is an instance of this skeleton. The
+              only things that change: window state, validity condition, max vs
+              min. Memorize the three steps.
+            </p>
+            <div class="code-block">
+              <div class="code-head">
+                <span class="code-lang">python</span
+                ><span class="code-label"
+                  >universal template + two applied examples</span
+                ><button class="copy-btn" onclick="copyCode(this)">copy</button>
+              </div>
+              <pre><code><span class="cm"># UNIVERSAL VARIABLE WINDOW TEMPLATE
+# Use for: "longest/shortest/min/max subarray or substring with property X"
+# The 3 steps never change. Only window_state and validity condition change.</span>
+
+<span class="kw">def</span> <span class="fn">variable_window</span>(arr):
+    left = 0
+    window_state = ...       <span class="cm"># set / dict / int / Counter</span>
+    result = 0               <span class="cm"># or float(&#39;inf&#39;) for minimum problems</span>
+
+    <span class="kw">for</span> right <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(arr)):
+
+        <span class="cm"># STEP 1 - EXPAND: incorporate arr[right] into window</span>
+        <span class="cm"># window_state = add(window_state, arr[right])</span>
+
+        <span class="cm"># STEP 2 - SHRINK:
+        # For MAXIMUM: while window INVALID, remove arr[left], left++
+        # For MINIMUM: while window VALID,   record, remove arr[left], left++</span>
+        <span class="kw">while</span> is_invalid(window_state):
+            <span class="cm"># window_state = remove(window_state, arr[left])</span>
+            left += 1
+
+        <span class="cm"># STEP 3 - RECORD (for maximum: after shrink loop)</span>
+        result = <span class="py-bi">max</span>(result, right - left + 1)
+
+    <span class="kw">return</span> result
+
+
+<span class="cm"># APPLIED 1: Longest Substring with At Most K Distinct Characters</span>
+<span class="kw">def</span> <span class="fn">longest_k_distinct</span>(s, k):
+    freq = {}
+    left = 0; result = 0
+    <span class="kw">for</span> right <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(s)):
+        freq[s[right]] = freq.get(s[right], 0) + 1       <span class="cm"># EXPAND</span>
+        <span class="kw">while</span> <span class="py-bi">len</span>(freq) &gt; k:                             <span class="cm"># SHRINK</span>
+            freq[s[left]] -= 1
+            <span class="kw">if</span> freq[s[left]] == 0: <span class="kw">del</span> freq[s[left]]
+            left += 1
+        result = <span class="py-bi">max</span>(result, right - left + 1)            <span class="cm"># RECORD</span>
+    <span class="kw">return</span> result
+
+
+<span class="cm"># APPLIED 2: Max Consecutive Ones III (flip at most k zeros to ones)</span>
+<span class="kw">def</span> <span class="fn">longest_ones</span>(nums, k):
+    zero_count = 0
+    left = 0; result = 0
+    <span class="kw">for</span> right <span class="kw">in</span> <span class="py-bi">range</span>(<span class="py-bi">len</span>(nums)):
+        <span class="kw">if</span> nums[right] == 0: zero_count += 1              <span class="cm"># EXPAND</span>
+        <span class="kw">while</span> zero_count &gt; k:                             <span class="cm"># SHRINK</span>
+            <span class="kw">if</span> nums[left] == 0: zero_count -= 1
+            left += 1
+        result = <span class="py-bi">max</span>(result, right - left + 1)            <span class="cm"># RECORD</span>
+    <span class="kw">return</span> result
+
+<span class="cm"># Both examples: Time O(n), Space O(k) or O(1)</span></code></pre>
+            </div>
+            <div class="callout tip">
+              <div class="callout-title">
+                &#9989; When to Reach for Sliding Window
+              </div>
+              <p>
+                Signal words: <strong>contiguous subarray/substring</strong>,
+                <strong>longest/shortest/min/max with condition X</strong>,
+                <strong>at most k distinct</strong>,
+                <strong>sum &ge; target</strong>. The condition must be
+                incrementally updatable in O(1) (or O(log n) with sorted
+                structure). If computing the condition requires scanning the
+                entire current window, sliding window does not apply.
+              </p>
+            </div>
+            <div class="callout insight">
+              <div class="callout-title">
+                &#128161; Two Pointers vs Sliding Window &mdash; The Decision
+                Rule
+              </div>
+              <p>
+                <strong>Use Two Pointers:</strong> sorted array, pair/triplet
+                sums, palindromes, in-place partition. Pointers converge toward
+                each other. <strong>Use Sliding Window:</strong> contiguous
+                subarray/substring, longest/shortest/min/max qualifier,
+                condition depends on window <em>content</em>. Window always
+                advances left-to-right, never reverses.
+                <strong>Key test:</strong> does sorting the array help? Yes
+                &rarr; Two Pointers. Is the problem about a contiguous range?
+                Yes &rarr; Sliding Window.
+              </p>
+            </div>
+          </div>
+        </section>
+        <hr class="divider" />
+        <section class="section" id="check">
+          <div class="section-number">
+            Section 0K <span class="sn-label">Knowledge Check</span>
+          </div>
+          <h2 class="sec-title">Questions &mdash; <em>No Peeking</em></h2>
+          <p class="sec-lead">
+            Answer each question before revealing. The ones you fumble are
+            exactly what you revise tomorrow morning. Spend at least 60 seconds
+            on each before hitting Reveal.
+          </p>
+          <div class="check-grid">
+            <div class="check-item">
+              <div class="check-q">Q01 / 08</div>
+              <div class="check-text">
+                Explain why two pointers on a sorted array is O(n) and not
+                O(n&sup2;). State the invariant precisely.
+              </div>
+              <button class="check-btn" onclick="revealAnswer(this)">
+                Reveal Answer
+              </button>
+              <div class="check-reveal">
+                <strong>Invariant:</strong> when
+                <code>nums[L]+nums[R] &lt; target</code>,
+                <code>nums[L]</code> paired with <em>any</em> value &le;
+                <code>nums[R]</code> is also too small &mdash; L is permanently
+                eliminated. Advance L. Symmetrically, when sum &gt; target, R is
+                eliminated. Each step eliminates exactly one element
+                permanently. n elements &rarr; at most n steps &rarr; O(n).
+                Neither pointer ever reverses.
+              </div>
+            </div>
+            <div class="check-item">
+              <div class="check-q">Q02 / 08</div>
+              <div class="check-text">
+                In 3Sum, name both duplicate-skip locations. What fails if you
+                miss each?
+              </div>
+              <button class="check-btn" onclick="revealAnswer(this)">
+                Reveal Answer
+              </button>
+              <div class="check-reveal">
+                <strong>Skip #1 &mdash; outer loop:</strong>
+                <code>if i &gt; 0 and nums[i] == nums[i-1]: continue</code>.
+                Missing it: triplets appear multiple times when there are
+                duplicate outer values. <br /><strong
+                  >Skip #2 &mdash; after found triplet:</strong
+                >
+                advance L past all <code>nums[left]==nums[left+1]</code> and R
+                past all <code>nums[right]==nums[right-1]</code>. Missing it:
+                the two-pointer loop generates the same triplet repeatedly when
+                duplicate values exist at L or R.
+              </div>
+            </div>
+            <div class="check-item">
+              <div class="check-q">Q03 / 08</div>
+              <div class="check-text">
+                Why does the inner <code>while</code> in variable sliding window
+                NOT make it O(n&sup2;)? State the amortized argument.
+              </div>
+              <button class="check-btn" onclick="revealAnswer(this)">
+                Reveal Answer
+              </button>
+              <div class="check-reveal">
+                <code>left</code> only moves right &mdash; it never reverses.
+                Across the entire algorithm, <code>left</code> advances at most
+                <strong>n times total</strong>, regardless of how many
+                individual while iterations fire per outer loop iteration. Total
+                inner-loop cost across all iterations: O(n). Add O(n) outer:
+                total O(n).
+                <strong
+                  >This exact argument applies to every shrinking-window
+                  problem.</strong
+                >
+              </div>
+            </div>
+            <div class="check-item">
+              <div class="check-q">Q04 / 08</div>
+              <div class="check-text">
+                State the fixed-window slide formula. What does each term
+                represent?
+              </div>
+              <button class="check-btn" onclick="revealAnswer(this)">
+                Reveal Answer
+              </button>
+              <div class="check-reveal">
+                <code>window_sum = window_sum + nums[i] - nums[i-k]</code>.
+                <code>nums[i]</code> = new element entering the right side of
+                the window. <code>nums[i-k]</code> = old element leaving the
+                left side. One addition + one subtraction = O(1) per slide.
+                Build first window with <code>sum(nums[:k])</code> in O(k).
+                Subsequent slides: O(1). Total: O(n).
+              </div>
+            </div>
+            <div class="check-item">
+              <div class="check-q">Q05 / 08</div>
+              <div class="check-text">
+                Minimum window vs maximum window &mdash; how does the shrink
+                condition differ?
+              </div>
+              <button class="check-btn" onclick="revealAnswer(this)">
+                Reveal Answer
+              </button>
+              <div class="check-reveal">
+                <strong>Maximum (e.g., longest without repeat):</strong> while
+                window INVALID &rarr; shrink &rarr; record after shrink loop.
+                <br /><strong
+                  >Minimum (e.g., shortest subarray with sum &ge;
+                  target):</strong
+                >
+                while window VALID &rarr; record FIRST (inside loop), then
+                shrink. The inversion: for minimum, you keep shrinking as long
+                as the window is valid, recording each valid length before
+                removing an element.
+              </div>
+            </div>
+            <div class="check-item">
+              <div class="check-q">Q06 / 08</div>
+              <div class="check-text">
+                Write the 3-step variable window template from memory.
+              </div>
+              <button class="check-btn" onclick="revealAnswer(this)">
+                Reveal Answer
+              </button>
+              <div class="check-reveal">
+                1. <strong>EXPAND:</strong> add <code>arr[right]</code> to
+                window state every iteration. 2. <strong>SHRINK:</strong> while
+                invalid (max) or valid (min), remove <code>arr[left]</code> and
+                left++. 3. <strong>RECORD:</strong> for max: after shrink loop.
+                For min: inside shrink loop before removing. Right moves n
+                times; left moves at most n times total = O(n).
+              </div>
+            </div>
+            <div class="check-item">
+              <div class="check-q">Q07 / 08</div>
+              <div class="check-text">
+                For LC #3, describe both the set version and dict version. What
+                is the practical difference?
+              </div>
+              <button class="check-btn" onclick="revealAnswer(this)">
+                Reveal Answer
+              </button>
+              <div class="check-reveal">
+                <strong>Set version:</strong>
+                <code>while s[right] in char_set: remove s[left], left++</code>.
+                Left advances one step at a time until duplicate is gone.
+                <br /><strong>Dict version:</strong>
+                <code>last_seen[c] = index</code>. When duplicate found at
+                right, set <code>left = last_seen[c]+1</code> directly &mdash;
+                jump over multiple characters in one step. Same O(n)
+                asymptotics. Dict version has fewer iterations in practice.
+              </div>
+            </div>
+            <div class="check-item">
+              <div class="check-q">Q08 / 08</div>
+              <div class="check-text">
+                What is the time complexity of 3Sum and why cannot we do better
+                than O(n&sup2;)?
+              </div>
+              <button class="check-btn" onclick="revealAnswer(this)">
+                Reveal Answer
+              </button>
+              <div class="check-reveal">
+                O(n&sup2;). Sorting O(n log n) + O(n) per fixed element &times;
+                n elements = O(n&sup2;). <br /><strong
+                  >Lower bound argument:</strong
+                >
+                in the worst case the output itself contains O(n&sup2;) triplets
+                (e.g., input is [-n,...,-1,0,1,...,n]). Any correct algorithm
+                must write the output, so &Omega;(n&sup2;) in the worst case.
+                Our algorithm is therefore output-sensitive optimal.
+              </div>
+            </div>
+          </div>
+        </section>
+        <hr class="divider" />
+        <section class="section" id="problems">
+          <div class="section-number">
+            Section 0P <span class="sn-label">LeetCode</span>
+          </div>
+          <h2 class="sec-title">Today's <em>Problems</em></h2>
+          <p class="sec-lead">
+            Four problems. 25-minute hard limit each. Before writing code:
+            verbalize the brute force and its complexity. Then explain the
+            insight. Then code. After solving: write time and space as comments.
+          </p>
+          <div class="lc-grid">
+            <a
+              class="lc-row"
+              href="https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/"
+              target="_blank"
+              rel="noopener"
+              ><div class="lc-diff lc-easy">Easy</div>
+              <div class="lc-body">
+                <div class="lc-name">
+                  #167 &mdash; Two Sum II &mdash; Input Array Is Sorted
+                </div>
+                <div class="lc-why">
+                  Direct two pointers on sorted array. O(1) space required
+                  &mdash; hash map disallowed. Verbalize the invariant before
+                  you start coding.
+                </div>
+                <div class="lc-hint">
+                  <strong>Hint (after 25 min):</strong> L=0, R=len-1. Sum too
+                  small: L++. Sum too big: R--. One pointer permanently
+                  eliminated per step.
+                </div>
+              </div></a
+            ><a
+              class="lc-row"
+              href="https://leetcode.com/problems/maximum-average-subarray-i/"
+              target="_blank"
+              rel="noopener"
+              ><div class="lc-diff lc-easy">Easy</div>
+              <div class="lc-body">
+                <div class="lc-name">
+                  #643 &mdash; Maximum Average Subarray I
+                </div>
+                <div class="lc-why">
+                  Warmup fixed window. Target: under 10 minutes. If it takes
+                  longer, re-read section 2.2 before the mediums.
+                </div>
+                <div class="lc-hint">
+                  <strong>Hint (after 25 min):</strong> Build first window.
+                  Slide: new_sum = old_sum + nums[i] - nums[i-k]. Max avg =
+                  max_sum / k.
+                </div>
+              </div></a
+            ><a
+              class="lc-row"
+              href="https://leetcode.com/problems/longest-substring-without-repeating-characters/"
+              target="_blank"
+              rel="noopener"
+              ><div class="lc-diff lc-med">Medium</div>
+              <div class="lc-body">
+                <div class="lc-name">
+                  #3 &mdash; Longest Substring Without Repeating Characters
+                </div>
+                <div class="lc-why">
+                  Canonical variable window. After solving: make the amortized
+                  O(n) argument out loud. Then implement the dict variant (jump
+                  version) as follow-up.
+                </div>
+                <div class="lc-hint">
+                  <strong>Hint (after 25 min):</strong> Set tracks chars. For
+                  each right: while s[right] in set, remove s[left], left++. Add
+                  s[right], update max.
+                </div>
+              </div></a
+            ><a
+              class="lc-row"
+              href="https://leetcode.com/problems/3sum/"
+              target="_blank"
+              rel="noopener"
+              ><div class="lc-diff lc-med">Medium</div>
+              <div class="lc-body">
+                <div class="lc-name">#15 &mdash; 3Sum</div>
+                <div class="lc-why">
+                  Most common medium in FAANG interviews. Trace through
+                  [-1,-1,0,1,2] on paper first. The duplicate handling is the
+                  entire challenge. Watch NeetCode only after 30 min of genuine
+                  struggle.
+                </div>
+                <div class="lc-hint">
+                  <strong>Hint (after 25 min):</strong> Sort. Fix i (skip if
+                  nums[i]==nums[i-1] and i&gt;0). Two pointers. After triplet:
+                  skip dups for both L and R.
+                </div>
+              </div></a
+            >
+          </div>
+          <div class="callout tip">
+            <div class="callout-title">
+              &#127919; The 5-Step Interview Protocol
+            </div>
+            <p>
+              (1) <strong>Restate</strong> the problem in your own words. (2)
+              <strong>Brute force:</strong> state it and its complexity. (3)
+              <strong>Optimize:</strong> explain the insight that unlocks the
+              better approach. (4) <strong>Code</strong> the optimal solution.
+              (5) <strong>Verify:</strong> trace one example by hand, then state
+              time/space complexity. This protocol distinguishes a hire from a
+              strong hire.
+            </p>
+          </div>
+        </section>
+        <hr class="divider" />
+        <section class="section" id="resources">
+          <div class="section-number">
+            Section 0R <span class="sn-label">Resources</span>
+          </div>
+          <h2 class="sec-title">Curated <em>References</em></h2>
+          <p class="sec-lead">
+            Supplements to this document &mdash; not replacements.
+          </p>
+          <div class="res-grid">
+            <a
+              class="res-card"
+              href="https://www.youtube.com/watch?v=VEPCm3BZEcw"
+              target="_blank"
+              rel="noopener"
+              ><div class="res-card-type" style="color: var(--rust)">
+                &#127902; YouTube
+              </div>
+              <div class="res-card-name">Two Pointers &mdash; NeetCode</div>
+              <div class="res-card-desc">
+                8-minute animated walkthrough. Watch if the convergence logic is
+                not clicking from reading.
+              </div></a
+            ><a
+              class="res-card"
+              href="https://www.youtube.com/watch?v=MK-NZ4hF9Gg"
+              target="_blank"
+              rel="noopener"
+              ><div class="res-card-type" style="color: var(--teal)">
+                &#127902; YouTube
+              </div>
+              <div class="res-card-name">Sliding Window &mdash; NeetCode</div>
+              <div class="res-card-desc">
+                14-minute deep dive. The variable window animation at 6:30 is
+                especially clear.
+              </div></a
+            ><a
+              class="res-card"
+              href="https://leetcode.com/tag/two-pointers/"
+              target="_blank"
+              rel="noopener"
+              ><div class="res-card-type" style="color: var(--gold)">
+                &#128187; Practice
+              </div>
+              <div class="res-card-name">LeetCode: Two Pointers</div>
+              <div class="res-card-desc">
+                After today: all Easy two-pointer problems sorted by acceptance
+                rate.
+              </div></a
+            ><a
+              class="res-card"
+              href="https://leetcode.com/tag/sliding-window/"
+              target="_blank"
+              rel="noopener"
+              ><div class="res-card-type" style="color: var(--plum)">
+                &#128187; Practice
+              </div>
+              <div class="res-card-name">LeetCode: Sliding Window</div>
+              <div class="res-card-desc">
+                Easy problems this week. Save Minimum Window Substring (hard)
+                for Week 2.
+              </div></a
+            ><a
+              class="res-card"
+              href="https://cp-algorithms.com/two_pointers/two_pointers.html"
+              target="_blank"
+              rel="noopener"
+              ><div class="res-card-type" style="color: var(--green)">
+                &#128218; Article
+              </div>
+              <div class="res-card-name">
+                CP Algorithms &mdash; Two Pointers
+              </div>
+              <div class="res-card-desc">
+                Mathematical proof of correctness. Read the invariant proof.
+                Makes you bulletproof.
+              </div></a
+            >
+          </div>
+        </section>
+        <hr class="divider" />
+        <section class="section" id="schedule">
+          <div class="section-number">
+            Section 0S <span class="sn-label">Schedule</span>
+          </div>
+          <h2 class="sec-title">Today's <em>Plan</em></h2>
+          <div class="sched">
+            <div class="sched-row">
+              <div class="sched-time">5 min</div>
+              <div class="sched-desc">
+                <strong>Spaced Repetition</strong><br />Write
+                <code>two_sum</code> (hash map) and
+                <code>group_anagrams</code> from memory. No looking. This ritual
+                runs every morning from Day 2 onwards.
+              </div>
+            </div>
+            <div class="sched-row">
+              <div class="sched-time">1.5 hr</div>
+              <div class="sched-desc">
+                <strong>Sections 1.1 &rarr; 1.4</strong><br />Two Pointers. Type
+                every code block in a Python REPL. Trace 3Sum through
+                <code>[-4,-1,-1,0,1,2]</code> by hand before running it.
+              </div>
+            </div>
+            <div class="sched-row">
+              <div class="sched-time">1.5 hr</div>
+              <div class="sched-desc">
+                <strong>Sections 2.1 &rarr; 2.5</strong><br />Sliding Window.
+                Draw the variable window diagram for "abcabcbb" on paper as you
+                read. Memorize the 3-step template.
+              </div>
+            </div>
+            <div class="sched-row">
+              <div class="sched-time">30 min</div>
+              <div class="sched-desc">
+                <strong>LC #643 + LC #167</strong><br />Easy warmups. Under 10
+                min each. If slower, re-read the relevant section before
+                tackling the mediums.
+              </div>
+            </div>
+            <div class="sched-row">
+              <div class="sched-time">45 min</div>
+              <div class="sched-desc">
+                <strong>LC #3 &mdash; Longest Substring</strong><br />Medium. 25
+                min limit. After solving: state the amortized O(n) argument out
+                loud. Implement the dict variant.
+              </div>
+            </div>
+            <div class="sched-row">
+              <div class="sched-time">1 hr</div>
+              <div class="sched-desc">
+                <strong>LC #15 &mdash; 3Sum</strong><br />Hard medium. Trace a
+                small example first. Expect to debug duplicate handling. Watch
+                NeetCode only after 30 min of genuine effort.
+              </div>
+            </div>
+            <div class="sched-row">
+              <div class="sched-time">30 min</div>
+              <div class="sched-desc">
+                <strong>Knowledge Check + Log</strong><br />8 questions without
+                peeking. Log every fumble &mdash; those are tomorrow morning
+                revision targets. Commit all code to GitHub.
+              </div>
+            </div>
+          </div>
+          <div class="callout tip">
+            <div class="callout-title">
+              &#9989; Tomorrow &mdash; Day 3: Binary Search
+            </div>
+            <p>
+              Day 3 covers <strong>Binary Search</strong> &mdash; turning O(n)
+              into O(log n). You will learn why binary search applies to far
+              more than sorted arrays, and tackle Search in Rotated Sorted Array
+              &mdash; the problem that eliminates most candidates.
+            </p>
+          </div>
+          <div class="closing-card">
+            <div class="day-num">Day 02 of 84.</div>
+            <div class="closing-line">
+              Two patterns, zero extra space, infinite applications. The
+              patterns don't change &mdash; only the problems do.
+            </div>
+            <div
+              class="hero-tags"
+              style="justify-content: center; margin-top: 16px"
+            >
+              <span class="tag r">Binary Search &rarr;</span
+              ><span class="tag t">Rotated Array &rarr;</span
+              ><span class="tag g">Search Space &rarr;</span
+              ><span class="tag p">82 days to go</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+    <script>
+      window.addEventListener("scroll", () => {
+        const s = window.scrollY,
+          t = document.body.scrollHeight - window.innerHeight;
+        document.getElementById("prog").style.width = (s / t) * 100 + "%";
+        document.getElementById("top-btn").classList.toggle("show", s > 400);
+        let cur = "";
+        document.querySelectorAll("[id]").forEach((el) => {
+          if (window.scrollY >= el.offsetTop - 110) cur = el.id;
+        });
+        document
+          .querySelectorAll(".toc-link")
+          .forEach((l) =>
+            l.classList.toggle("on", l.getAttribute("href") === "#" + cur),
+          );
+      });
+      function copyCode(btn) {
+        const pre = btn.closest(".code-block").querySelector("pre");
+        navigator.clipboard.writeText(pre.innerText).then(() => {
+          btn.textContent = "copied!";
+          btn.style.cssText =
+            "background:var(--green);color:#fff;border-color:var(--green)";
+          setTimeout(() => {
+            btn.textContent = "copy";
+            btn.style.cssText = "";
+          }, 2200);
+        });
+      }
+      function revealAnswer(btn) {
+        const r = btn.nextElementSibling,
+          open = r.style.display === "block";
+        r.style.display = open ? "none" : "block";
+        btn.textContent = open ? "Reveal Answer" : "Hide Answer";
+        btn.style.cssText = open
+          ? ""
+          : "background:var(--green);color:#fff;border-color:var(--green)";
+      }
+      const obs = new IntersectionObserver(
+        (entries) =>
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.style.cssText =
+                "opacity:1;transform:none;transition:opacity .5s ease,transform .5s ease";
+              obs.unobserve(e.target);
+            }
+          }),
+        { threshold: 0.05 },
+      );
+      document
+        .querySelectorAll(
+          ".section,.sub,.think-steps,.mental-model,.diagram,.video-wrap",
+        )
+        .forEach((el) => {
+          el.style.opacity = "0";
+          el.style.transform = "translateY(16px)";
+          obs.observe(el);
+        });
+    </script>
+  </body>
+</html>
