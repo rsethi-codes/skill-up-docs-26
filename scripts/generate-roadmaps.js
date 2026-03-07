@@ -63,11 +63,16 @@ function main() {
 
   for (const [folderPath, docs] of roadmapsByFolder) {
     const sorted = docs.sort((a, b) => a.href.localeCompare(b.href));
+    const docsWithNav = sorted.map((d, i) => ({
+      ...d,
+      prev: i > 0 ? sorted[i - 1].href : null,
+      next: i < sorted.length - 1 ? sorted[i + 1].href : null,
+    }));
     roadmaps.push({
       id: folderPath.replace(/[/\\]/g, '-').toLowerCase(),
       name: getFolderLabel(folderPath),
       path: folderPath.replace(/\\/g, '/'),
-      docs: sorted,
+      docs: docsWithNav,
     });
   }
 

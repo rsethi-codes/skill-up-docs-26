@@ -1,0 +1,2020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day 2 — TypeScript Advanced + Async Patterns | Raghav's Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,700;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f0e8;
+  --bg2: #ede8de;
+  --bg3: #e4ddd0;
+  --ink: #1a1410;
+  --ink2: #2d2520;
+  --ink3: #453d35;
+  --muted: #7a6f62;
+  --muted2: #a89e92;
+  --border: rgba(26,20,16,0.12);
+  --border2: rgba(26,20,16,0.06);
+  --rust: #c0392b;
+  --rust2: #e74c3c;
+  --rust-bg: rgba(192,57,43,0.07);
+  --rust-border: rgba(192,57,43,0.2);
+  --teal: #0d7f7f;
+  --teal2: #0fb3b3;
+  --teal-bg: rgba(13,127,127,0.07);
+  --teal-border: rgba(13,127,127,0.2);
+  --gold: #b8860b;
+  --gold2: #d4a017;
+  --gold-bg: rgba(184,134,11,0.08);
+  --gold-border: rgba(184,134,11,0.22);
+  --plum: #5b2d8e;
+  --plum-bg: rgba(91,45,142,0.07);
+  --plum-border: rgba(91,45,142,0.2);
+  --green: #1a6b3c;
+  --green-bg: rgba(26,107,60,0.07);
+  --green-border: rgba(26,107,60,0.2);
+  --serif: 'Playfair Display', Georgia, serif;
+  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --sans: 'DM Sans', system-ui, sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.75;
+  font-size: 16px;
+  overflow-x: hidden;
+}
+
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9999; opacity: 0.6;
+}
+
+#prog {
+  position: fixed; top: 0; left: 0; height: 3px; width: 0;
+  background: linear-gradient(90deg, var(--teal), var(--plum), var(--gold));
+  z-index: 1000; transition: width .1s linear;
+  box-shadow: 0 0 10px rgba(13,127,127,0.5);
+}
+
+#top-btn {
+  position: fixed; bottom: 28px; right: 28px; width: 42px; height: 42px;
+  background: var(--ink2); color: #fff; border: none; border-radius: 6px;
+  font-size: 18px; cursor: pointer; z-index: 900; opacity: 0; transition: opacity .3s, transform .2s;
+  display: flex; align-items: center; justify-content: center;
+}
+#top-btn.show { opacity: 1; }
+#top-btn:hover { transform: translateY(-2px); background: var(--rust); }
+
+/* ─── TOPBAR ─── */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; height: 54px;
+  background: rgba(245,240,232,0.94); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; z-index: 900;
+}
+.tb-brand { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--teal); letter-spacing: .06em; }
+.tb-day { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.tb-nav { display: flex; gap: 22px; list-style: none; }
+.tb-nav a { font-family: var(--sans); font-size: 12px; font-weight: 500; color: var(--muted); text-decoration: none; transition: color .2s; }
+.tb-nav a:hover { color: var(--teal); }
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  position: fixed; left: 0; top: 54px; width: 222px;
+  height: calc(100vh - 54px); overflow-y: auto;
+  padding: 24px 0; border-right: 1px solid var(--border);
+  background: rgba(245,240,232,0.85); backdrop-filter: blur(12px);
+  z-index: 800;
+}
+.sidebar::-webkit-scrollbar { width: 2px }
+.sidebar::-webkit-scrollbar-thumb { background: var(--muted2); }
+.toc-head {
+  padding: 0 18px 12px; font-family: var(--mono); font-size: 9px;
+  font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--muted2); border-bottom: 1px solid var(--border); margin-bottom: 10px;
+}
+.toc-section {
+  padding: 8px 18px 4px; font-family: var(--mono); font-size: 8px; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--muted2);
+}
+.toc-link {
+  display: block; padding: 5px 18px; font-family: var(--sans); font-size: 12px;
+  font-weight: 400; color: var(--muted); text-decoration: none;
+  border-left: 2px solid transparent; transition: all .18s; line-height: 1.4;
+}
+.toc-link:hover, .toc-link.on { color: var(--teal); border-left-color: var(--teal); background: var(--teal-bg); }
+.toc-link.sub { padding-left: 28px; font-size: 11px; }
+.toc-link.sub:hover, .toc-link.sub.on { color: var(--plum); border-left-color: var(--plum); background: var(--plum-bg); }
+
+/* ─── MAIN LAYOUT ─── */
+.main { margin-left: 222px; padding-top: 54px; }
+.content { max-width: 880px; margin: 0 auto; padding: 60px 44px 120px; }
+
+/* ─── HERO ─── */
+.hero { margin-bottom: 72px; padding-bottom: 60px; border-bottom: 2px solid var(--border); }
+.day-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--teal); color: #fff;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  padding: 4px 14px; border-radius: 2px; margin-bottom: 20px;
+}
+.day-pill::before {
+  content: ''; width: 5px; height: 5px; background: rgba(255,255,255,0.8);
+  border-radius: 50%; animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.6)} }
+
+h1.hero-title {
+  font-family: var(--serif); font-size: clamp(34px, 5.5vw, 60px);
+  font-weight: 900; line-height: 1.0; letter-spacing: -.02em;
+  color: var(--ink); margin-bottom: 18px;
+}
+h1.hero-title .accent { color: var(--teal); font-style: italic; }
+h1.hero-title .accent2 { color: var(--plum); font-style: italic; }
+.hero-lead {
+  font-family: var(--sans); font-size: 17px; font-weight: 300;
+  color: var(--ink3); max-width: 640px; line-height: 1.78; margin-bottom: 28px;
+}
+.hero-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+.tag {
+  font-family: var(--mono); font-size: 10px; padding: 3px 10px;
+  border-radius: 2px; border: 1px solid; letter-spacing: .04em;
+}
+.tag.r { color: var(--rust); border-color: var(--rust-border); background: var(--rust-bg); }
+.tag.t { color: var(--teal); border-color: var(--teal-border); background: var(--teal-bg); }
+.tag.g { color: var(--gold); border-color: var(--gold-border); background: var(--gold-bg); }
+.tag.p { color: var(--plum); border-color: var(--plum-border); background: var(--plum-bg); }
+.tag.gr { color: var(--green); border-color: var(--green-border); background: var(--green-bg); }
+
+/* ─── SECTIONS ─── */
+.section { margin-bottom: 88px; scroll-margin-top: 74px; }
+.section-number {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--muted2); margin-bottom: 4px;
+  display: flex; align-items: center; gap: 12px;
+}
+.section-number::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+h2.sec-title {
+  font-family: var(--serif); font-size: clamp(24px, 3vw, 38px);
+  font-weight: 900; letter-spacing: -.01em; line-height: 1.1;
+  color: var(--ink); margin-bottom: 14px;
+}
+h2.sec-title .accent { color: var(--teal); font-style: italic; }
+h2.sec-title .accent2 { color: var(--plum); font-style: italic; }
+h2.sec-title .accent3 { color: var(--rust); font-style: italic; }
+.sec-lead { font-size: 15.5px; color: var(--ink3); max-width: 700px; margin-bottom: 40px; line-height: 1.82; }
+
+.sub { margin-bottom: 56px; scroll-margin-top: 74px; }
+h3.sub-title {
+  font-family: var(--sans); font-size: 20px; font-weight: 600;
+  color: var(--ink); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+h3.sub-title .sub-num {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  color: #fff; background: var(--teal); padding: 2px 8px; border-radius: 2px; flex-shrink: 0;
+}
+h3.sub-title .sub-num.p { background: var(--plum); }
+h3.sub-title .sub-num.r { background: var(--rust); }
+h3.sub-title .sub-num.g { background: var(--gold); }
+h4.mini-title {
+  font-family: var(--sans); font-size: 14px; font-weight: 700;
+  color: var(--ink); margin: 26px 0 10px; letter-spacing: -.01em;
+  display: flex; align-items: center; gap: 8px;
+}
+h4.mini-title::before { content: ''; width: 3px; height: 14px; background: var(--teal); border-radius: 2px; }
+
+p { color: var(--ink3); line-height: 1.82; margin-bottom: 16px; font-size: 15.5px; }
+p strong { color: var(--ink); font-weight: 600; }
+p em { color: var(--teal); font-style: italic; }
+p code {
+  font-family: var(--mono); font-size: 13px; background: var(--bg3);
+  padding: 2px 6px; border-radius: 3px; color: var(--ink); border: 1px solid var(--border);
+}
+
+ul.prose-list, ol.prose-list {
+  margin: 14px 0 22px 22px; display: flex; flex-direction: column; gap: 8px;
+}
+ul.prose-list li, ol.prose-list li { color: var(--ink3); font-size: 15px; line-height: 1.72; }
+ul.prose-list li strong { color: var(--ink); }
+ul.prose-list li code, ol.prose-list li code {
+  font-family: var(--mono); font-size: 12.5px; background: var(--bg3);
+  padding: 1px 5px; border-radius: 3px; color: var(--ink); border: 1px solid var(--border);
+}
+
+/* ─── CALLOUTS ─── */
+.callout { border-radius: 7px; padding: 18px 22px; margin: 24px 0; border-left: 3px solid; }
+.callout-title {
+  font-family: var(--mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .18em; text-transform: uppercase; margin-bottom: 9px;
+}
+.callout p { margin-bottom: 0; font-size: 14.5px; }
+.callout.danger { background: var(--rust-bg); border-color: var(--rust); }
+.callout.danger .callout-title { color: var(--rust); }
+.callout.insight { background: var(--plum-bg); border-color: var(--plum); }
+.callout.insight .callout-title { color: var(--plum); }
+.callout.tip { background: var(--green-bg); border-color: var(--green); }
+.callout.tip .callout-title { color: var(--green); }
+.callout.warn { background: var(--gold-bg); border-color: var(--gold); }
+.callout.warn .callout-title { color: var(--gold); }
+.callout.info { background: var(--teal-bg); border-color: var(--teal); }
+.callout.info .callout-title { color: var(--teal); }
+
+/* ─── CODE BLOCKS ─── */
+.code-block {
+  border-radius: 9px; overflow: hidden; margin: 24px 0;
+  border: 1px solid var(--border); box-shadow: 0 3px 16px rgba(0,0,0,.06);
+}
+.code-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; background: #1c1612; border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.code-lang { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--teal2); }
+.code-label { font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,.28); font-style: italic; }
+.copy-btn {
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+  color: rgba(255,255,255,.4); font-family: var(--mono); font-size: 10px;
+  padding: 3px 10px; border-radius: 3px; cursor: pointer; transition: all .2s;
+}
+.copy-btn:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
+pre {
+  background: #181410; padding: 24px 26px; overflow-x: auto;
+  font-family: var(--mono); font-size: 13px; line-height: 1.88;
+}
+pre::-webkit-scrollbar { height: 3px }
+pre::-webkit-scrollbar-thumb { background: #3a3028; border-radius: 2px }
+pre code { background: none; padding: 0; font-size: inherit; color: inherit; border: none; }
+
+/* Syntax highlighting */
+.kw  { color: #c678dd }
+.fn  { color: #61afef }
+.str { color: #98c379 }
+.num { color: #d19a66 }
+.cm  { color: #5c6370; font-style: italic }
+.cl  { color: #e5c07b }
+.var { color: #abb2bf }
+.op  { color: #e06c75 }
+.prop{ color: #61afef }
+.at  { color: #e5c07b }
+.type{ color: #e5c07b }
+.dec { color: #e06c75 }
+.pun { color: #abb2bf }
+.iface{ color: #56b6c2 }
+
+/* ─── BEFORE/AFTER ─── */
+.ba {
+  display: grid; grid-template-columns: 1fr 1fr; margin: 24px 0;
+  border-radius: 9px; overflow: hidden; border: 1px solid var(--border);
+  box-shadow: 0 3px 16px rgba(0,0,0,.06);
+}
+.ba-head {
+  padding: 10px 16px; font-family: var(--mono); font-size: 10px;
+  font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 7px;
+}
+.ba-bad .ba-head { background: rgba(192,57,43,.1); color: var(--rust); border-bottom: 1px solid rgba(192,57,43,.15); }
+.ba-good .ba-head { background: rgba(26,107,60,.08); color: var(--green); border-bottom: 1px solid rgba(26,107,60,.15); }
+.ba-pane pre { border-radius: 0; font-size: 12.5px; padding: 20px; }
+
+/* ─── DIAGRAMS ─── */
+.diagram {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 9px; padding: 28px; margin: 24px 0; overflow-x: auto;
+}
+.diag-title {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--muted); text-align: center; margin-bottom: 24px;
+}
+
+/* ─── FLOW DIAGRAM ─── */
+.flow {
+  display: flex; align-items: stretch; gap: 0; margin: 24px 0; overflow-x: auto;
+}
+.flow-step {
+  flex: 1; min-width: 130px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 0; padding: 16px 14px; position: relative; text-align: center;
+}
+.flow-step:first-child { border-radius: 7px 0 0 7px; }
+.flow-step:last-child { border-radius: 0 7px 7px 0; }
+.flow-step + .flow-step { border-left: none; }
+.flow-step-num { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted2); margin-bottom: 6px; }
+.flow-step-label { font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 5px; }
+.flow-step-desc { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+.flow-arrow { display: flex; align-items: center; padding: 0 6px; color: var(--muted2); font-size: 18px; }
+.flow-step.active { border-color: var(--teal-border); background: var(--teal-bg); }
+.flow-step.active .flow-step-label { color: var(--teal); }
+.flow-step.error { border-color: var(--rust-border); background: var(--rust-bg); }
+.flow-step.error .flow-step-label { color: var(--rust); }
+
+/* ─── MENTAL MODEL ─── */
+.mental-model {
+  background: linear-gradient(135deg, rgba(13,127,127,0.06), rgba(91,45,142,0.06));
+  border: 2px solid var(--teal-border); border-radius: 10px;
+  padding: 28px 32px; margin: 28px 0;
+}
+.mental-model h4 {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--teal);
+  margin-bottom: 14px;
+}
+.mental-model p { font-size: 16px; color: var(--ink); margin-bottom: 0; line-height: 1.78; }
+.mental-model p strong { color: var(--teal); }
+
+/* ─── CONFIG TABLE ─── */
+.config-table {
+  width: 100%; border-collapse: collapse; margin: 22px 0;
+  border: 1px solid var(--border); border-radius: 9px; overflow: hidden; font-size: 13.5px;
+}
+.config-table th {
+  background: var(--ink2); color: rgba(255,255,255,.65);
+  font-family: var(--mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; padding: 10px 16px; text-align: left;
+}
+.config-table td { padding: 12px 16px; border-top: 1px solid var(--border); vertical-align: top; color: var(--ink3); line-height: 1.6; }
+.config-table td:first-child { font-family: var(--mono); font-size: 12px; color: var(--teal2); font-weight: 600; min-width: 170px; }
+.config-table td code { font-family: var(--mono); font-size: 12px; background: var(--bg3); padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); }
+.config-table tr:nth-child(even) td { background: rgba(0,0,0,0.015); }
+.config-table td.required { color: var(--rust); font-weight: 700; font-size: 11px; font-family: var(--mono); letter-spacing: .08em; }
+.config-table td.recommended { color: var(--teal); font-weight: 700; font-size: 11px; font-family: var(--mono); letter-spacing: .08em; }
+
+/* ─── COMPARISON GRID ─── */
+.comp-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 22px 0;
+}
+.comp-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 20px;
+}
+.comp-card h4 { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 12px; }
+.comp-card.teal h4 { color: var(--teal); }
+.comp-card.plum h4 { color: var(--plum); }
+.comp-card.rust h4 { color: var(--rust); }
+.comp-card.gold h4 { color: var(--gold); }
+.comp-card p { font-size: 13.5px; color: var(--ink3); margin-bottom: 8px; line-height: 1.65; }
+.comp-card ul { margin-left: 16px; }
+.comp-card ul li { font-size: 13px; color: var(--ink3); margin-bottom: 4px; }
+
+/* ─── INLINE RESOURCE ─── */
+.inline-res {
+  display: flex; gap: 14px; padding: 14px 18px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 7px; margin: 18px 0; text-decoration: none;
+  transition: all .2s; align-items: flex-start;
+}
+.inline-res:hover { border-color: var(--teal); background: var(--teal-bg); transform: translateX(3px); }
+.ir-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.ir-label { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted2); margin-bottom: 3px; }
+.ir-title { font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 3px; }
+.ir-desc { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+
+/* ─── VIDEO ─── */
+.video-wrap {
+  margin: 28px 0; border-radius: 9px; overflow: hidden;
+  border: 1px solid var(--border); box-shadow: 0 4px 22px rgba(0,0,0,.09);
+}
+.video-label {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; background: #1c1612;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.45);
+}
+.video-label .vl-accent { color: var(--teal2); }
+.video-wrap iframe { display: block; width: 100%; aspect-ratio: 16/9; border: none; }
+
+/* ─── KNOWLEDGE CHECK ─── */
+.check-grid { display: flex; flex-direction: column; gap: 14px; margin-top: 28px; }
+.check-item {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden; transition: box-shadow .2s;
+}
+.check-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,.06); }
+.check-header { padding: 18px 22px; cursor: pointer; display: flex; align-items: flex-start; gap: 14px; }
+.check-q {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--teal);
+  flex-shrink: 0; padding-top: 2px;
+}
+.check-text { font-size: 14.5px; color: var(--ink); font-weight: 500; line-height: 1.6; flex: 1; }
+.check-toggle { font-family: var(--mono); font-size: 18px; color: var(--muted2); flex-shrink: 0; transition: transform .2s; line-height: 1; padding-top: 2px; }
+.check-reveal {
+  padding: 18px 22px; border-top: 1px solid var(--border);
+  background: var(--bg3); display: none;
+  font-size: 14px; color: var(--ink3); line-height: 1.78;
+}
+.check-reveal.open { display: block; }
+.check-reveal code {
+  font-family: var(--mono); font-size: 12px; background: var(--bg2);
+  padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border);
+}
+.check-reveal strong { color: var(--ink); }
+.check-reveal .answer-code {
+  background: #181410; border-radius: 6px; padding: 14px 18px; margin: 10px 0;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.7; overflow-x: auto;
+  color: #abb2bf;
+}
+
+/* ─── RESOURCE CARDS ─── */
+.res-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr));
+  gap: 14px; margin-top: 28px;
+}
+.res-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 18px; text-decoration: none;
+  transition: all .2s; display: block;
+}
+.res-card:hover { border-color: var(--teal); transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.09); }
+.res-card-type { font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 7px; }
+.res-card-name { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 6px; line-height: 1.4; }
+.res-card-desc { font-size: 12px; color: var(--muted); line-height: 1.55; }
+
+/* ─── SCHEDULE ─── */
+.sched { display: flex; flex-direction: column; gap: 3px; margin-top: 22px; }
+.sched-row {
+  display: grid; grid-template-columns: 165px 1fr;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 5px; overflow: hidden;
+}
+.sched-time {
+  font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--teal);
+  padding: 14px 16px; border-right: 1px solid var(--border); background: var(--teal-bg);
+  display: flex; align-items: center;
+}
+.sched-desc { padding: 14px 18px; font-size: 14px; color: var(--ink3); line-height: 1.68; }
+.sched-desc strong { color: var(--ink); }
+.sched-desc code { font-family: var(--mono); font-size: 12px; background: var(--bg3); padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border); }
+
+/* ─── SPACED REPETITION CARDS ─── */
+.recap-strip {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px; margin: 24px 0;
+}
+.recap-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 16px; border-top: 3px solid;
+}
+.recap-card.t { border-top-color: var(--teal); }
+.recap-card.p { border-top-color: var(--plum); }
+.recap-card.r { border-top-color: var(--rust); }
+.recap-card.g { border-top-color: var(--gold); }
+.recap-card h5 { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted2); margin-bottom: 8px; }
+.recap-card p { font-size: 13px; color: var(--ink3); margin-bottom: 0; line-height: 1.6; }
+.recap-card code { font-family: var(--mono); font-size: 11.5px; background: var(--bg3); padding: 1px 4px; border-radius: 3px; border: 1px solid var(--border); }
+
+/* ─── TSCONFIG VISUAL ─── */
+.tsconfig-visual {
+  background: #181410; border-radius: 9px; padding: 28px;
+  margin: 22px 0; border: 1px solid var(--border);
+  font-family: var(--mono); font-size: 13px; line-height: 2;
+}
+.tc-key { color: #61afef; }
+.tc-val-bool-true { color: #56b6c2; }
+.tc-val-bool-false { color: #e06c75; }
+.tc-val-str { color: #98c379; }
+.tc-val-arr { color: #d19a66; }
+.tc-comment { color: #5c6370; font-style: italic; }
+.tc-bracket { color: #abb2bf; }
+.tc-important { background: rgba(13,127,127,0.15); border-left: 2px solid var(--teal2); display: block; margin: 0 -28px; padding: 0 26px 0 26px; }
+.tc-critical { background: rgba(192,57,43,0.12); border-left: 2px solid var(--rust2); display: block; margin: 0 -28px; padding: 0 26px 0 26px; }
+
+.div { border: none; border-top: 1px solid var(--border); margin: 60px 0; }
+
+/* ─── RESULT PATTERN VISUAL ─── */
+.result-visual {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 22px 0;
+  border-radius: 9px; overflow: hidden; border: 1px solid var(--border);
+  box-shadow: 0 3px 16px rgba(0,0,0,.06);
+}
+.rv-pane { padding: 0; }
+.rv-head {
+  padding: 10px 16px; font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+}
+.rv-ok .rv-head { background: rgba(26,107,60,.1); color: var(--green); border-bottom: 1px solid rgba(26,107,60,.15); }
+.rv-err .rv-head { background: rgba(192,57,43,.08); color: var(--rust); border-bottom: 1px solid rgba(192,57,43,.12); }
+.rv-pane pre { border-radius: 0; font-size: 12.5px; padding: 20px; }
+
+/* ─── FADE ANIMATIONS ─── */
+.fade-in { animation: fadeIn .5s ease both; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .content { padding: 40px 20px 80px; }
+  .ba, .result-visual, .comp-grid { grid-template-columns: 1fr; }
+  .sched-row { grid-template-columns: 1fr; }
+  .flow { flex-direction: column; }
+  .flow-arrow { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+<button id="top-btn" onclick="scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- ═══ TOPBAR ═══ -->
+<nav class="topbar">
+  <div class="tb-brand">RAGHAV.DEV // ROADMAP</div>
+  <div class="tb-day">DAY 02 / 56</div>
+  <ul class="tb-nav">
+    <li><a href="#recap">Recap</a></li>
+    <li><a href="#async">Async & Errors</a></li>
+    <li><a href="#modules">Modules & tsconfig</a></li>
+    <li><a href="#express">Express</a></li>
+    <li><a href="#check">Check</a></li>
+    <li><a href="#tasks">Tasks</a></li>
+  </ul>
+</nav>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar">
+  <div class="toc-head">Day 02 Contents</div>
+  <a class="toc-link" href="#hero">Overview</a>
+  <a class="toc-link" href="#recap">↩ Day 1 Spaced Recap</a>
+  <div class="toc-section">TOPIC 01 — ASYNC & ERRORS</div>
+  <a class="toc-link" href="#async">1. Async & Error Handling</a>
+  <a class="toc-link sub" href="#promise-typing">Typing Promises</a>
+  <a class="toc-link sub" href="#error-problem">The Error Problem</a>
+  <a class="toc-link sub" href="#result-pattern">Result Pattern</a>
+  <a class="toc-link sub" href="#fetch-typing">Typed Fetch</a>
+  <a class="toc-link sub" href="#zod-validation">Zod + Runtime Safety</a>
+  <div class="toc-section">TOPIC 02 — MODULES</div>
+  <a class="toc-link" href="#modules">2. Modules & tsconfig</a>
+  <a class="toc-link sub" href="#esm-cjs">ESM vs CommonJS</a>
+  <a class="toc-link sub" href="#declaration-files">Declaration Files</a>
+  <a class="toc-link sub" href="#ambient">Ambient Declarations</a>
+  <a class="toc-link sub" href="#tsconfig">tsconfig Deep Dive</a>
+  <a class="toc-link sub" href="#path-aliases">Path Aliases</a>
+  <div class="toc-section">TOPIC 03 — EXPRESS</div>
+  <a class="toc-link" href="#express">3. TypeScript + Express</a>
+  <a class="toc-link sub" href="#request-extension">Extending Request</a>
+  <a class="toc-link sub" href="#middleware">Middleware Typing</a>
+  <a class="toc-link sub" href="#env-vars">Typed Env Variables</a>
+  <a class="toc-link sub" href="#satisfies">The satisfies Operator</a>
+  <a class="toc-link" href="#check">Knowledge Check</a>
+  <a class="toc-link" href="#resources">Resources</a>
+  <a class="toc-link" href="#tasks">Today's Schedule</a>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+<div class="content">
+
+<!-- ═══ HERO ═══ -->
+<div class="hero fade-in" id="hero">
+  <div class="day-pill">Day 02 — Phase 1 — Week 1</div>
+  <h1 class="hero-title">TypeScript:<br><span class="accent">Async</span> Patterns<br>& the <span class="accent2">Real World</span></h1>
+  <p class="hero-lead">Day 1 gave you the type system foundations. Today you take TypeScript into the code you actually ship — async functions that can fail, APIs that lie, environment configs that break, and Express servers that need to know who's calling. This is where TypeScript pays its rent.</p>
+  <div class="hero-tags">
+    <span class="tag t">Result Pattern</span>
+    <span class="tag p">Typed Fetch</span>
+    <span class="tag g">tsconfig Mastery</span>
+    <span class="tag r">Express Typing</span>
+    <span class="tag gr">Env Variables</span>
+    <span class="tag t">satisfies Operator</span>
+  </div>
+</div>
+
+<!-- ═══ DAY 1 RECAP ═══ -->
+<section class="section fade-in" id="recap">
+  <div class="section-number">Spaced Repetition</div>
+  <h2 class="sec-title">Day 1 <span class="accent">Quick Recall</span></h2>
+  <p class="sec-lead">Before new material, fire the synapses from yesterday. Don't scroll back to Day 1 — answer from memory. That friction is what builds retention.</p>
+
+  <div class="recap-strip">
+    <div class="recap-card t">
+      <h5>Structural Typing</h5>
+      <p>TypeScript checks <strong>shape</strong>, not names. <code>{ name: string, age: number }</code> satisfies <code>{ name: string }</code> because it has everything required, plus more.</p>
+    </div>
+    <div class="recap-card p">
+      <h5>type vs interface</h5>
+      <p>Only <code>interface</code> supports <strong>declaration merging</strong>. Only <code>type</code> can express unions, primitive aliases, conditional types. They're both fine for objects.</p>
+    </div>
+    <div class="recap-card r">
+      <h5>Discriminated Unions</h5>
+      <p>A union with a shared <strong>literal discriminant field</strong> (kind, type, status). Switching on the discriminant narrows the full union automatically. Add <code>never</code> in default for exhaustive checking.</p>
+    </div>
+    <div class="recap-card g">
+      <h5>infer Keyword</h5>
+      <p>Pattern-matches inside conditional types. <code>T extends () => infer R ? R : never</code> extracts the return type of any function. Powers <code>ReturnType</code>, <code>Awaited</code>, <code>Parameters</code>.</p>
+    </div>
+    <div class="recap-card t">
+      <h5>unknown vs any</h5>
+      <p><code>any</code> turns off type checking. <code>unknown</code> forces you to check before using. Always reach for <code>unknown</code> when you don't know the type — never <code>any</code> in app code.</p>
+    </div>
+    <div class="recap-card p">
+      <h5>Utility Types</h5>
+      <p><code>Partial</code>, <code>Required</code>, <code>Readonly</code>, <code>Pick</code>, <code>Omit</code>, <code>Record</code>, <code>Exclude</code>, <code>Extract</code>. Know each one cold and be able to implement from scratch using mapped/conditional types.</p>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <div class="callout-title">📌 If Any Card Made You Hesitate</div>
+    <p>That's your signal — that concept isn't solid yet. Don't push forward without it. Spend 10 minutes in the TypeScript Playground exercising that specific thing before starting Section 1. Continuity of understanding beats speed every time.</p>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 1 — ASYNC & ERROR HANDLING
+════════════════════════════════════════════════════════ -->
+<section class="section fade-in" id="async">
+  <div class="section-number">Topic 01</div>
+  <h2 class="sec-title">Async &amp; <span class="accent">Error Handling</span></h2>
+  <p class="sec-lead">Almost everything in real applications is async. And async code fails. The question is whether your failures are typed — giving you compile-time guarantees — or untyped — giving you runtime surprises. Today you get the patterns that make async TypeScript bulletproof.</p>
+
+  <!-- 1.1 PROMISE TYPING -->
+  <div class="sub" id="promise-typing">
+    <h3 class="sub-title"><span class="sub-num">1.1</span> Typing Async Functions &amp; Promises</h3>
+
+    <div class="mental-model">
+      <h4>🧠 Core Mental Model</h4>
+      <p>An async function always returns a <strong>Promise</strong>. The type annotation <code>Promise&lt;T&gt;</code> declares what the promise resolves to. <strong>Async functions can never return <code>void</code> in practice</strong> — they return <code>Promise&lt;void&gt;</code>. And when they throw, they return a rejected Promise. The type system only tracks the resolved type, not the rejected type — which is the problem we solve with the Result pattern.</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">promise typing — the full picture</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── Basic async function return types ──────────────────────────</span>
+<span class="kw">async function</span> <span class="fn">fetchUser</span>(<span class="var">id</span>: <span class="type">string</span>): <span class="type">Promise</span><<span class="type">User</span>> {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(`/api/users/${<span class="var">id</span>}`);
+  <span class="kw">return</span> <span class="var">res</span>.<span class="fn">json</span>(); <span class="cm">// ← Problem: json() returns Promise<any></span>
+}
+
+<span class="kw">async function</span> <span class="fn">deleteUser</span>(<span class="var">id</span>: <span class="type">string</span>): <span class="type">Promise</span><<span class="type">void</span>> {
+  <span class="kw">await</span> <span class="fn">fetch</span>(`/api/users/${<span class="var">id</span>}`, { <span class="prop">method</span>: <span class="str">"DELETE"</span> });
+  <span class="cm">// returns Promise<void> — nothing to return</span>
+}
+
+<span class="cm">// ─── Typing concurrent operations ─────────────────────────────</span>
+<span class="kw">async function</span> <span class="fn">fetchDashboard</span>(<span class="var">userId</span>: <span class="type">string</span>) {
+  <span class="cm">// Promise.all — all must succeed; type is tuple of each Promise's type</span>
+  <span class="kw">const</span> [user, posts, notifications] = <span class="kw">await</span> Promise.<span class="fn">all</span>([
+    <span class="fn">fetchUser</span>(<span class="var">userId</span>),          <span class="cm">// Promise<User></span>
+    <span class="fn">fetchPosts</span>(<span class="var">userId</span>),         <span class="cm">// Promise<Post[]></span>
+    <span class="fn">fetchNotifications</span>(<span class="var">userId</span>), <span class="cm">// Promise<Notification[]></span>
+  ]);
+  <span class="cm">// user: User, posts: Post[], notifications: Notification[] — all correctly typed</span>
+
+  <span class="cm">// Promise.allSettled — survives partial failures</span>
+  <span class="kw">const</span> results = <span class="kw">await</span> Promise.<span class="fn">allSettled</span>([
+    <span class="fn">fetchUser</span>(<span class="var">userId</span>),
+    <span class="fn">fetchPosts</span>(<span class="var">userId</span>),
+  ]);
+  <span class="cm">// results: PromiseSettledResult<User | Post[]>[]
+  // Each result is { status: "fulfilled", value: T } | { status: "rejected", reason: unknown }</span>
+
+  results.<span class="fn">forEach</span>(result => {
+    <span class="kw">if</span> (result.<span class="prop">status</span> === <span class="str">"fulfilled"</span>) {
+      <span class="fn">console</span>.<span class="fn">log</span>(result.<span class="prop">value</span>); <span class="cm">// User | Post[]</span>
+    } <span class="kw">else</span> {
+      <span class="fn">console</span>.<span class="fn">error</span>(result.<span class="prop">reason</span>); <span class="cm">// unknown — must narrow</span>
+    }
+  });
+}
+
+<span class="cm">// ─── Async arrow functions ────────────────────────────────────</span>
+<span class="kw">const</span> <span class="fn">getUser</span> = <span class="kw">async</span> (<span class="var">id</span>: <span class="type">string</span>): <span class="type">Promise</span><<span class="type">User</span>> => {
+  <span class="cm">/* ... */</span>
+};
+
+<span class="cm">// ─── Awaited<T> utility type — unwrap Promise type ───────────</span>
+<span class="kw">type</span> <span class="type">UserResult</span> = <span class="type">Awaited</span><<span class="type">ReturnType</span><<span class="kw">typeof</span> <span class="fn">fetchUser</span>>>;
+<span class="cm">// = User (Promise<User> → User)</span>
+<span class="cm">// Use this to extract a promise's type when you don't own the function signature</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 1.2 THE ERROR PROBLEM -->
+  <div class="sub" id="error-problem">
+    <h3 class="sub-title"><span class="sub-num">1.2</span> The Error Handling Problem — Why try/catch Fails TypeScript</h3>
+
+    <p>Here's the critical insight most TypeScript developers miss: <strong>TypeScript cannot type what a function throws.</strong> The language has no mechanism for declaring "this function throws a NetworkError or a ValidationError." Every <code>catch (e)</code> block gives you <code>unknown</code> — intentionally.</p>
+
+    <div class="diagram">
+      <div class="diag-title">The Fundamental Problem — Throws Are Invisible to the Type System</div>
+      <pre style="background:transparent;color:var(--ink);padding:0;font-family:var(--mono);font-size:13px;line-height:1.9;white-space:pre-wrap;">
+
+  function fetchUser(id: string): Promise&lt;User&gt; { ... }
+                                         ↑
+                                   TypeScript sees this
+                                   
+  But what about when it throws? TypeScript sees NOTHING.
+  It could throw: NetworkError | TimeoutError | ValidationError | RateLimitError | anything
+  
+  The promise type says "if it succeeds, you get a User"
+  But the error path is completely untyped.
+  
+  This means you need to handle two problems:
+  
+  ① fetch() / axios throws on network failure — but not on 4xx/5xx
+  ② json() can throw on malformed JSON
+  ③ YOUR code can throw on bad data
+  ④ ALL of these manifest as untyped exceptions in catch blocks
+  
+  The fix: NEVER let errors become exceptions. RETURN them instead.
+      </pre>
+    </div>
+
+    <div class="callout danger">
+      <div class="callout-title">🚫 The Deadly Mistake — Returning "any" Errors</div>
+      <p>The common pattern of <code>catch (e) { return { error: e.message } }</code> is wrong in two ways: (1) <code>e</code> is <code>unknown</code> so <code>e.message</code> is a TypeScript error, and (2) it loses the error type entirely, making the caller unable to distinguish error cases. TypeScript 4.0+ correctly types catch parameters as <code>unknown</code>, not <code>Error</code>, because <em>anything can be thrown</em>.</p>
+    </div>
+  </div>
+
+  <!-- 1.3 RESULT PATTERN -->
+  <div class="sub" id="result-pattern">
+    <h3 class="sub-title"><span class="sub-num">1.3</span> The Result Pattern — Type Your Errors</h3>
+
+    <p>The Result pattern (from Rust/Haskell) makes errors first-class typed values. Instead of throwing, you return a discriminated union of success or failure. The caller is forced by TypeScript to handle both cases.</p>
+
+    <div class="flow" style="margin: 28px 0;">
+      <div class="flow-step">
+        <div class="flow-step-num">call</div>
+        <div class="flow-step-label">fetchUser(id)</div>
+        <div class="flow-step-desc">Returns Result&lt;User, ApiError&gt;</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step active">
+        <div class="flow-step-num">check</div>
+        <div class="flow-step-label">result.ok?</div>
+        <div class="flow-step-desc">Discriminant narrows the type</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-step-num">success</div>
+        <div class="flow-step-label">result.value</div>
+        <div class="flow-step-desc">User — fully typed</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step error">
+        <div class="flow-step-num">failure</div>
+        <div class="flow-step-label">result.error</div>
+        <div class="flow-step-desc">ApiError — typed, handleable</div>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">result pattern — complete production implementation</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── Step 1: Define the Result type ──────────────────────────────</span>
+<span class="kw">type</span> <span class="type">Result</span><<span class="type">T</span>, <span class="type">E</span> = <span class="type">Error</span>> =
+  | { <span class="prop">ok</span>: <span class="kw">true</span>;  <span class="prop">value</span>: <span class="type">T</span> }
+  | { <span class="prop">ok</span>: <span class="kw">false</span>; <span class="prop">error</span>: <span class="type">E</span> };
+
+<span class="cm">// Convenience constructors</span>
+<span class="kw">const</span> <span class="fn">ok</span> = <<span class="type">T</span>>(<span class="var">value</span>: <span class="type">T</span>): <span class="type">Result</span><<span class="type">T</span>, <span class="kw">never</span>> => ({ <span class="prop">ok</span>: <span class="kw">true</span>, <span class="prop">value</span> });
+<span class="kw">const</span> <span class="fn">err</span> = <<span class="type">E</span>>(<span class="var">error</span>: <span class="type">E</span>): <span class="type">Result</span><<span class="kw">never</span>, <span class="type">E</span>> => ({ <span class="prop">ok</span>: <span class="kw">false</span>, <span class="prop">error</span> });
+
+<span class="cm">// ─── Step 2: Define typed error variants ─────────────────────────</span>
+<span class="kw">type</span> <span class="type">ApiError</span> =
+  | { <span class="prop">kind</span>: <span class="str">"network"</span>;     <span class="prop">message</span>: <span class="type">string</span> }
+  | { <span class="prop">kind</span>: <span class="str">"not_found"</span>;   <span class="prop">id</span>: <span class="type">string</span> }
+  | { <span class="prop">kind</span>: <span class="str">"unauthorized"</span>; <span class="prop">message</span>: <span class="type">string</span> }
+  | { <span class="prop">kind</span>: <span class="str">"rate_limit"</span>;  <span class="prop">retryAfter</span>: <span class="type">number</span> }
+  | { <span class="prop">kind</span>: <span class="str">"validation"</span>;  <span class="prop">fields</span>: <span class="type">Record</span><<span class="type">string</span>, <span class="type">string</span>> };
+
+<span class="cm">// ─── Step 3: Functions that return Result ─────────────────────────</span>
+<span class="kw">async function</span> <span class="fn">fetchUser</span>(<span class="var">id</span>: <span class="type">string</span>): <span class="type">Promise</span><<span class="type">Result</span><<span class="type">User</span>, <span class="type">ApiError</span>>> {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(`/api/users/${<span class="var">id</span>}`);
+    
+    <span class="kw">if</span> (res.<span class="prop">status</span> === <span class="num">404</span>) {
+      <span class="kw">return</span> <span class="fn">err</span>({ <span class="prop">kind</span>: <span class="str">"not_found"</span>, <span class="prop">id</span> });
+    }
+    <span class="kw">if</span> (res.<span class="prop">status</span> === <span class="num">401</span>) {
+      <span class="kw">return</span> <span class="fn">err</span>({ <span class="prop">kind</span>: <span class="str">"unauthorized"</span>, <span class="prop">message</span>: <span class="str">"Token expired"</span> });
+    }
+    <span class="kw">if</span> (res.<span class="prop">status</span> === <span class="num">429</span>) {
+      <span class="kw">const</span> retryAfter = <span class="fn">parseInt</span>(res.<span class="prop">headers</span>.<span class="fn">get</span>(<span class="str">"Retry-After"</span>) ?? <span class="str">"60"</span>);
+      <span class="kw">return</span> <span class="fn">err</span>({ <span class="prop">kind</span>: <span class="str">"rate_limit"</span>, <span class="prop">retryAfter</span> });
+    }
+    <span class="kw">if</span> (!res.<span class="prop">ok</span>) {
+      <span class="kw">return</span> <span class="fn">err</span>({ <span class="prop">kind</span>: <span class="str">"network"</span>, <span class="prop">message</span>: `HTTP ${res.<span class="prop">status</span>}` });
+    }
+
+    <span class="kw">const</span> data: <span class="type">unknown</span> = <span class="kw">await</span> res.<span class="fn">json</span>();
+    <span class="cm">// Validate data here with Zod (see section 1.5)</span>
+    <span class="kw">return</span> <span class="fn">ok</span>(data <span class="kw">as</span> <span class="type">User</span>); <span class="cm">// ideally use Zod.parse instead of cast</span>
+    
+  } <span class="kw">catch</span> (e: <span class="kw">unknown</span>) {
+    <span class="cm">// Only actual network failures reach here (no internet, CORS, etc.)</span>
+    <span class="kw">const</span> message = e <span class="kw">instanceof</span> <span class="cl">Error</span> ? e.<span class="prop">message</span> : <span class="str">"Unknown network error"</span>;
+    <span class="kw">return</span> <span class="fn">err</span>({ <span class="prop">kind</span>: <span class="str">"network"</span>, <span class="prop">message</span> });
+  }
+}
+
+<span class="cm">// ─── Step 4: The caller must handle both paths ────────────────────</span>
+<span class="kw">async function</span> <span class="fn">loadProfile</span>(<span class="var">userId</span>: <span class="type">string</span>) {
+  <span class="kw">const</span> result = <span class="kw">await</span> <span class="fn">fetchUser</span>(<span class="var">userId</span>);
+
+  <span class="kw">if</span> (!result.<span class="prop">ok</span>) {
+    <span class="cm">// result.error is ApiError — fully typed, switch on kind</span>
+    <span class="kw">switch</span> (result.<span class="prop">error</span>.<span class="prop">kind</span>) {
+      <span class="kw">case</span> <span class="str">"not_found"</span>:
+        <span class="kw">return</span> <span class="fn">showNotFound</span>(result.<span class="prop">error</span>.<span class="prop">id</span>); <span class="cm">// id is typed string</span>
+      <span class="kw">case</span> <span class="str">"unauthorized"</span>:
+        <span class="kw">return</span> <span class="fn">redirectToLogin</span>();
+      <span class="kw">case</span> <span class="str">"rate_limit"</span>:
+        <span class="kw">return</span> <span class="fn">showRateLimitMessage</span>(result.<span class="prop">error</span>.<span class="prop">retryAfter</span>); <span class="cm">// retryAfter: number</span>
+      <span class="kw">case</span> <span class="str">"network"</span>:
+        <span class="kw">return</span> <span class="fn">showNetworkError</span>(result.<span class="prop">error</span>.<span class="prop">message</span>);
+    }
+  }
+
+  <span class="cm">// result.value is User — TypeScript KNOWS it's ok here</span>
+  <span class="kw">const</span> user = result.<span class="prop">value</span>;
+  <span class="fn">displayUser</span>(user);
+}</code></pre>
+    </div>
+
+    <div class="callout insight">
+      <div class="callout-title">💡 Why This Is Better Than try/catch</div>
+      <p>With try/catch, the caller has no idea what errors to expect — the error type is invisible. With Result, <strong>the error possibilities are documented in the type signature</strong>. Adding a new error case to <code>ApiError</code> forces every caller to handle it (if they use exhaustive checking). You get compile-time proof that no error case is silently swallowed.</p>
+    </div>
+  </div>
+
+  <!-- 1.4 TYPED FETCH -->
+  <div class="sub" id="fetch-typing">
+    <h3 class="sub-title"><span class="sub-num">1.4</span> Typed Fetch — A Generic API Wrapper</h3>
+
+    <p><code>fetch</code> returns <code>Response</code>, and <code>response.json()</code> returns <code>Promise&lt;any&gt;</code>. You need a wrapper that: (1) types the response, (2) handles HTTP errors as Results, (3) is generic so one function works for all endpoints.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">production-grade typed fetch wrapper</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── Generic fetch wrapper ────────────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">FetchError</span> =
+  | { <span class="prop">kind</span>: <span class="str">"network"</span>; <span class="prop">message</span>: <span class="type">string</span> }
+  | { <span class="prop">kind</span>: <span class="str">"http"</span>; <span class="prop">status</span>: <span class="type">number</span>; <span class="prop">body</span>: <span class="kw">unknown</span> }
+  | { <span class="prop">kind</span>: <span class="str">"parse"</span>; <span class="prop">message</span>: <span class="type">string</span> };
+
+<span class="kw">async function</span> <span class="fn">apiFetch</span><<span class="type">T</span>>(
+  <span class="var">url</span>: <span class="type">string</span>,
+  <span class="var">options</span>?: <span class="type">RequestInit</span>
+): <span class="type">Promise</span><<span class="type">Result</span><<span class="type">T</span>, <span class="type">FetchError</span>>> {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="var">url</span>, {
+      <span class="prop">headers</span>: { <span class="str">"Content-Type"</span>: <span class="str">"application/json"</span>, ...<span class="var">options</span>?.<span class="prop">headers</span> },
+      ...<span class="var">options</span>,
+    });
+
+    <span class="kw">if</span> (!res.<span class="prop">ok</span>) {
+      <span class="kw">const</span> body: <span class="kw">unknown</span> = <span class="kw">await</span> res.<span class="fn">json</span>().<span class="fn">catch</span>(() => <span class="kw">null</span>);
+      <span class="kw">return</span> <span class="fn">err</span>({ <span class="prop">kind</span>: <span class="str">"http"</span>, <span class="prop">status</span>: res.<span class="prop">status</span>, <span class="prop">body</span> });
+    }
+
+    <span class="kw">try</span> {
+      <span class="kw">const</span> data: <span class="type">T</span> = <span class="kw">await</span> res.<span class="fn">json</span>();
+      <span class="kw">return</span> <span class="fn">ok</span>(data);
+    } <span class="kw">catch</span> {
+      <span class="kw">return</span> <span class="fn">err</span>({ <span class="prop">kind</span>: <span class="str">"parse"</span>, <span class="prop">message</span>: <span class="str">"Invalid JSON response"</span> });
+    }
+  } <span class="kw">catch</span> (e: <span class="kw">unknown</span>) {
+    <span class="kw">const</span> message = e <span class="kw">instanceof</span> <span class="cl">Error</span> ? e.<span class="prop">message</span> : <span class="str">"Unknown error"</span>;
+    <span class="kw">return</span> <span class="fn">err</span>({ <span class="prop">kind</span>: <span class="str">"network"</span>, <span class="prop">message</span> });
+  }
+}
+
+<span class="cm">// ─── Usage — caller tells TypeScript what to expect ───────────────</span>
+<span class="kw">interface</span> <span class="iface">User</span> { <span class="prop">id</span>: <span class="type">string</span>; <span class="prop">name</span>: <span class="type">string</span>; <span class="prop">email</span>: <span class="type">string</span> }
+
+<span class="kw">const</span> userResult = <span class="kw">await</span> <span class="fn">apiFetch</span><<span class="type">User</span>>(<span class="str">"/api/users/123"</span>);
+<span class="kw">const</span> postsResult = <span class="kw">await</span> <span class="fn">apiFetch</span><<span class="type">Post</span>[]>(<span class="str">"/api/posts?userId=123"</span>);
+
+<span class="cm">// POST with body</span>
+<span class="kw">const</span> createResult = <span class="kw">await</span> <span class="fn">apiFetch</span><<span class="type">User</span>>(<span class="str">"/api/users"</span>, {
+  <span class="prop">method</span>: <span class="str">"POST"</span>,
+  <span class="prop">body</span>: <span class="fn">JSON</span>.<span class="fn">stringify</span>({ <span class="prop">name</span>: <span class="str">"Raghav"</span>, <span class="prop">email</span>: <span class="str">"r@test.com"</span> }),
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- 1.5 ZOD -->
+  <div class="sub" id="zod-validation">
+    <h3 class="sub-title"><span class="sub-num">1.5</span> Zod — Runtime Safety Meets TypeScript</h3>
+
+    <p>Here's the gap <code>apiFetch&lt;T&gt;</code> doesn't close: the API could return <em>anything</em> and you cast it to <code>T</code>. That's still a lie — you're telling TypeScript "trust me, this is a User" without actually checking. <strong>Zod validates at runtime and infers the TypeScript type automatically.</strong> One schema, two jobs.</p>
+
+    <div class="video-wrap fade-in">
+      <div class="video-label">🎬 <span class="vl-accent">WATCH NOW</span> — Zod — The TypeScript-first Schema Validation Library</div>
+      <iframe src="https://www.youtube.com/embed/L6BE-U3oy80" allowfullscreen loading="lazy"></iframe>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">zod + result pattern — the complete stack</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">"zod"</span>;
+
+<span class="cm">// ─── Define schema (runtime validator) ──────────────────────────</span>
+<span class="kw">const</span> <span class="cl">UserSchema</span> = z.<span class="fn">object</span>({
+  <span class="prop">id</span>:    z.<span class="fn">string</span>().<span class="fn">uuid</span>(),
+  <span class="prop">name</span>:  z.<span class="fn">string</span>().<span class="fn">min</span>(<span class="num">1</span>).<span class="fn">max</span>(<span class="num">100</span>),
+  <span class="prop">email</span>: z.<span class="fn">string</span>().<span class="fn">email</span>(),
+  <span class="prop">role</span>:  z.<span class="fn">enum</span>([<span class="str">"admin"</span>, <span class="str">"user"</span>]),
+  <span class="prop">createdAt</span>: z.<span class="fn">string</span>().<span class="fn">datetime</span>(),
+});
+
+<span class="cm">// ─── Infer TypeScript type FROM the schema — single source of truth</span>
+<span class="kw">type</span> <span class="type">User</span> = z.<span class="fn">infer</span><<span class="kw">typeof</span> <span class="cl">UserSchema</span>>;
+<span class="cm">// { id: string; name: string; email: string; role: "admin" | "user"; createdAt: string }
+// You NEVER write this manually — Zod generates it from the schema!</span>
+
+<span class="cm">// ─── Validated fetch — actually safe ─────────────────────────────</span>
+<span class="kw">async function</span> <span class="fn">fetchUser</span>(<span class="var">id</span>: <span class="type">string</span>): <span class="type">Promise</span><<span class="type">Result</span><<span class="type">User</span>, <span class="type">FetchError</span> | { <span class="prop">kind</span>: <span class="str">"invalid"</span>; <span class="prop">errors</span>: z.<span class="type">ZodIssue</span>[] }>> {
+  <span class="kw">const</span> raw = <span class="kw">await</span> <span class="fn">apiFetch</span><<span class="kw">unknown</span>>(`/api/users/${<span class="var">id</span>}`);
+
+  <span class="kw">if</span> (!raw.<span class="prop">ok</span>) <span class="kw">return</span> raw;
+
+  <span class="kw">const</span> parsed = <span class="cl">UserSchema</span>.<span class="fn">safeParse</span>(raw.<span class="prop">value</span>);
+  <span class="kw">if</span> (!parsed.<span class="prop">success</span>) {
+    <span class="kw">return</span> <span class="fn">err</span>({ <span class="prop">kind</span>: <span class="str">"invalid"</span>, <span class="prop">errors</span>: parsed.<span class="prop">error</span>.<span class="prop">issues</span> });
+  }
+
+  <span class="kw">return</span> <span class="fn">ok</span>(parsed.<span class="prop">data</span>); <span class="cm">// parsed.data is User — ACTUALLY validated</span>
+}
+
+<span class="cm">// ─── Zod for form / request body validation ───────────────────────</span>
+<span class="kw">const</span> <span class="cl">CreateUserSchema</span> = <span class="cl">UserSchema</span>.<span class="fn">omit</span>({ <span class="prop">id</span>: <span class="kw">true</span>, <span class="prop">createdAt</span>: <span class="kw">true</span> });
+<span class="kw">type</span> <span class="type">CreateUserInput</span> = z.<span class="fn">infer</span><<span class="kw">typeof</span> <span class="cl">CreateUserSchema</span>>;
+
+<span class="cm">// Extend or transform schemas:
+const AdminSchema = UserSchema.extend({ permissions: z.array(z.string()) });
+const PublicUserSchema = UserSchema.pick({ id: true, name: true }); // like Omit/Pick but for schemas</span></code></pre>
+    </div>
+
+    <div class="callout tip">
+      <div class="callout-title">✅ Why Zod Is On Your Roadmap</div>
+      <p>You'll use Zod in the SyncSpace project (Week 5-6). It validates Express request bodies, Socket.IO message payloads, and API responses. It replaces manual type guards entirely. Learning it now means you're ready to use it properly in the project — not fumbling with it during build time.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 2 — MODULES & TSCONFIG
+════════════════════════════════════════════════════════ -->
+<section class="section fade-in" id="modules">
+  <div class="section-number">Topic 02</div>
+  <h2 class="sec-title">Modules &amp; <span class="accent2">tsconfig</span></h2>
+  <p class="sec-lead">The reason "TypeScript works on my machine but not in production" is almost always a module system or tsconfig misconfiguration. Understanding this deeply is what separates developers who fight tooling from developers who own it.</p>
+
+  <!-- 2.1 ESM vs CJS -->
+  <div class="sub" id="esm-cjs">
+    <h3 class="sub-title"><span class="sub-num">2.1</span> ESM vs CommonJS — The Module War</h3>
+
+    <div class="comp-grid">
+      <div class="comp-card teal">
+        <h4>ES Modules (ESM)</h4>
+        <p>The <strong>JavaScript standard</strong> since ES2015. Native browser support. Static imports (analyzed at compile time).</p>
+        <ul>
+          <li><code>import x from 'y'</code></li>
+          <li><code>export default x</code></li>
+          <li><code>export { x, y }</code></li>
+          <li>Top-level <code>await</code> supported</li>
+          <li>Tree-shakeable by bundlers</li>
+          <li>Used by Next.js, Vite, modern Node ≥ 14</li>
+        </ul>
+      </div>
+      <div class="comp-card plum">
+        <h4>CommonJS (CJS)</h4>
+        <p>Node.js <strong>legacy format</strong>, still used in older packages. Dynamic requires (evaluated at runtime).</p>
+        <ul>
+          <li><code>const x = require('y')</code></li>
+          <li><code>module.exports = x</code></li>
+          <li><code>exports.x = x</code></li>
+          <li>No top-level await</li>
+          <li>Not tree-shakeable natively</li>
+          <li>Default in Node without <code>"type": "module"</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">module system in TypeScript context</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// TypeScript compiles ESM syntax to CJS or ESM based on tsconfig "module" setting</span>
+
+<span class="cm">// ─── Your TypeScript source (always write ESM syntax) ─────────────</span>
+<span class="kw">import</span> { <span class="fn">createServer</span> } <span class="kw">from</span> <span class="str">"http"</span>;
+<span class="kw">import</span> <span class="cl">express</span> <span class="kw">from</span> <span class="str">"express"</span>;
+<span class="kw">export</span> { <span class="fn">createServer</span> };
+<span class="kw">export default</span> <span class="cl">express</span>;
+
+<span class="cm">// ─── When compiled to CJS (module: "CommonJS") ────────────────────</span>
+<span class="cm">// "use strict";
+// const http_1 = require("http");
+// const express_1 = require("express");
+// exports.createServer = http_1.createServer;</span>
+
+<span class="cm">// ─── When compiled to ESM (module: "ESNext") ─────────────────────</span>
+<span class="cm">// import { createServer } from "http";
+// import express from "express";
+// export { createServer };
+// export default express;</span>
+
+<span class="cm">// ─── The interop problem ──────────────────────────────────────────</span>
+<span class="cm">// CJS: module.exports = { a, b }
+// ESM importing CJS: import pkg from 'cjs-pkg'; → pkg.default is the module
+// This is why some imports look like: import { default as x } from 'pkg';
+// or need: import x = require('pkg'); in older TypeScript</span>
+
+<span class="cm">// ─── esModuleInterop: true (always enable!) ───────────────────────</span>
+<span class="cm">// Without: import React from 'react' FAILS (React is CJS)
+// With: TypeScript adds a default interop wrapper, import React from 'react' works</span></code></pre>
+      </div>
+  </div>
+
+  <!-- 2.2 DECLARATION FILES -->
+  <div class="sub" id="declaration-files">
+    <h3 class="sub-title"><span class="sub-num">2.2</span> Declaration Files (.d.ts) — TypeScript's X-ray Vision</h3>
+
+    <p>When TypeScript compiles your code, it can output <code>.d.ts</code> files alongside the JavaScript. These declaration files contain <strong>only type information</strong> — no runtime code. They let other TypeScript consumers use your library with full type safety, even though they only execute the JS.</p>
+
+    <div class="diagram">
+      <div class="diag-title">What Declaration Files Are and Where They Come From</div>
+      <pre style="background:transparent;color:var(--ink);font-family:var(--mono);font-size:13px;padding:0;line-height:2;white-space:pre-wrap;">
+
+  Your TypeScript source                  After compilation
+  ───────────────────                     ─────────────────
+  
+  src/utils.ts          →  dist/utils.js      (runtime code)
+                        →  dist/utils.d.ts    (type declarations only)
+  
+  
+  What dist/utils.d.ts looks like:
+  
+  ┌─────────────────────────────────────────────────────────────┐
+  │  // No implementation code — just shapes                    │
+  │  export declare function formatDate(d: Date): string;       │
+  │  export declare type DateFormat = "ISO" | "US" | "EU";      │
+  │  export declare interface Config { format: DateFormat; }    │
+  └─────────────────────────────────────────────────────────────┘
+  
+  
+  When another developer imports your package:
+  
+  import { formatDate } from "your-package";
+          ↑ TypeScript reads the .d.ts file, not the .ts source
+            It knows formatDate takes a Date and returns string
+            Without ever seeing your implementation
+      </pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">creating and using declaration files</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── tsconfig to generate .d.ts ──────────────────────────────────</span>
+<span class="cm">// tsconfig.json:
+// "declaration": true  ← generates .d.ts files
+// "declarationMap": true  ← generates .d.ts.map for Go To Source
+// "declarationDir": "./dist/types"  ← where .d.ts files go</span>
+
+<span class="cm">// ─── Writing a .d.ts manually (for JS libraries without types) ───</span>
+<span class="cm">// File: my-js-lib.d.ts</span>
+<span class="kw">declare module</span> <span class="str">"my-js-lib"</span> {
+  <span class="kw">export function</span> <span class="fn">doSomething</span>(<span class="var">x</span>: <span class="type">string</span>): <span class="type">number</span>;
+  <span class="kw">export interface</span> <span class="iface">Config</span> { <span class="prop">verbose</span>: <span class="type">boolean</span> }
+  <span class="kw">export default function</span> <span class="fn">create</span>(<span class="var">config</span>: <span class="type">Config</span>): <span class="type">void</span>;
+}
+
+<span class="cm">// ─── Augmenting built-in types ───────────────────────────────────</span>
+<span class="cm">// File: global.d.ts</span>
+<span class="kw">declare global</span> {
+  <span class="kw">interface</span> <span class="iface">Window</span> {
+    <span class="prop">analytics</span>: { <span class="fn">track</span>(<span class="var">event</span>: <span class="type">string</span>, <span class="var">props</span>?: <span class="type">Record</span><<span class="type">string</span>, <span class="kw">unknown</span>>): <span class="type">void</span> };
+    <span class="prop">__APP_CONFIG__</span>: { <span class="prop">apiUrl</span>: <span class="type">string</span>; <span class="prop">version</span>: <span class="type">string</span> };
+  }
+}
+<span class="kw">export</span> {}; <span class="cm">// make this a module (needed for declare global to work)</span>
+
+<span class="cm">// Now window.analytics.track("page_view") is fully typed everywhere</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 2.3 AMBIENT -->
+  <div class="sub" id="ambient">
+    <h3 class="sub-title"><span class="sub-num">2.3</span> @types Packages &amp; DefinitelyTyped</h3>
+
+    <p>Most popular JavaScript packages were written before TypeScript existed. The community maintains type definitions separately at <strong>DefinitelyTyped</strong> — a massive GitHub repository with <code>.d.ts</code> files for thousands of packages. These are published under the <code>@types/</code> namespace on npm.</p>
+
+    <div class="callout info">
+      <div class="callout-title">🔗 How @types Packages Work</div>
+      <p>When you run <code>npm install express</code>, you get the JavaScript. TypeScript has no idea what <code>express</code> exports. When you run <code>npm install -D @types/express</code>, you get <code>node_modules/@types/express/index.d.ts</code> — pure type declarations. TypeScript automatically picks these up from <code>node_modules/@types/</code>. The <code>-D</code> is important — they're dev-only, never shipped to production.</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">bash</span>
+        <span class="code-label">common @types installs for your stack</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm"># Core stack types — install all of these for your projects</span>
+npm install -D @types/node      <span class="cm"># Node.js globals: Buffer, process, __dirname, etc.</span>
+npm install -D @types/express   <span class="cm"># Express Request, Response, NextFunction, etc.</span>
+npm install -D @types/cors      <span class="cm"># cors middleware types</span>
+npm install -D @types/bcrypt    <span class="cm"># bcrypt hashing functions</span>
+npm install -D @types/jsonwebtoken  <span class="cm"># JWT sign/verify</span>
+
+<span class="cm"># Packages with built-in types (no @types needed)</span>
+<span class="cm"># zod, axios, react-query, zustand, socket.io — ship their own .d.ts files</span>
+
+<span class="cm"># Check if a package has types:</span>
+<span class="cm"># 1. Look for "types" or "typings" field in package.json</span>
+<span class="cm"># 2. Check https://arethetypeswrong.com</span>
+<span class="cm"># 3. Check https://www.npmjs.com/package/@types/[package-name]</span></code></pre>
+    </div>
+  </div>
+
+  <!-- 2.4 TSCONFIG -->
+  <div class="sub" id="tsconfig">
+    <h3 class="sub-title"><span class="sub-num">2.4</span> tsconfig.json — The Options That Matter</h3>
+
+    <p>Most developers copy-paste a tsconfig without understanding it. That's a problem when something breaks. Here are the settings you must know — what they do, why they matter, and what your defaults should be.</p>
+
+    <div class="video-wrap fade-in">
+      <div class="video-label">🎬 <span class="vl-accent">WATCH</span> — TypeScript Config Explained — Matt Pocock</div>
+      <iframe src="https://www.youtube.com/embed/1Oo-bKJM4uk" allowfullscreen loading="lazy"></iframe>
+    </div>
+
+    <p>Below is the production tsconfig you should use for Next.js + Node.js projects. Every option is explained:</p>
+
+    <div class="tsconfig-visual">
+<span class="tc-bracket">{</span>
+  <span class="tc-key">"compilerOptions"</span>: <span class="tc-bracket">{</span>
+
+    <span class="tc-comment">/* ── Output ── */</span>
+    <span class="tc-important"><span class="tc-key">"target"</span>: <span class="tc-val-str">"ES2020"</span>,          <span class="tc-comment">// What JS to output. ES2020 = all modern browsers + Node 14+</span></span>
+    <span class="tc-important"><span class="tc-key">"lib"</span>: [<span class="tc-val-str">"ES2020"</span>, <span class="tc-val-str">"DOM"</span>],   <span class="tc-comment">// Type definitions to include. DOM = browser APIs</span></span>
+    <span class="tc-key">"outDir"</span>: <span class="tc-val-str">"./dist"</span>,              <span class="tc-comment">// Where compiled JS goes</span>
+    <span class="tc-key">"rootDir"</span>: <span class="tc-val-str">"./src"</span>,             <span class="tc-comment">// Where your TypeScript source lives</span>
+    <span class="tc-key">"declaration"</span>: <span class="tc-val-bool-true">true</span>,            <span class="tc-comment">// Generate .d.ts files (for libraries)</span>
+
+    <span class="tc-comment">/* ── Module System ── */</span>
+    <span class="tc-important"><span class="tc-key">"module"</span>: <span class="tc-val-str">"NodeNext"</span>,          <span class="tc-comment">// For Node.js 18+ projects (supports ESM natively)</span></span>
+    <span class="tc-comment">// "module": "CommonJS"     // For older Node or when in doubt</span>
+    <span class="tc-comment">// "module": "ESNext"       // For Next.js / Vite projects</span>
+    <span class="tc-important"><span class="tc-key">"moduleResolution"</span>: <span class="tc-val-str">"bundler"</span>,  <span class="tc-comment">// Use for Next.js/Vite. "NodeNext" for pure Node</span></span>
+    <span class="tc-important"><span class="tc-key">"esModuleInterop"</span>: <span class="tc-val-bool-true">true</span>,      <span class="tc-comment">// Allows: import React from 'react' (CJS → ESM interop)</span></span>
+    <span class="tc-key">"allowSyntheticDefaultImports"</span>: <span class="tc-val-bool-true">true</span>,  <span class="tc-comment">// Implied by esModuleInterop</span>
+
+    <span class="tc-comment">/* ── Strict Mode — ALWAYS ENABLE ALL OF THESE ── */</span>
+    <span class="tc-critical"><span class="tc-key">"strict"</span>: <span class="tc-val-bool-true">true</span>,               <span class="tc-comment">// Enables ALL strict options below in one flag</span></span>
+    <span class="tc-comment">// strict: true enables:
+    // "noImplicitAny": true        — no implicit any types
+    // "strictNullChecks": true     — null/undefined are separate types
+    // "strictFunctionTypes": true  — function params are contravariant
+    // "strictBindCallApply": true  — bind/call/apply are typed
+    // "strictPropertyInitialization": true — class properties must be initialized
+    // "noImplicitThis": true       — 'this' must be typed
+    // "useUnknownInCatchVariables": true — catch (e) gives unknown not any</span>
+    <span class="tc-important"><span class="tc-key">"noUncheckedIndexedAccess"</span>: <span class="tc-val-bool-true">true</span>, <span class="tc-comment">// arr[0] is T | undefined, not just T</span></span>
+    <span class="tc-important"><span class="tc-key">"exactOptionalPropertyTypes"</span>: <span class="tc-val-bool-true">true</span>, <span class="tc-comment">// { x?: string } means x is string or absent, not string | undefined</span></span>
+    <span class="tc-important"><span class="tc-key">"noImplicitReturns"</span>: <span class="tc-val-bool-true">true</span>,    <span class="tc-comment">// All code paths must return a value</span></span>
+    <span class="tc-important"><span class="tc-key">"noFallthroughCasesInSwitch"</span>: <span class="tc-val-bool-true">true</span>, <span class="tc-comment">// Switch cases must break/return</span></span>
+
+    <span class="tc-comment">/* ── Path Aliases ── */</span>
+    <span class="tc-important"><span class="tc-key">"baseUrl"</span>: <span class="tc-val-str">"."</span>,                <span class="tc-comment">// Base for non-relative imports (required for paths)</span></span>
+    <span class="tc-important"><span class="tc-key">"paths"</span>: <span class="tc-bracket">{</span>                      <span class="tc-comment">// @/x → src/x</span>
+      <span class="tc-key">"@/*"</span>: [<span class="tc-val-str">"src/*"</span>],
+      <span class="tc-key">"@components/*"</span>: [<span class="tc-val-str">"src/components/*"</span>],
+      <span class="tc-key">"@lib/*"</span>: [<span class="tc-val-str">"src/lib/*"</span>]
+    <span class="tc-bracket">}</span>,
+
+    <span class="tc-comment">/* ── Misc ── */</span>
+    <span class="tc-key">"skipLibCheck"</span>: <span class="tc-val-bool-true">true</span>,           <span class="tc-comment">// Skip type-checking .d.ts files (faster builds)</span>
+    <span class="tc-key">"forceConsistentCasingInFileNames"</span>: <span class="tc-val-bool-true">true</span>, <span class="tc-comment">// import Foo vs import foo matters</span>
+    <span class="tc-key">"resolveJsonModule"</span>: <span class="tc-val-bool-true">true</span>,     <span class="tc-comment">// import data from './data.json' with types</span>
+    <span class="tc-key">"isolatedModules"</span>: <span class="tc-val-bool-true">true</span>,       <span class="tc-comment">// Required for Babel/SWC — ensures each file is independently transpilable</span>
+    <span class="tc-key">"jsx"</span>: <span class="tc-val-str">"preserve"</span>               <span class="tc-comment">// For Next.js. Use "react-jsx" for Vite/CRA</span>
+  <span class="tc-bracket">}</span>,
+  <span class="tc-key">"include"</span>: [<span class="tc-val-str">"src/**/*"</span>],
+  <span class="tc-key">"exclude"</span>: [<span class="tc-val-str">"node_modules"</span>, <span class="tc-val-str">"dist"</span>]
+<span class="tc-bracket">}</span>
+    </div>
+
+    <div class="callout warn">
+      <div class="callout-title">⚠️ moduleResolution: "bundler" vs "node" vs "NodeNext"</div>
+      <p><strong>"node"</strong> is the old behavior — resolves like Node.js pre-ESM. <strong>"NodeNext"</strong> supports ESM in Node.js — requires you to write <code>import './file.js'</code> (with .js extension) even for .ts files. <strong>"bundler"</strong> is for Vite/Next.js/webpack — bundler handles resolution, TypeScript doesn't enforce file extensions. For Next.js always use <code>"bundler"</code>. For a standalone Node.js backend use <code>"NodeNext"</code>.</p>
+    </div>
+  </div>
+
+  <!-- 2.5 PATH ALIASES -->
+  <div class="sub" id="path-aliases">
+    <h3 class="sub-title"><span class="sub-num">2.5</span> Path Aliases — Ending Import Hell</h3>
+
+    <div class="ba">
+      <div class="ba-pane ba-bad">
+        <div class="ba-head">❌ Relative Imports — Fragile Hell</div>
+        <pre><code><span class="cm">// 5 levels deep. Moving this file breaks everything.</span>
+<span class="kw">import</span> { Button } <span class="kw">from</span> <span class="str">'../../../../components/ui/Button'</span>
+<span class="kw">import</span> { useAuth } <span class="kw">from</span> <span class="str">'../../../hooks/useAuth'</span>
+<span class="kw">import</span> { apiClient } <span class="kw">from</span> <span class="str">'../../../../lib/api'</span>
+<span class="kw">import</span> type { User } <span class="kw">from</span> <span class="str">'../../../../types/user'</span>
+
+<span class="cm">// If you move this file up one directory,
+// ALL of these break. Every. Single. One.</span></code></pre>
+      </div>
+      <div class="ba-pane ba-good">
+        <div class="ba-head">✅ Path Aliases — Stable & Readable</div>
+        <pre><code><span class="cm">// Absolute from project root. Move file anywhere — unchanged.</span>
+<span class="kw">import</span> { Button } <span class="kw">from</span> <span class="str">'@/components/ui/Button'</span>
+<span class="kw">import</span> { useAuth } <span class="kw">from</span> <span class="str">'@/hooks/useAuth'</span>
+<span class="kw">import</span> { apiClient } <span class="kw">from</span> <span class="str">'@/lib/api'</span>
+<span class="kw">import</span> type { User } <span class="kw">from</span> <span class="str">'@/types/user'</span>
+
+<span class="cm">// Move the file 5 levels up — imports unchanged.
+// Also easier to read: you know exactly where it comes from.</span></code></pre>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">json + typescript</span>
+        <span class="code-label">full path aliases setup — Next.js + pure TypeScript</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── tsconfig.json ─────────────────────────────────────────────────</span>
+{
+  "compilerOptions": {
+    "baseUrl": ".",         <span class="cm">// anchor for paths (required)</span>
+    "paths": {
+      "@/*":            ["src/*"],           <span class="cm">// @/lib/api → src/lib/api</span>
+      "@components/*":  ["src/components/*"],
+      "@hooks/*":       ["src/hooks/*"],
+      "@lib/*":         ["src/lib/*"],
+      "@types/*":       ["src/types/*"],
+      "@server/*":      ["src/server/*"]
+    }
+  }
+}
+
+<span class="cm">// ─── For Next.js: next.config.js (handles webpack + TS) ──────────</span>
+<span class="kw">const</span> nextConfig = {
+  <span class="prop">webpack</span>: (config) => {
+    config.<span class="prop">resolve</span>.<span class="prop">alias</span> = {
+      ...config.<span class="prop">resolve</span>.<span class="prop">alias</span>,
+      <span class="str">"@"</span>: path.<span class="fn">resolve</span>(__dirname, <span class="str">"src"</span>),
+    };
+    <span class="kw">return</span> config;
+  },
+};
+<span class="cm">// Actually, Next.js reads paths from tsconfig.json automatically — no config needed!</span>
+
+<span class="cm">// ─── For pure Node.js (tsconfig paths don't affect Node runtime) ──
+// Need: npm install -D tsconfig-paths
+// Run: ts-node -r tsconfig-paths/register src/index.ts
+// OR use: tsc + tsc-alias for compiled output</span>
+<span class="cm">// package.json:</span>
+{
+  "scripts": {
+    "dev": "ts-node -r tsconfig-paths/register src/index.ts",
+    "build": "tsc && tsc-alias"
+  }
+}</code></pre>
+    </div>
+
+    <div class="callout insight">
+      <div class="callout-title">💡 The Trap: tsconfig paths ≠ runtime aliases</div>
+      <p>TypeScript's <code>paths</code> only affects the TypeScript compiler — it tells TS where to look for types. It does <strong>NOT</strong> modify the compiled JavaScript. If your Node.js runtime sees <code>@/lib/api</code>, it has no idea what that means — it's not a real file path. You need <code>tsconfig-paths</code> (for ts-node) or <code>tsc-alias</code> / <code>module-alias</code> (for compiled output) to make aliases work at runtime.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 3 — TYPESCRIPT + EXPRESS
+════════════════════════════════════════════════════════ -->
+<section class="section fade-in" id="express">
+  <div class="section-number">Topic 03</div>
+  <h2 class="sec-title">TypeScript + <span class="accent3">Express</span></h2>
+  <p class="sec-lead">Express was written in JavaScript and its types are community-maintained. That means there are gaps you need to fill — especially around the Request object, which has no idea about your authenticated user or parsed body without help.</p>
+
+  <!-- 3.1 EXTENDING REQUEST -->
+  <div class="sub" id="request-extension">
+    <h3 class="sub-title"><span class="sub-num">3.1</span> Extending Express's Request — Module Augmentation</h3>
+
+    <p>You have a JWT auth middleware that decodes a token and attaches <code>req.user</code>. Express's type for <code>Request</code> has no <code>user</code> property. TypeScript errors. The solution is <strong>module augmentation</strong> — you extend Express's interface without modifying its source.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">extending Express Request — the correct pattern</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── File: src/types/express.d.ts ─────────────────────────────────</span>
+<span class="cm">// This file augments the Express module — adds properties to Request</span>
+
+<span class="kw">import</span> <span class="str">"express"</span>; <span class="cm">// IMPORTANT: must import to make this a module augmentation</span>
+
+<span class="kw">declare module</span> <span class="str">"express-serve-static-core"</span> {
+  <span class="kw">interface</span> <span class="iface">Request</span> {
+    user?: {
+      <span class="prop">id</span>: <span class="type">string</span>;
+      <span class="prop">email</span>: <span class="type">string</span>;
+      <span class="prop">role</span>: <span class="str">"admin"</span> | <span class="str">"user"</span>;
+    };
+    <span class="prop">requestId</span>?: <span class="type">string</span>; <span class="cm">// for request tracing</span>
+  }
+}
+
+<span class="cm">// ─── File: src/middleware/auth.ts ─────────────────────────────────</span>
+<span class="kw">import</span> { <span class="type">Request</span>, <span class="type">Response</span>, <span class="type">NextFunction</span> } <span class="kw">from</span> <span class="str">"express"</span>;
+<span class="kw">import</span> jwt <span class="kw">from</span> <span class="str">"jsonwebtoken"</span>;
+
+<span class="kw">export function</span> <span class="fn">requireAuth</span>(<span class="var">req</span>: <span class="type">Request</span>, <span class="var">res</span>: <span class="type">Response</span>, <span class="var">next</span>: <span class="type">NextFunction</span>) {
+  <span class="kw">const</span> authHeader = <span class="var">req</span>.<span class="prop">headers</span>.<span class="prop">authorization</span>;
+  
+  <span class="kw">if</span> (!authHeader?.startsWith(<span class="str">"Bearer "</span>)) {
+    <span class="var">res</span>.<span class="fn">status</span>(<span class="num">401</span>).<span class="fn">json</span>({ <span class="prop">error</span>: <span class="str">"No token"</span> });
+    <span class="kw">return</span>;
+  }
+
+  <span class="kw">try</span> {
+    <span class="kw">const</span> token = authHeader.<span class="fn">split</span>(<span class="str">" "</span>)[<span class="num">1</span>];
+    <span class="kw">const</span> payload = jwt.<span class="fn">verify</span>(token, process.<span class="prop">env</span>.<span class="prop">JWT_SECRET</span>!);
+    <span class="cm">// payload is string | JwtPayload — must narrow:</span>
+    <span class="kw">if</span> (<span class="kw">typeof</span> payload !== <span class="str">"object"</span> || !payload || !(<span class="str">"id"</span> <span class="kw">in</span> payload)) {
+      <span class="var">res</span>.<span class="fn">status</span>(<span class="num">401</span>).<span class="fn">json</span>({ <span class="prop">error</span>: <span class="str">"Invalid token"</span> });
+      <span class="kw">return</span>;
+    }
+    <span class="cm">// TypeScript now knows req.user is available (from our augmentation)</span>
+    <span class="var">req</span>.<span class="prop">user</span> = { 
+      <span class="prop">id</span>: payload.<span class="prop">id</span> <span class="kw">as</span> <span class="type">string</span>, 
+      <span class="prop">email</span>: payload.<span class="prop">email</span> <span class="kw">as</span> <span class="type">string</span>, 
+      <span class="prop">role</span>: payload.<span class="prop">role</span> <span class="kw">as</span> <span class="str">"admin"</span> | <span class="str">"user"</span>
+    };
+    <span class="fn">next</span>();
+  } <span class="kw">catch</span> {
+    <span class="var">res</span>.<span class="fn">status</span>(<span class="num">401</span>).<span class="fn">json</span>({ <span class="prop">error</span>: <span class="str">"Invalid token"</span> });
+  }
+}
+
+<span class="cm">// ─── In route handlers — req.user is now typed ────────────────────</span>
+<span class="var">router</span>.<span class="fn">get</span>(<span class="str">"/profile"</span>, requireAuth, (req, res) => {
+  <span class="cm">// req.user is { id: string; email: string; role: "admin" | "user" } | undefined</span>
+  <span class="kw">if</span> (!req.<span class="prop">user</span>) <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">401</span>).<span class="fn">send</span>();
+  <span class="var">res</span>.<span class="fn">json</span>({ <span class="prop">userId</span>: req.<span class="prop">user</span>.<span class="prop">id</span> }); <span class="cm">// ✅ fully typed</span>
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- 3.2 MIDDLEWARE TYPING -->
+  <div class="sub" id="middleware">
+    <h3 class="sub-title"><span class="sub-num">3.2</span> Middleware Typing — RequestHandler Generic</h3>
+
+    <p><code>RequestHandler</code> is Express's generic type for middleware and route handlers. It takes 4 type parameters that let you type the request and response bodies precisely.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">typed route handlers and middleware</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="kw">import</span> { <span class="type">RequestHandler</span> } <span class="kw">from</span> <span class="str">"express"</span>;
+
+<span class="cm">// RequestHandler<Params, ResBody, ReqBody, Query>
+//   Params  = route params   (req.params)
+//   ResBody = response body  (res.json(...))
+//   ReqBody = request body   (req.body)
+//   Query   = query params   (req.query)</span>
+
+<span class="cm">// ─── Typed route params ───────────────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">UserParams</span> = { <span class="prop">id</span>: <span class="type">string</span> };
+<span class="kw">type</span> <span class="type">UserResponse</span> = { <span class="prop">user</span>: <span class="type">User</span> } | { <span class="prop">error</span>: <span class="type">string</span> };
+
+<span class="kw">const</span> <span class="fn">getUser</span>: <span class="type">RequestHandler</span><<span class="type">UserParams</span>, <span class="type">UserResponse</span>> = <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { id } = req.<span class="prop">params</span>; <span class="cm">// id: string — typed</span>
+  <span class="kw">const</span> user = <span class="kw">await</span> <span class="fn">findUser</span>(id);
+  <span class="kw">if</span> (!user) {
+    res.<span class="fn">status</span>(<span class="num">404</span>).<span class="fn">json</span>({ <span class="prop">error</span>: <span class="str">"Not found"</span> }); <span class="cm">// must match UserResponse</span>
+    <span class="kw">return</span>;
+  }
+  res.<span class="fn">json</span>({ <span class="prop">user</span> }); <span class="cm">// must match UserResponse</span>
+};
+
+<span class="cm">// ─── Typed request body ───────────────────────────────────────────</span>
+<span class="kw">type</span> <span class="type">CreateUserBody</span> = { <span class="prop">name</span>: <span class="type">string</span>; <span class="prop">email</span>: <span class="type">string</span>; <span class="prop">role</span>: <span class="str">"admin"</span> | <span class="str">"user"</span> };
+<span class="kw">type</span> <span class="type">CreateUserResponse</span> = { <span class="prop">user</span>: <span class="type">User</span> } | { <span class="prop">error</span>: <span class="type">string</span>; <span class="prop">fields</span>?: <span class="type">Record</span><<span class="type">string</span>, <span class="type">string</span>> };
+
+<span class="kw">const</span> <span class="fn">createUser</span>: <span class="type">RequestHandler</span><<span class="type">Record</span><<span class="type">never</span>, <span class="kw">never</span>>, <span class="type">CreateUserResponse</span>, <span class="type">CreateUserBody</span>> = <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { name, email, role } = req.<span class="prop">body</span>; <span class="cm">// all typed!</span>
+  
+  <span class="cm">// Validate with Zod:</span>
+  <span class="kw">const</span> parsed = <span class="cl">CreateUserSchema</span>.<span class="fn">safeParse</span>(req.<span class="prop">body</span>);
+  <span class="kw">if</span> (!parsed.<span class="prop">success</span>) {
+    <span class="kw">const</span> fields = <span class="fn">Object</span>.<span class="fn">fromEntries</span>(
+      parsed.<span class="prop">error</span>.<span class="prop">issues</span>.<span class="fn">map</span>(i => [i.<span class="prop">path</span>.<span class="fn">join</span>(<span class="str">"."</span>), i.<span class="prop">message</span>])
+    );
+    res.<span class="fn">status</span>(<span class="num">400</span>).<span class="fn">json</span>({ <span class="prop">error</span>: <span class="str">"Validation failed"</span>, <span class="prop">fields</span> });
+    <span class="kw">return</span>;
+  }
+  <span class="cm">// ... create user, return result</span>
+};</code></pre>
+    </div>
+  </div>
+
+  <!-- 3.3 ENV VARS -->
+  <div class="sub" id="env-vars">
+    <h3 class="sub-title"><span class="sub-num">3.3</span> Typed Environment Variables — Never <code>as string</code> Again</h3>
+
+    <p>Every Node.js app uses <code>process.env</code>. The type of every value is <code>string | undefined</code>. Doing <code>process.env.PORT as string</code> everywhere is error-prone and hides missing variables until runtime. The right pattern validates all env vars at startup and exposes a typed <code>env</code> object.</p>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">typed env variables — production pattern with Zod</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── File: src/config/env.ts ──────────────────────────────────────</span>
+<span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">"zod"</span>;
+
+<span class="kw">const</span> <span class="cl">EnvSchema</span> = z.<span class="fn">object</span>({
+  <span class="cm">// Server</span>
+  <span class="prop">NODE_ENV</span>:    z.<span class="fn">enum</span>([<span class="str">"development"</span>, <span class="str">"test"</span>, <span class="str">"production"</span>]).<span class="fn">default</span>(<span class="str">"development"</span>),
+  <span class="prop">PORT</span>:        z.<span class="fn">string</span>().<span class="fn">regex</span>(/^\d+$/).<span class="fn">default</span>(<span class="str">"3000"</span>).<span class="fn">transform</span>(Number),
+  
+  <span class="cm">// Database</span>
+  <span class="prop">DATABASE_URL</span>: z.<span class="fn">string</span>().<span class="fn">url</span>(),
+  <span class="prop">DB_POOL_SIZE</span>: z.<span class="fn">string</span>().<span class="fn">default</span>(<span class="str">"10"</span>).<span class="fn">transform</span>(Number),
+  
+  <span class="cm">// Auth</span>
+  <span class="prop">JWT_SECRET</span>:  z.<span class="fn">string</span>().<span class="fn">min</span>(<span class="num">32</span>, <span class="str">"JWT_SECRET must be at least 32 characters"</span>),
+  <span class="prop">JWT_EXPIRY</span>:  z.<span class="fn">string</span>().<span class="fn">default</span>(<span class="str">"7d"</span>),
+  
+  <span class="cm">// Redis</span>
+  <span class="prop">REDIS_URL</span>:   z.<span class="fn">string</span>().<span class="fn">url</span>(),
+  
+  <span class="cm">// AWS</span>
+  <span class="prop">AWS_REGION</span>:         z.<span class="fn">string</span>().<span class="fn">default</span>(<span class="str">"ap-south-1"</span>),
+  <span class="prop">AWS_S3_BUCKET</span>:      z.<span class="fn">string</span>(),
+  <span class="prop">AWS_ACCESS_KEY_ID</span>:  z.<span class="fn">string</span>(),
+  <span class="prop">AWS_SECRET_ACCESS_KEY</span>: z.<span class="fn">string</span>(),
+});
+
+<span class="cm">// Validate on module load — app crashes immediately if env is misconfigured</span>
+<span class="kw">const</span> parsed = <span class="cl">EnvSchema</span>.<span class="fn">safeParse</span>(process.<span class="prop">env</span>);
+
+<span class="kw">if</span> (!parsed.<span class="prop">success</span>) {
+  <span class="fn">console</span>.<span class="fn">error</span>(<span class="str">"❌ Invalid environment variables:"</span>);
+  <span class="fn">console</span>.<span class="fn">error</span>(parsed.<span class="prop">error</span>.<span class="fn">flatten</span>().<span class="prop">fieldErrors</span>);
+  process.<span class="fn">exit</span>(<span class="num">1</span>); <span class="cm">// FAIL FAST — don't start a broken server</span>
+}
+
+<span class="kw">export const</span> env = parsed.<span class="prop">data</span>;
+<span class="cm">// env.PORT is number (not string!) — transformed by Zod
+// env.NODE_ENV is "development" | "test" | "production" — not just string
+// env.JWT_SECRET is string — guaranteed to exist</span>
+
+<span class="cm">// ─── Usage throughout the app ─────────────────────────────────────</span>
+<span class="kw">import</span> { env } <span class="kw">from</span> <span class="str">"@/config/env"</span>;
+
+<span class="var">app</span>.<span class="fn">listen</span>(env.<span class="prop">PORT</span>, () => {          <span class="cm">// number, not string</span>
+  <span class="fn">console</span>.<span class="fn">log</span>(`Server on port ${env.<span class="prop">PORT</span>}`);
+});
+
+<span class="kw">const</span> token = jwt.<span class="fn">sign</span>(payload, env.<span class="prop">JWT_SECRET</span>, { <span class="cm">// string, guaranteed</span>
+  <span class="prop">expiresIn</span>: env.<span class="prop">JWT_EXPIRY</span>
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- 3.4 SATISFIES -->
+  <div class="sub" id="satisfies">
+    <h3 class="sub-title"><span class="sub-num">3.4</span> The <code>satisfies</code> Operator — TypeScript 4.9</h3>
+
+    <p>The <code>satisfies</code> operator is the answer to a specific frustrating problem: you want TypeScript to <em>check</em> that a value matches a type, but you want to <em>keep</em> the inferred literal type rather than widening to the annotation.</p>
+
+    <div class="ba">
+      <div class="ba-pane ba-bad">
+        <div class="ba-head">❌ Type Annotation — Widens Types</div>
+        <pre><code><span class="kw">type</span> <span class="type">Config</span> = {
+  <span class="prop">theme</span>: <span class="str">"light"</span> | <span class="str">"dark"</span>;
+  <span class="prop">colors</span>: <span class="type">Record</span><<span class="type">string</span>, <span class="type">string</span>>;
+};
+
+<span class="kw">const</span> config: <span class="type">Config</span> = {
+  <span class="prop">theme</span>: <span class="str">"dark"</span>,
+  <span class="prop">colors</span>: {
+    <span class="prop">primary</span>: <span class="str">"#007bff"</span>,
+    <span class="prop">secondary</span>: <span class="str">"#6c757d"</span>,
+  }
+};
+
+<span class="cm">// Problem: TypeScript knows colors is Record<string, string>
+// NOT { primary: string; secondary: string }
+// So this ERRORS:</span>
+config.<span class="prop">colors</span>.<span class="prop">primary</span>; <span class="cm">// works but no autocomplete on keys
+// TypeScript sees string, not "primary" | "secondary"</span></code></pre>
+      </div>
+      <div class="ba-pane ba-good">
+        <div class="ba-head">✅ satisfies — Checks Without Widening</div>
+        <pre><code><span class="kw">type</span> <span class="type">Config</span> = {
+  <span class="prop">theme</span>: <span class="str">"light"</span> | <span class="str">"dark"</span>;
+  <span class="prop">colors</span>: <span class="type">Record</span><<span class="type">string</span>, <span class="type">string</span>>;
+};
+
+<span class="kw">const</span> config = {
+  <span class="prop">theme</span>: <span class="str">"dark"</span>,
+  <span class="prop">colors</span>: {
+    <span class="prop">primary</span>: <span class="str">"#007bff"</span>,
+    <span class="prop">secondary</span>: <span class="str">"#6c757d"</span>,
+  }
+} <span class="kw">satisfies</span> <span class="type">Config</span>;
+
+<span class="cm">// satisfies checks the shape matches Config ✅
+// BUT infers the type as the literal object!
+// So TypeScript knows config.colors has "primary" and "secondary"</span>
+config.<span class="prop">colors</span>.<span class="prop">primary</span>; <span class="cm">// ✅ full autocomplete on keys
+config.<span class="prop">theme</span>; <span class="cm">// "dark" (not "light" | "dark")</span></code></pre>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-lang">typescript</span>
+        <span class="code-label">satisfies — real use cases</span>
+        <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      </div>
+      <pre><code><span class="cm">// ─── Use case 1: Route configuration with full inference ──────────</span>
+<span class="kw">type</span> <span class="type">Route</span> = { <span class="prop">path</span>: <span class="type">string</span>; <span class="prop">method</span>: <span class="str">"GET"</span> | <span class="str">"POST"</span> | <span class="str">"PUT"</span> | <span class="str">"DELETE"</span> };
+
+<span class="kw">const</span> routes = {
+  <span class="prop">getUser</span>:    { <span class="prop">path</span>: <span class="str">"/users/:id"</span>, <span class="prop">method</span>: <span class="str">"GET"</span>    },
+  <span class="prop">createUser</span>: { <span class="prop">path</span>: <span class="str">"/users"</span>,     <span class="prop">method</span>: <span class="str">"POST"</span>   },
+  <span class="prop">updateUser</span>: { <span class="prop">path</span>: <span class="str">"/users/:id"</span>, <span class="prop">method</span>: <span class="str">"PUT"</span>    },
+  <span class="prop">deleteUser</span>: { <span class="prop">path</span>: <span class="str">"/users/:id"</span>, <span class="prop">method</span>: <span class="str">"DELETE"</span> },
+} <span class="kw">satisfies</span> <span class="type">Record</span><<span class="type">string</span>, <span class="type">Route</span>>;
+
+<span class="cm">// TypeScript checks all values are valid Routes ✅
+// AND knows the exact keys ("getUser" | "createUser" | ...)
+// AND knows routes.getUser.method is "GET" (not "GET" | "POST" | "PUT" | "DELETE")</span>
+
+<span class="cm">// ─── Use case 2: Theme palette with specific colors ───────────────</span>
+<span class="kw">const</span> palette = {
+  <span class="prop">red</span>:   [<span class="str">"#fde8e8"</span>, <span class="str">"#f87171"</span>, <span class="str">"#dc2626"</span>],
+  <span class="prop">blue</span>:  [<span class="str">"#dbeafe"</span>, <span class="str">"#60a5fa"</span>, <span class="str">"#2563eb"</span>],
+  <span class="prop">green</span>: [<span class="str">"#dcfce7"</span>, <span class="str">"#4ade80"</span>, <span class="str">"#16a34a"</span>],
+} <span class="kw">satisfies</span> <span class="type">Record</span><<span class="type">string</span>, <span class="type">string</span>[]>;
+
+palette.<span class="prop">red</span>[<span class="num">0</span>].<span class="fn">toUpperCase</span>(); <span class="cm">// ✅ TypeScript knows red[0] is string, not string | undefined</span>
+<span class="cm">// (without satisfies, Record<string, string[]> would make indexing return string[] not string)</span></code></pre>
+    </div>
+
+    <a class="inline-res" href="https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator" target="_blank" rel="noopener">
+      <div class="ir-icon">📄</div>
+      <div class="ir-content">
+        <div class="ir-label">Official Docs — Read This</div>
+        <div class="ir-title">TypeScript 4.9 Release Notes — satisfies operator</div>
+        <div class="ir-desc">The official explanation with the motivating examples. Takes 5 minutes. The examples of "palette" and "settings" objects make the value of satisfies immediately concrete.</div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════ KNOWLEDGE CHECK ═══════════ -->
+<section class="section fade-in" id="check">
+  <div class="section-number">Knowledge Check</div>
+  <h2 class="sec-title">10 Questions — <span class="accent">No Peeking</span></h2>
+  <p class="sec-lead">These are verbatim interview questions from real interviews at Indian product companies. Attempt each before revealing. Time yourself — you should be able to answer any of these in under 90 seconds verbally.</p>
+
+  <div class="check-grid">
+
+    <div class="check-item">
+      <div class="check-header" onclick="toggleAnswer(this)">
+        <div class="check-q">Q01</div>
+        <div class="check-text">Write a <code>Result&lt;T,E&gt;</code> type and a function <code>fetchUser</code> that returns <code>Result&lt;User, ApiError&gt;</code>.</div>
+        <div class="check-toggle">+</div>
+      </div>
+      <div class="check-reveal">
+        <strong>The Result type:</strong>
+        <div class="answer-code"><span class="type">type</span> Result&lt;T, E = Error&gt; =
+  | { ok: <span class="kw">true</span>;  value: T }
+  | { ok: <span class="kw">false</span>; error: E };
+
+<span class="kw">type</span> ApiError =
+  | { kind: <span class="str">"not_found"</span>;   id: string }
+  | { kind: <span class="str">"unauthorized"</span>; message: string }
+  | { kind: <span class="str">"network"</span>;     message: string };
+
+<span class="kw">async function</span> fetchUser(id: string): Promise&lt;Result&lt;User, ApiError&gt;&gt; {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> res = <span class="kw">await</span> fetch(`/api/users/${id}`);
+    <span class="kw">if</span> (res.status === 404) <span class="kw">return</span> { ok: <span class="kw">false</span>, error: { kind: <span class="str">"not_found"</span>, id } };
+    <span class="kw">if</span> (res.status === 401) <span class="kw">return</span> { ok: <span class="kw">false</span>, error: { kind: <span class="str">"unauthorized"</span>, message: <span class="str">"Expired"</span> } };
+    <span class="kw">const</span> user: User = <span class="kw">await</span> res.json();
+    <span class="kw">return</span> { ok: <span class="kw">true</span>, value: user };
+  } <span class="kw">catch</span> (e: unknown) {
+    <span class="kw">const</span> message = e <span class="kw">instanceof</span> Error ? e.message : <span class="str">"Unknown"</span>;
+    <span class="kw">return</span> { ok: <span class="kw">false</span>, error: { kind: <span class="str">"network"</span>, message } };
+  }
+}</div>
+        The key insight: the caller is forced to check <code>result.ok</code> before accessing <code>result.value</code>. TypeScript narrows the discriminated union automatically. This is zero-cost — no runtime overhead, just type safety.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-header" onclick="toggleAnswer(this)">
+        <div class="check-q">Q02</div>
+        <div class="check-text">How do you extend Express's <code>Request</code> interface to include a <code>user</code> property?</div>
+        <div class="check-toggle">+</div>
+      </div>
+      <div class="check-reveal">
+        Use <strong>module augmentation</strong> — extend the Express interface by reopening it in a <code>.d.ts</code> file. The critical detail: augment <code>"express-serve-static-core"</code> (not <code>"express"</code> directly) because that's where Express's Request interface actually lives.
+        <div class="answer-code"><span class="cm">// src/types/express.d.ts</span>
+import <span class="str">"express"</span>; <span class="cm">// must import to make this a module augmentation</span>
+
+declare module <span class="str">"express-serve-static-core"</span> {
+  interface Request {
+    user?: { id: string; role: <span class="str">"admin"</span> | <span class="str">"user"</span> };
+  }
+}</div>
+        Without the <code>import "express"</code> line, this file is an ambient declaration and the augmentation applies globally but differently. With the import, TypeScript treats it as a module augmentation scoped correctly.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-header" onclick="toggleAnswer(this)">
+        <div class="check-q">Q03</div>
+        <div class="check-text">What is the difference between declaration merging and module augmentation?</div>
+        <div class="check-toggle">+</div>
+      </div>
+      <div class="check-reveal">
+        <strong>Declaration merging</strong> happens when you declare the same interface name twice <em>in the same scope</em>. TypeScript merges them into one combined interface. It only works for interfaces, not type aliases.
+        <br><br>
+        <strong>Module augmentation</strong> is declaration merging applied to another module's exported types. You use <code>declare module "x" { interface Y { ... } }</code> inside a file that imports from the module. This extends the module's types without modifying its source.
+        <br><br>
+        Module augmentation is how the Express Request extension works, how <code>@types/jest</code> adds <code>describe/it</code> to global scope, and how window.analytics gets typed globally.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-header" onclick="toggleAnswer(this)">
+        <div class="check-q">Q04</div>
+        <div class="check-text">Explain <code>tsconfig</code> strict mode. What does it enable and why should you always use it?</div>
+        <div class="check-toggle">+</div>
+      </div>
+      <div class="check-reveal">
+        <code>"strict": true</code> is a shorthand that enables a group of strict flags simultaneously:
+        <br><br>
+        • <strong>noImplicitAny</strong> — variables can't accidentally become <code>any</code> through inference<br>
+        • <strong>strictNullChecks</strong> — <code>null</code> and <code>undefined</code> are distinct types, not assignable to everything<br>
+        • <strong>strictFunctionTypes</strong> — function parameter types are checked contravariantly<br>
+        • <strong>strictPropertyInitialization</strong> — class properties must be initialized in the constructor<br>
+        • <strong>useUnknownInCatchVariables</strong> — catch block <code>e</code> is <code>unknown</code> not <code>any</code>
+        <br><br>
+        Without strict mode, TypeScript is dramatically less useful. <code>null</code> bugs slip through, accidental <code>any</code> types spread silently, and catch blocks give you false confidence. Always use strict: true. There's no valid reason to skip it in new projects.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-header" onclick="toggleAnswer(this)">
+        <div class="check-q">Q05</div>
+        <div class="check-text">How do you type environment variables safely in TypeScript without using <code>process.env.FOO as string</code> everywhere?</div>
+        <div class="check-toggle">+</div>
+      </div>
+      <div class="check-reveal">
+        Validate all env vars at startup using Zod and export a typed <code>env</code> object:
+        <div class="answer-code"><span class="kw">const</span> EnvSchema = z.object({
+  PORT:         z.string().transform(Number),
+  DATABASE_URL: z.string().url(),
+  JWT_SECRET:   z.string().min(32),
+  NODE_ENV:     z.enum([<span class="str">"development"</span>, <span class="str">"production"</span>]),
+});
+
+<span class="kw">const</span> result = EnvSchema.safeParse(process.env);
+<span class="kw">if</span> (!result.success) { console.error(result.error); process.exit(1); }
+export <span class="kw">const</span> env = result.data; <span class="cm">// typed, validated, never undefined</span></div>
+        Benefits: (1) App fails immediately at startup if any variable is missing or malformed. (2) <code>env.PORT</code> is <code>number</code> not <code>string</code>. (3) <code>env.NODE_ENV</code> is the union literal, not <code>string</code>. (4) No type assertions anywhere — the types are earned, not declared.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-header" onclick="toggleAnswer(this)">
+        <div class="check-q">Q06</div>
+        <div class="check-text">What is a discriminated union and how does it improve error handling over try/catch?</div>
+        <div class="check-toggle">+</div>
+      </div>
+      <div class="check-reveal">
+        A discriminated union is a union type where every member has a shared literal field (the discriminant). Switching on this field narrows the type to the specific member.
+        <br><br>
+        In error handling: with try/catch, the error type is <code>unknown</code> — no one knows what errors a function throws. With a Result discriminated union (<code>{ ok: true, value: T } | { ok: false, error: E }</code>), the error possibilities are part of the function's type signature. The caller <em>must</em> check <code>result.ok</code> before accessing the value. New error types added to the union become compiler errors at every unhandled call site. This is compile-time exhaustive error handling — something try/catch can never provide.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-header" onclick="toggleAnswer(this)">
+        <div class="check-q">Q07</div>
+        <div class="check-text">Write a typed generic fetch wrapper: <code>async function apiFetch&lt;T&gt;(url: string): Promise&lt;T&gt;</code></div>
+        <div class="check-toggle">+</div>
+      </div>
+      <div class="check-reveal">
+        <div class="answer-code"><span class="kw">async function</span> apiFetch&lt;T&gt;(url: string, options?: RequestInit): Promise&lt;T&gt; {
+  <span class="kw">const</span> res = <span class="kw">await</span> fetch(url, {
+    headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>, ...options?.headers },
+    ...options,
+  });
+
+  <span class="kw">if</span> (!res.ok) {
+    <span class="kw">throw new</span> Error(`HTTP error: ${res.status}`);
+  }
+  
+  <span class="kw">return</span> res.json() <span class="kw">as</span> Promise&lt;T&gt;;
+}
+
+<span class="cm">// Usage:</span>
+<span class="kw">const</span> user = <span class="kw">await</span> apiFetch&lt;User&gt;(<span class="str">"/api/users/1"</span>); <span class="cm">// user: User</span></div>
+        Note: This is the simpler version that throws. For production, upgrade to return <code>Result&lt;T, FetchError&gt;</code> and never throw. The T is the caller's promise about what the API returns — if the API lies, the cast is wrong but that's a runtime problem Zod solves.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-header" onclick="toggleAnswer(this)">
+        <div class="check-q">Q08</div>
+        <div class="check-text">What does <code>moduleResolution: "bundler"</code> do in tsconfig vs <code>"node"</code>?</div>
+        <div class="check-toggle">+</div>
+      </div>
+      <div class="check-reveal">
+        <strong>"node"</strong> (legacy) — TypeScript resolves imports like Node.js CommonJS: tries <code>x.ts</code>, <code>x/index.ts</code>, etc. Requires no file extensions in imports. Used for older projects.
+        <br><br>
+        <strong>"bundler"</strong> (new, for Next.js/Vite/webpack) — TypeScript defers to the bundler for actual resolution. Allows imports without file extensions, supports <code>exports</code> field in package.json. Designed for modern build tools that handle module resolution themselves.
+        <br><br>
+        <strong>"NodeNext"</strong> — strict ESM mode for modern Node.js. Requires explicit <code>.js</code> extensions in imports (even for .ts files), and respects <code>type: "module"</code> in package.json. Use this for Node.js-only backends targeting Node 18+.
+        <br><br>
+        Practical rule: Next.js = "bundler". Pure Node backend = "NodeNext". Old code = "node".
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-header" onclick="toggleAnswer(this)">
+        <div class="check-q">Q09</div>
+        <div class="check-text">How do you create path aliases in TypeScript and what problem do they solve?</div>
+        <div class="check-toggle">+</div>
+      </div>
+      <div class="check-reveal">
+        In <code>tsconfig.json</code>:
+        <div class="answer-code">{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  }
+}</div>
+        This lets you write <code>import { Button } from "@/components/Button"</code> instead of <code>"../../../components/Button"</code>.
+        <br><br>
+        Problems solved: (1) <strong>Fragile imports</strong> — relative imports break when files move. Aliases are absolute from project root. (2) <strong>Readability</strong> — you can tell immediately whether an import is from your code or a package. (3) <strong>Refactoring</strong> — move a file anywhere; imports don't change.
+        <br><br>
+        Critical gotcha: <code>tsconfig paths</code> only affects TypeScript. Runtime (Node.js) doesn't know about them — you need <code>tsconfig-paths</code> for ts-node, or <code>tsc-alias</code> for compiled output.
+      </div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-header" onclick="toggleAnswer(this)">
+        <div class="check-q">Q10</div>
+        <div class="check-text">What is the purpose of the <code>satisfies</code> operator introduced in TypeScript 4.9?</div>
+        <div class="check-toggle">+</div>
+      </div>
+      <div class="check-reveal">
+        <code>satisfies</code> validates that a value matches a type <strong>without widening the inferred type</strong> to the annotation.
+        <br><br>
+        Problem it solves: If you write <code>const x: Record&lt;string, string[]&gt; = { red: ["#fff"] }</code>, TypeScript knows x has string keys with string[] values, but <em>not</em> that it has a specific "red" key. With <code>const x = { red: ["#fff"] } satisfies Record&lt;string, string[]&gt;</code>, TypeScript checks the shape AND retains knowledge that x.red specifically exists.
+        <br><br>
+        Best use cases: configuration objects, route maps, theme definitions — anywhere you want type validation but also want to keep the specific literal inference for autocomplete and safety.
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════ RESOURCES ═══════════ -->
+<section class="section fade-in" id="resources">
+  <div class="section-number">Resources</div>
+  <h2 class="sec-title">Today's <span class="accent">References</span></h2>
+
+  <div class="res-grid">
+    <a class="res-card" href="https://zod.dev" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--teal);">📘 Official Docs</div>
+      <div class="res-card-name">Zod Documentation</div>
+      <div class="res-card-desc">Read: Getting Started, Primitives, Objects, Transforms. These 4 sections cover 90% of what you'll use. Then scan Coercion and Error Formatting.</div>
+    </a>
+    <a class="res-card" href="https://www.typescriptlang.org/tsconfig" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--teal);">📘 Official Docs</div>
+      <div class="res-card-name">TSConfig Reference — Complete</div>
+      <div class="res-card-desc">Every tsconfig option documented. Bookmark this. When a build breaks because of a config mismatch, this is where you go. Search for any option and read the full explanation.</div>
+    </a>
+    <a class="res-card" href="https://github.com/sindresorhus/type-fest" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--plum);">💻 GitHub</div>
+      <div class="res-card-name">type-fest — Essential Types</div>
+      <div class="res-card-desc">A huge collection of useful TypeScript types that aren't in the stdlib. Read the source for each type you find interesting — they're the best examples of advanced TypeScript patterns.</div>
+    </a>
+    <a class="res-card" href="https://youtu.be/9-R5eE0bFO4" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--rust);">🎬 Video</div>
+      <div class="res-card-name">TypeScript Error Handling — Matt Pocock</div>
+      <div class="res-card-desc">Matt's take on the Result pattern and why try/catch fails TypeScript. 18 minutes. Watch it after completing this doc — reinforces everything in Section 1.</div>
+    </a>
+    <a class="res-card" href="https://kentcdodds.com/blog/get-a-catch-block-error-message-with-typescript" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--teal);">📝 Article</div>
+      <div class="res-card-name">Catch Block Error Message with TypeScript</div>
+      <div class="res-card-desc">Kent C. Dodds on the exact problem of catch (e: unknown). Short, focused, directly relevant. Shows you the utility function pattern for narrowing caught errors cleanly.</div>
+    </a>
+    <a class="res-card" href="https://www.totaltypescript.com/tsconfig-cheat-sheet" target="_blank" rel="noopener">
+      <div class="res-card-type" style="color:var(--green);">📋 Cheatsheet</div>
+      <div class="res-card-name">Total TypeScript — TSConfig Cheat Sheet</div>
+      <div class="res-card-desc">Matt Pocock's recommended tsconfig for every scenario: library, Next.js, Node.js. The definitive reference. Bookmark and use instead of copying from random Stack Overflow answers.</div>
+    </a>
+  </div>
+</section>
+
+<hr class="div">
+
+<!-- ═══════════ SCHEDULE ═══════════ -->
+<section class="section" id="tasks">
+  <div class="section-number">Action Plan</div>
+  <h2 class="sec-title">Today's <span class="accent">8-Hour</span> Schedule</h2>
+
+  <div class="sched">
+    <div class="sched-row">
+      <div class="sched-time">6:00 – 7:30am</div>
+      <div class="sched-desc">
+        <strong>DSA Block — Non-Negotiable</strong><br>
+        LC 121 (Best Time to Buy and Sell Stock) + LC 53 (Maximum Subarray). These are sliding window / Kadane's — establish the pattern early. Target: both solved under 40 minutes total.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">7:30 – 8:00am</div>
+      <div class="sched-desc">
+        <strong>Spaced Repetition — Day 1 Recall</strong><br>
+        Without opening Day 1's doc: write down (1) How <code>infer</code> works, (2) Implement <code>DeepReadonly&lt;T&gt;</code>, (3) Difference between type and interface. Then check against the recap cards at the top of today's doc. The act of recalling — even imperfectly — builds more memory than rereading.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">8:00 – 12:00pm</div>
+      <div class="sched-desc">
+        <strong>Deep Learning Block — Read This Document</strong><br>
+        Read top to bottom. For the Result pattern: trace through the flow diagram with a real scenario in your head before reading the code. For tsconfig: open your own Next.js project's tsconfig.json and compare it to the annotated version here. Identify every option you didn't understand before. For the satisfies operator: open the TypeScript Playground and reproduce both the before and after examples side by side.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">12:00 – 1:00pm</div>
+      <div class="sched-desc"><strong>Break + Eat</strong></div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">1:00 – 5:00pm</div>
+      <div class="sched-desc">
+        <strong>Build: Typed Express API</strong><br>
+        Build a User CRUD API in Express + TypeScript with zero <code>any</code>: (1) Zod schemas for User, CreateUserInput, UpdateUserInput. (2) Typed env vars with startup validation. (3) <code>requireAuth</code> middleware with module augmentation. (4) Result-typed service functions. (5) Typed RequestHandler route handlers for GET /users, GET /users/:id, POST /users, PUT /users/:id, DELETE /users/:id. (6) A global error handler that handles different error kinds. No TypeScript errors. No <code>any</code>. No <code>as string</code>.
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">5:00 – 6:00pm</div>
+      <div class="sched-desc"><strong>Break / Walk</strong></div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">6:00 – 8:00pm</div>
+      <div class="sched-desc">
+        <strong>Total TypeScript Exercises + Zod Docs</strong><br>
+        Do the Error Handling exercises on totaltypescript.com. Then read zod.dev: Primitives → Objects → Arrays → Transforms → safeParse vs parse. These prepare you for PharmaSync (if you revisit it) and SyncSpace (Week 5).
+      </div>
+    </div>
+    <div class="sched-row">
+      <div class="sched-time">8:00 – 9:30pm</div>
+      <div class="sched-desc">
+        <strong>GitHub Commit + Knowledge Log</strong><br>
+        Commit your Express API. Answer the 10 knowledge check questions cold. Write in your log: (1) The three concepts from today you found hardest. (2) One real code improvement you'd make to PharmaSync using today's learning. (3) Your tsconfig settings — can you explain every option to a junior developer?
+      </div>
+    </div>
+  </div>
+
+  <div class="callout tip" style="margin-top:36px;">
+    <div class="callout-title">✅ Tomorrow — Day 3</div>
+    <p>Day 3 is <strong>Next.js App Router Deep Internals</strong> — your biggest gap and the most important day of Week 1. You'll understand ISR vs PPR vs SSR vs SSG mechanically, how Server Components change the mental model of React, streaming with Suspense, and Server Actions. Everything you've done in Days 1-2 was preparing the TypeScript foundation you'll use to write fully-typed Next.js code from Day 3 onwards.</p>
+  </div>
+
+  <div style="margin-top:52px;padding:36px;background:var(--bg2);border:2px solid var(--border);border-radius:10px;text-align:center;">
+    <div style="font-family:var(--serif);font-size:28px;font-weight:900;color:var(--ink);margin-bottom:8px;">Day 02 of 56.</div>
+    <div style="font-size:16px;color:var(--muted);margin-bottom:22px;">Your async code is now typed. Your errors are no longer invisible. Your server knows who's calling.</div>
+    <div class="hero-tags" style="justify-content:center;">
+      <span class="tag t">Next.js Internals →</span>
+      <span class="tag p">Server Components →</span>
+      <span class="tag g">ISR / PPR / SSG →</span>
+      <span class="tag r">54 days to go</span>
+    </div>
+  </div>
+</section>
+
+</div>
+</main>
+
+<script>
+const prog = document.getElementById('prog');
+const topBtn = document.getElementById('top-btn');
+
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY;
+  const total = document.body.scrollHeight - window.innerHeight;
+  prog.style.width = (scrolled / total * 100) + '%';
+  topBtn.classList.toggle('show', scrolled > 400);
+  updateToc();
+});
+
+function updateToc() {
+  const links = document.querySelectorAll('.toc-link');
+  let current = '';
+  document.querySelectorAll('[id]').forEach(el => {
+    if (window.scrollY >= el.offsetTop - 100) current = el.id;
+  });
+  links.forEach(l => {
+    l.classList.toggle('on', l.getAttribute('href') === '#' + current);
+  });
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'copied!';
+    btn.style.background = 'var(--teal)';
+    btn.style.color = '#fff';
+    btn.style.borderColor = 'var(--teal)';
+    setTimeout(() => {
+      btn.textContent = 'copy';
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2200);
+  });
+}
+
+function toggleAnswer(header) {
+  const reveal = header.nextElementSibling;
+  const toggle = header.querySelector('.check-toggle');
+  const isOpen = reveal.classList.contains('open');
+  reveal.classList.toggle('open', !isOpen);
+  toggle.textContent = isOpen ? '+' : '−';
+  toggle.style.color = isOpen ? '' : 'var(--teal)';
+}
+
+// Intersection observer for fade-in animations
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'none';
+      e.target.style.transition = 'opacity .5s ease, transform .5s ease';
+      obs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.04 });
+
+document.querySelectorAll('.section, .sub, .callout, .video-wrap, .comp-grid, .recap-strip').forEach(el => {
+  if (!el.classList.contains('fade-in')) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+    obs.observe(el);
+  }
+});
+</script>
+</body>
+</html>

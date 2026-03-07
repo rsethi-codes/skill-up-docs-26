@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-04T23:10:04.789Z",
+  "generated": "2026-03-06T04:44:38.558Z",
   "roadmaps": [
     {
       "id": "dsa",
@@ -8,7 +8,15 @@
       "docs": [
         {
           "title": "Day1 Plan",
-          "href": "DSA/day-1-plan.html"
+          "href": "DSA/day-1-plan.html",
+          "prev": null,
+          "next": "DSA/day-2-plan.html"
+        },
+        {
+          "title": "Day2 Plan",
+          "href": "DSA/day-2-plan.html",
+          "prev": "DSA/day-1-plan.html",
+          "next": null
         }
       ]
     },
@@ -19,15 +27,21 @@
       "docs": [
         {
           "title": "Day1 Plan",
-          "href": "FE-plan/day-1-plan.html"
+          "href": "FE-plan/day-1-plan.html",
+          "prev": null,
+          "next": "FE-plan/day-2-plan.html"
         },
         {
           "title": "Day2 Plan",
-          "href": "FE-plan/day-2-plan.html"
+          "href": "FE-plan/day-2-plan.html",
+          "prev": "FE-plan/day-1-plan.html",
+          "next": "FE-plan/day-3-plan.html"
         },
         {
           "title": "Day3 Plan",
-          "href": "FE-plan/day-3-plan.html"
+          "href": "FE-plan/day-3-plan.html",
+          "prev": "FE-plan/day-2-plan.html",
+          "next": null
         }
       ]
     },
@@ -38,7 +52,9 @@
       "docs": [
         {
           "title": "Day1 Plan",
-          "href": "full-stack-plan/day-1-plan.html"
+          "href": "full-stack-plan/day-1-plan.html",
+          "prev": null,
+          "next": null
         }
       ]
     },
@@ -49,7 +65,9 @@
       "docs": [
         {
           "title": "Day 1",
-          "href": "Month-1 Plan/Week-1 Plan/day-1.html"
+          "href": "Month-1 Plan/Week-1 Plan/day-1.html",
+          "prev": null,
+          "next": null
         }
       ]
     }

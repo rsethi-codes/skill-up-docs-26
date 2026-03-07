@@ -161,6 +161,70 @@
             outline-offset: 2px;
         }
 
+        .doc-link-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .doc-link-wrap .complete-badge {
+            font-size: 0.7rem;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .index-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .index-theme-btn, .index-help-btn {
+            padding: 0.5rem 1rem;
+            font-family: var(--font);
+            font-size: 0.85rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .index-theme-btn:hover, .index-help-btn:hover {
+            color: var(--accent);
+            border-color: var(--border-hover);
+        }
+        .index-help-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .index-help-overlay.is-open { display: flex; }
+        .index-help-modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            max-width: 400px;
+        }
+        .index-help-modal h3 { margin: 0 0 1rem; font-size: 1rem; color: var(--text); }
+        .index-help-modal p { margin: 0.5rem 0; color: var(--text-muted); font-size: 0.9rem; }
+        .index-help-modal kbd { background: var(--bg-elevated); padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.8rem; }
+
+        [data-theme="light"] body { background: #f5f2ed; }
+        [data-theme="light"] .roadmap-card { background: #fff; border-color: rgba(0,0,0,0.08); }
+        [data-theme="light"] .roadmap-card:hover { border-color: var(--accent-dim); }
+        [data-theme="light"] .roadmap-card .name, [data-theme="light"] .roadmap-card .doc-link { color: #1a1a1a; }
+        [data-theme="light"] .search-input, [data-theme="light"] .index-help-modal, [data-theme="light"] .index-theme-btn, [data-theme="light"] .index-help-btn { background: #fff; border-color: rgba(0,0,0,0.1); color: #333; }
+        [data-theme="light"] h1 { background: linear-gradient(135deg, #1a1a1a 0%, #333 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        [data-theme="light"] .tagline, [data-theme="light"] .search-label, [data-theme="light"] .no-results { color: #666; }
+
         #loading {
             text-align: center;
             padding: 4rem 2rem;
@@ -203,6 +267,43 @@
             text-decoration: underline;
         }
 
+        #search-wrap {
+            margin-bottom: 1.5rem;
+        }
+        .search-label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-family: var(--font);
+            font-size: 1rem;
+            color: var(--text);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+        .no-results {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 2rem;
+        }
+        .roadmap-card.hidden-by-search {
+            display: none !important;
+        }
+
         footer {
             text-align: center;
             padding: 3rem 1rem;
@@ -224,15 +325,32 @@
         <p class="logo">Skill Up 2026</p>
         <h1>Your Roadmaps</h1>
         <p class="tagline">Structured learning plans — DSA, Frontend, Full Stack & more</p>
+        <div class="index-actions" id="index-actions">
+            <button type="button" class="index-theme-btn" id="index-theme-btn" aria-label="Toggle theme">Theme</button>
+            <button type="button" class="index-help-btn" id="index-help-btn" aria-label="Keyboard shortcuts">? Shortcuts</button>
+        </div>
     </header>
 
+    <div class="index-help-overlay" id="index-help-overlay">
+        <div class="index-help-modal">
+            <h3>Keyboard shortcuts</h3>
+            <p><kbd>/</kbd> or <kbd>Ctrl+K</kbd> — Focus search</p>
+            <p><kbd>Escape</kbd> — Clear search / close</p>
+        </div>
+    </div>
+
     <div class="container">
+        <div id="search-wrap" class="hidden">
+            <label for="search-input" class="search-label">Search roadmaps & docs</label>
+            <input type="text" id="search-input" class="search-input" placeholder="Type to filter by name or doc title…" autocomplete="off" aria-label="Search roadmaps and doc titles">
+        </div>
         <div id="loading">
             <div class="spinner"></div>
             <p>Loading roadmaps…</p>
         </div>
         <ul id="roadmaps" class="hidden" aria-live="polite"></ul>
         <div id="error" class="hidden" role="alert"></div>
+        <p id="no-results" class="hidden no-results">No roadmaps or docs match your search.</p>
     </div>
 
     <footer>
@@ -243,12 +361,36 @@
     <script src="roadmaps-data.js"></script>
     <script>
         (function () {
+            try {
+                var t = localStorage.getItem('skillup-index-theme') || 'dark';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
             const roadmapsEl = document.getElementById('roadmaps');
             const loadingEl = document.getElementById('loading');
             const errorEl = document.getElementById('error');
 
             function show(el) { el.classList.remove('hidden'); }
             function hide(el) { el.classList.add('hidden'); }
+
+            const searchWrap = document.getElementById('search-wrap');
+            const searchInput = document.getElementById('search-input');
+            const noResultsEl = document.getElementById('no-results');
+
+            function filterCards(q) {
+                const term = (q || '').trim().toLowerCase();
+                const cards = roadmapsEl.querySelectorAll('.roadmap-card');
+                let visible = 0;
+                cards.forEach(function (card) {
+                    const name = (card.getAttribute('data-roadmap-name') || '').toLowerCase();
+                    const docTitles = (card.getAttribute('data-doc-titles') || '').toLowerCase();
+                    const match = !term || name.indexOf(term) !== -1 || docTitles.indexOf(term) !== -1;
+                    card.classList.toggle('hidden-by-search', !match);
+                    if (match) visible++;
+                });
+                if (noResultsEl) {
+                    noResultsEl.classList.toggle('hidden', visible > 0 || !term);
+                }
+            }
 
             function render(roadmaps) {
                 hide(loadingEl);
@@ -258,25 +400,92 @@
                     const card = document.createElement('li');
                     card.className = 'roadmap-card';
                     card.style.animationDelay = (i * 0.06) + 's';
+                    card.setAttribute('data-roadmap-name', r.name);
+                    card.setAttribute('data-doc-titles', (r.docs || []).map(function (d) { return d.title; }).join(' '));
                     const name = document.createElement('h2');
                     name.className = 'name';
                     name.textContent = r.name;
                     const docsWrap = document.createElement('div');
                     docsWrap.className = 'docs';
                     (r.docs || []).forEach(function (d) {
+                        const wrap = document.createElement('span');
+                        wrap.className = 'doc-link-wrap';
                         const a = document.createElement('a');
                         a.className = 'doc-link';
                         a.href = d.href;
                         a.textContent = d.title;
                         a.setAttribute('data-roadmap', r.name);
-                        docsWrap.appendChild(a);
+                        a.setAttribute('data-doc-href', d.href);
+                        wrap.appendChild(a);
+                        const key = 'skillup-docs-complete-' + d.href;
+                        try {
+                            if (localStorage.getItem(key) === '1') {
+                                const badge = document.createElement('span');
+                                badge.className = 'complete-badge';
+                                badge.textContent = '✓';
+                                badge.setAttribute('aria-label', 'Completed');
+                                wrap.appendChild(badge);
+                            }
+                        } catch (e) {}
+                        docsWrap.appendChild(wrap);
                     });
                     card.appendChild(name);
                     card.appendChild(docsWrap);
                     roadmapsEl.appendChild(card);
                 });
                 show(roadmapsEl);
+                if (searchWrap) show(searchWrap);
+                if (searchInput) {
+                    searchInput.value = '';
+                    searchInput.addEventListener('input', function () { filterCards(this.value); });
+                    searchInput.addEventListener('keydown', function (e) {
+                        if (e.key === 'Escape') { this.value = ''; filterCards(''); this.blur(); }
+                    });
+                }
+                initIndexTheme();
+                initIndexHelp();
             }
+            var INDEX_THEME_KEY = 'skillup-index-theme';
+            function getIndexTheme() { try { return localStorage.getItem(INDEX_THEME_KEY) || 'dark'; } catch (e) { return 'dark'; } }
+            function setIndexTheme(v) { document.documentElement.setAttribute('data-theme', v); try { localStorage.setItem(INDEX_THEME_KEY, v); } catch (e) {} }
+            function initIndexTheme() {
+                setIndexTheme(getIndexTheme());
+                var btn = document.getElementById('index-theme-btn');
+                if (btn) {
+                    btn.textContent = getIndexTheme() === 'light' ? 'Dark' : 'Light';
+                    btn.onclick = function () {
+                        var next = getIndexTheme() === 'light' ? 'dark' : 'light';
+                        setIndexTheme(next);
+                        btn.textContent = next === 'light' ? 'Dark' : 'Light';
+                    };
+                }
+            }
+            function initIndexHelp() {
+                var overlay = document.getElementById('index-help-overlay');
+                var btn = document.getElementById('index-help-btn');
+                if (btn && overlay) {
+                    btn.onclick = function () { overlay.classList.add('is-open'); };
+                    overlay.onclick = function (e) { if (e.target === overlay) overlay.classList.remove('is-open'); };
+                }
+            }
+            function indexKeydown(e) {
+                if (e.key === '/' && document.activeElement !== searchInput && document.activeElement.tagName !== 'INPUT') {
+                    e.preventDefault();
+                    if (searchInput) searchInput.focus();
+                    return;
+                }
+                if (e.key === 'k' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    if (searchInput) searchInput.focus();
+                    return;
+                }
+                if (e.key === 'Escape') {
+                    var ov = document.getElementById('index-help-overlay');
+                    if (ov && ov.classList.contains('is-open')) ov.classList.remove('is-open');
+                    if (searchInput && document.activeElement === searchInput) { searchInput.value = ''; filterCards(''); searchInput.blur(); }
+                }
+            }
+            document.addEventListener('keydown', indexKeydown);
 
             function showError(msg) {
                 hide(loadingEl);
