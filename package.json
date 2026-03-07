@@ -1,0 +1,13 @@
+{
+  "name": "skill-up-docs-26",
+  "private": true,
+  "version": "2.0.0",
+  "description": "Static roadmap docs with smart dashboard and automation scripts",
+  "scripts": {
+    "generate": "node scripts/generate-roadmaps.js",
+    "validate": "node scripts/validate-roadmaps.js",
+    "refresh": "node scripts/daily-refresh.js",
+    "import:claude": "node scripts/import-claude-doc.js",
+    "test": "node scripts/test-runner.js"
+  }
+}

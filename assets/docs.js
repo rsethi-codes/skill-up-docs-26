@@ -8,6 +8,8 @@
   var STORAGE_THEME = 'skillup-docs-theme';
   var STORAGE_PROGRESS = 'skillup-docs-progress-';
   var STORAGE_COMPLETE = 'skillup-docs-complete-';
+  var EVENT_LOG_KEY = 'skillup.eventLog';
+  var DOC_STATE_PREFIX = 'skillup.docState.';
 
   var assetPath = getAssetPath();
   var docPath = getDocPath();
@@ -17,6 +19,37 @@
 
   function safeTagName(el) {
     try { return (el && el.tagName) ? String(el.tagName).toUpperCase() : ''; } catch (e) { return ''; }
+  }
+
+  function getDocId() {
+    return (docPath || '').replace(/[^\w\-]+/g, '_');
+  }
+
+  function getDocState() {
+    if (!docPath) return {};
+    try {
+      return JSON.parse(localStorage.getItem(DOC_STATE_PREFIX + getDocId()) || '{}') || {};
+    } catch (e) { return {}; }
+  }
+
+  function setDocState(next) {
+    if (!docPath) return;
+    try { localStorage.setItem(DOC_STATE_PREFIX + getDocId(), JSON.stringify(next || {})); } catch (e) {}
+  }
+
+  function pushEvent(type, payload) {
+    try {
+      var list = JSON.parse(localStorage.getItem(EVENT_LOG_KEY) || '[]');
+      list.unshift({
+        type: type,
+        at: new Date().toISOString(),
+        docId: getDocId(),
+        docPath: docPath,
+        title: (document.title || '').replace(/\s*\|.*$/, ''),
+        payload: payload || {}
+      });
+      localStorage.setItem(EVENT_LOG_KEY, JSON.stringify(list.slice(0, 300)));
+    } catch (e) {}
   }
 
   // ----- Theme -----
@@ -632,12 +665,21 @@
       completeBtn.className = 'doc-nav-complete-btn';
       completeBtn.style.cssText = 'flex:0 0 auto; padding:10px 16px; font-family:var(--sans); font-size:13px; background:var(--green-bg); border:1px solid var(--green-border); color:var(--green); border-radius:8px; cursor:pointer;';
       try {
-        completeBtn.textContent = localStorage.getItem(completeKey) === '1' ? 'Completed ✓' : 'Mark as complete';
+        var curState = getDocState();
+        var done = localStorage.getItem(completeKey) === '1' || !!curState.done;
+        completeBtn.textContent = done ? 'Completed ✓' : 'Mark as complete';
         completeBtn.onclick = function () {
           try {
             var isComplete = localStorage.getItem(completeKey) === '1';
-            localStorage.setItem(completeKey, isComplete ? '0' : '1');
+            var next = isComplete ? '0' : '1';
+            localStorage.setItem(completeKey, next);
+            var st = getDocState();
+            st.done = next === '1';
+            st.inProgress = !st.done;
+            st.lastOpenedAt = new Date().toISOString();
+            setDocState(st);
             completeBtn.textContent = isComplete ? 'Mark as complete' : 'Completed ✓';
+            pushEvent(isComplete ? 'doc_undone' : 'doc_done', { href: href });
           } catch (e) {}
         };
       } catch (e) { completeBtn.textContent = 'Mark complete'; }
@@ -657,6 +699,100 @@
     return div.innerHTML;
   }
   injectDocNav();
+
+  function injectQuickActions() {
+    var content = document.querySelector('.content');
+    if (!content || document.getElementById('doc-quick-actions')) return;
+    var state = getDocState();
+    var box = document.createElement('section');
+    box.id = 'doc-quick-actions';
+    box.style.cssText = 'margin-top:26px;border:1px solid var(--border);background:var(--bg2);border-radius:10px;padding:14px;';
+    box.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">' +
+      '  <strong style="font-size:14px;">Quick Actions</strong>' +
+      '  <div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+      '    <button type="button" class="check-btn" id="qa-mark-done">Mark done</button>' +
+      '    <button type="button" class="check-btn" id="qa-mark-review">Review +2d</button>' +
+      '    <button type="button" class="check-btn" id="qa-bookmark">Bookmark</button>' +
+      '  </div>' +
+      '</div>' +
+      '<div style="margin-top:10px;">' +
+      '  <label class="tb-day" for="qa-note" style="display:block;margin-bottom:6px;">Doc note</label>' +
+      '  <textarea id="qa-note" style="width:100%;min-height:84px;border:1px solid var(--border);background:var(--bg);color:var(--ink);border-radius:8px;padding:10px;font-family:var(--sans);"></textarea>' +
+      '  <div style="margin-top:8px;"><button type="button" class="check-btn" id="qa-save-note">Save note</button></div>' +
+      '</div>' +
+      '<div class="tb-day" id="qa-status" style="margin-top:8px;">Resume key: ' + escapeHtml(getDocId()) + '</div>';
+
+    content.appendChild(box);
+    var note = document.getElementById('qa-note');
+    if (note) note.value = state.note || '';
+    var status = document.getElementById('qa-status');
+
+    function showStatus(text) {
+      if (status) status.textContent = text;
+    }
+
+    var doneBtn = document.getElementById('qa-mark-done');
+    if (doneBtn) {
+      doneBtn.onclick = function () {
+        var st = getDocState();
+        st.done = !st.done;
+        st.inProgress = !st.done;
+        st.lastOpenedAt = new Date().toISOString();
+        setDocState(st);
+        try { localStorage.setItem(STORAGE_COMPLETE + currentHref(), st.done ? '1' : '0'); } catch (e) {}
+        pushEvent(st.done ? 'doc_done' : 'doc_undone', {});
+        showStatus(st.done ? 'Marked done' : 'Marked not done');
+      };
+    }
+
+    var reviewBtn = document.getElementById('qa-mark-review');
+    if (reviewBtn) {
+      reviewBtn.onclick = function () {
+        var st = getDocState();
+        var due = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+        st.nextReviewDate = due;
+        st.lastReviewedDate = new Date().toISOString().slice(0, 10);
+        st.lastOpenedAt = new Date().toISOString();
+        setDocState(st);
+        pushEvent('doc_review_due', { due: due });
+        showStatus('Review due set to ' + due);
+      };
+    }
+
+    var bookmarkBtn = document.getElementById('qa-bookmark');
+    if (bookmarkBtn) {
+      bookmarkBtn.onclick = function () {
+        var st = getDocState();
+        st.bookmarked = !st.bookmarked;
+        st.lastOpenedAt = new Date().toISOString();
+        setDocState(st);
+        pushEvent(st.bookmarked ? 'doc_bookmark' : 'doc_unbookmark', {});
+        showStatus(st.bookmarked ? 'Bookmarked' : 'Bookmark removed');
+      };
+    }
+
+    var saveBtn = document.getElementById('qa-save-note');
+    if (saveBtn) {
+      saveBtn.onclick = function () {
+        var st = getDocState();
+        st.note = note ? note.value : '';
+        st.lastOpenedAt = new Date().toISOString();
+        setDocState(st);
+        pushEvent('doc_note_saved', { length: st.note.length });
+        showStatus('Note saved');
+      };
+    }
+  }
+
+  injectQuickActions();
+  (function markOpenEvent() {
+    var st = getDocState();
+    st.lastOpenedAt = new Date().toISOString();
+    if (!st.done) st.inProgress = true;
+    setDocState(st);
+    pushEvent('doc_open', {});
+  })();
 
   (function () {
     document.querySelectorAll('a[href]').forEach(function (a) {

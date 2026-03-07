@@ -1,35 +1,63 @@
 # skill-up-docs-26
 
-Structured learning roadmaps (DSA, Frontend, Full Stack, etc.). Open `index.html` to see all plans.
+Personal learning dashboard + roadmap docs (static, GitHub Pages friendly).
 
-## Features
+## What Changed In V2
 
-- **Index page**: Hub with all roadmaps and doc links; **search** filters by roadmap name and doc titles.
-- **Shared assets**: `assets/docs.css` and `assets/docs.js` provide layout, scroll progress, TOC highlight, copy code, reveal answer, and scroll-reveal. Use the migrate script so existing docs use them.
-- **Prev/Next**: Generator adds prev/next links per doc; data is in `roadmaps.json` and `roadmaps-data.js`.
+- Dashboard-style `index.html` with:
+  - Hero metrics
+  - Continue Learning cards
+  - Track Overview with filters
+  - Today Queue and Recent Activity
+  - Command palette (`Ctrl/Cmd + K`)
+- Schema v2 roadmap generation (`roadmaps.json`, `roadmaps-data.js`)
+- Optional doc metadata contract:
+  - `<!-- DOC_META: {"track":"DSA","day":1,"tags":["arrays"],"estimatedMinutes":180} -->`
+- Local intelligence keys:
+  - `skillup.eventLog`
+  - `skillup.docState.<docId>`
+  - `skillup.trackState.<trackId>`
+- Daily automation scripts:
+  - Claude import
+  - migrate + generate + validate pipeline
+- CI and GitHub Pages deployment workflow
 
-## Adding a new roadmap
+## Project Scripts
 
-1. Create a folder (e.g. `my-plan`) and add `.html` doc files inside it.
-2. From the project root run:
-   ```bash
-   node scripts/generate-roadmaps.js
-   ```
-3. The new folder will appear on the index automatically. No need to edit `index.html` by hand.
+```bash
+npm run generate   # regenerate roadmaps.json + roadmaps-data.js
+npm run validate   # check broken links, duplicate docIds, prev/next integrity
+npm run refresh    # migrate docs -> generate -> validate
+npm run test       # lightweight generator/data tests
+```
 
-## Using shared assets (optional)
+## Claude Daily Workflow
 
-If you add full self-contained HTML docs (e.g. from Claude) and want them to use shared CSS/JS:
+1. Import raw Claude HTML into a track folder:
 
-1. Run the migration script on one file or all docs:
-   ```bash
-   node scripts/migrate-doc-to-shared.js path/to/doc.html
-   # or migrate all:
-   node scripts/migrate-doc-to-shared.js
-   ```
-2. Use `--dry-run` to see what would change without writing:
-   ```bash
-   node scripts/migrate-doc-to-shared.js --dry-run
-   ```
-3. The script creates a `.bak` backup before overwriting. Docs that already link to `docs.css` are skipped.
-4. Then run `node scripts/generate-roadmaps.js` to refresh the index data.
+```bash
+node scripts/import-claude-doc.js --input ./raw/day3.html --track DSA --day 3 --tags arrays,hashing --estimatedMinutes 180
+```
+
+2. Run full refresh:
+
+```bash
+npm run refresh
+```
+
+3. Open `index.html` (or push to `main` for GitHub Pages deploy).
+
+## Metadata Notes
+
+- Metadata is optional.
+- Missing metadata falls back to inferred defaults:
+  - `dayNumber` from filename (`day-<n>-*.html`)
+  - `status: "todo"`
+  - `estimatedMinutes: 90`
+  - `difficulty: "medium"`
+
+## GitHub Pages
+
+- Workflow: `.github/workflows/pages.yml`
+- Trigger: push to `main`
+- Pipeline: generate -> validate -> test -> deploy
